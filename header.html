@@ -1,0 +1,206 @@
+{{define "header"}}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.4.1/dist/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js" integrity="sha512-ElRFoEQdI5Ht6kZvyzXhYG9NqjtkmlkfYk0wr6wHxU9JEHakS7UJZNeml5ALk+8IKlU6jDgMabC3vkumRokgJA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script>{{template "loginjs" .}}</script>
+<style>
+.container {  display: grid;
+grid-template-columns: 1fr 1fr 1fr 1fr;
+grid-template-rows: 0.4fr 0.4fr 2.2fr 1fr;
+gap: 10px 10px;
+grid-auto-flow: row;
+}
+
+.Order-ID { grid-area: 1 / 2 / 2 / 4;
+padding: 10px; }
+
+.Picked { grid-area: 3 / 2 / 4 / 3;
+padding: 10px; }
+
+.Shipped { grid-area: 3 / 3 / 4 / 4;
+padding: 10px; }
+
+.Box { grid-area: 1 / 2 / 4 / 4;
+padding: 10px;
+border-style: solid;
+border-radius: 15px;
+}
+
+.container2 {  display: grid;
+  grid-template-columns: 0.5fr 2fr 0.5fr;
+  grid-template-rows: 0.2fr 2.6fr 0.2fr;
+  gap: 10px 10px;
+  grid-auto-flow: row;
+  grid-template-areas:
+    ". . ."
+    ". messagebox ."
+    ". . .";
+}
+
+.container3 {  display: grid;
+  grid-template-columns: 1.2fr 0.6fr 1.2fr;
+  grid-template-rows: 0.2fr 2.6fr 0.2fr;
+  gap: 10px 10px;
+  grid-auto-flow: row;
+  grid-template-areas:
+    ". . ."
+    ". formentry ."
+    ". . .";
+}
+
+.container {  display: grid;
+  grid-template-columns: 5% 30% 30% 30% 5%;
+  grid-template-rows: 0.1fr 0.1fr 1.7fr 1.7fr 0.1fr;
+  gap: 10px 10px;
+  grid-auto-flow: row;
+  max-width: none;
+  grid-template-areas:
+    ". . . . ."
+    ". . . . ."
+    ". graph1 graph2 graph3 ."
+    ". graph4 graph5 graph6 ."
+    ". . . . .";
+}
+
+.graph1 { grid-area: graph1;
+  background-color:#ffffff;
+  color:333333;
+  padding: 10px;
+  border-style: solid;
+  border-radius: 15px;
+  text-align:center;
+}
+
+.graph2 { grid-area: graph2;
+  background-color:#ffffff;
+  color:333333;
+  padding: 10px;
+  border-style: solid;
+  border-radius: 15px;
+  text-align:center;
+}
+
+.graph3 { grid-area: graph3;
+  background-color:#ffffff;
+  color:333333;
+  padding: 10px;
+  border-style: solid;
+  border-radius: 15px;
+  text-align:center;
+}
+
+.graph4 { grid-area: graph4;
+  background-color:#ffffff;
+  color:333333;
+  padding: 10px;
+  border-style: solid;
+  border-radius: 15px;
+  text-align:center;
+}
+
+.graph5 { grid-area: 4 / 3 / 5 / 5;
+  background-color:#ffffff;
+  color:333333;
+  padding: 10px;
+  border-style: solid;
+  border-radius: 15px;
+  text-align:center;
+}
+
+.graph6 { grid-area: graph6;
+  background-color:#ffffff;
+  color:333333;
+  padding: 10px;
+  border-style: solid;
+  border-radius: 15px;
+  text-align:center;
+}
+
+.datepicker { grid-area: 2 / 2 / 2 / 5;
+  background-color:#ffffff;
+  color:333333;
+  padding: 10px;
+  border-style: solid;
+  border-radius: 15px;
+  text-align:center;
+}
+
+.messagebox { grid-area: messagebox;
+  color:333333;
+  padding: 10px;
+  border-style: solid;
+  border-radius: 15px;
+  text-align:center;
+}
+
+.formentry { grid-area: formentry;
+  background-color:#ffffff;
+  color:333333;
+  padding: 10px;
+  border-style: solid;
+  border-radius: 15px;
+  text-align:center;
+}
+
+.table-wrapper {
+  height:350px;
+  width:100%;
+  overflow: auto;
+  display:inline-block;
+}
+
+</style>
+{{end}}
+
+{{define "navigation"}}
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+<a class="navbar-brand" href="#">{{.Title}}</a>
+<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+  <span class="navbar-toggler-icon"></span>
+</button>
+
+<div class="collapse navbar-collapse" id="navbarSupportedContent">
+  <ul class="navbar-nav mr-auto">
+  {{if or (eq .Permission "admin") (eq .Permission "manage")}}
+    <li class="nav-item active">
+      <a class="nav-link" href="/dashboard">Dashboard<span class="sr-only">(current)</span></a>
+    </li>
+    {{end}}
+    {{if or (eq .Permission "admin") (eq .Permission "cs") (eq .Permission "manage")}}
+      <li class="nav-item active">
+        <a class="nav-link" href="/order">Order Lookup<span class="sr-only">(current)</span></a>
+      </li>
+      {{end}}
+      {{if or (eq .Permission "admin") (eq .Permission "cs")}}
+      <li class="nav-item active">
+        <a class="nav-link" href="/error">Errors <span class="sr-only">(current)</span></a>
+      </li>
+      {{end}}
+      {{if or (eq .Permission "admin") (eq .Permission "cs") (eq .Permission "manage")}}
+      <li class="nav-item active">
+        <a class="nav-link" href="/logout">Logout <span class="sr-only">(current)</span></a>
+      </li>
+      {{end}}
+  </ul>
+</div>
+</nav>
+{{end}}
+
+{{define "messagebox"}}
+{{if eq .Message.Body ""}}{{else}}
+<div class="container2">
+  <div class="messagebox" {{if .Message.Success}}style="background-color:#ccffcc;"{{else}}style="background-color:#ffcccc;"{{end}}>{{.Message.Body}}</div>
+</div>
+<hr>
+{{end}}
+{{end}}
+
+{{define "footer"}}
+<footer class="bg-dark text-center text-white fixed-bottom">
+  <div class="text-center p-3">
+    © 2022 Copyright:
+    <a class="text-white" href="https://beadboxbargains.com/">BeadBoxBargains.com</a>
+  </div>
+</footer>
+{{end}}
