@@ -10,7 +10,7 @@
   <table>
     <tr>
         <td><label for="exampleFormControlFile1">Select file for upload:</label></td>
-        <form>
+        <form enctype="multipart/form-data" action="/upload" method="POST">
             <td><input class="form-control-file" type="file" name="file" multiple /></td>
             <td><button class="btn btn-primary" type="submit">Submit</button></td>
         </form>
@@ -23,6 +23,7 @@
                     <th scope="col">Item #</th>
                     <th scope="col">Description</th>
                     <th scope="col">Manufacturer</th>
+                    <th scope="col">Manufacturer Part #</th>
                     <th></th>
                 </tr>
             </thead>
@@ -36,6 +37,21 @@
                             <option value="pandahall">Pandahall</option>
                           </select>
                         </td>
+                        <td><input class="form-control" type='text'></td>
+                        <td><input type='button' value='Search' class="btn btn-primary"></td>
+                        </div>
+                    </form>
+                </tr>
+                <tr>
+                    <form method="POST">
+                        <div class="form-group">
+                        <td><input class="form-control" type='text'></td>
+                        <td><input class="form-control" type='text'></td>
+                        <td><select class="custom-select mr-sm-2" id="manufacturer">
+                            <option value="pandahall">Pandahall</option>
+                          </select>
+                        </td>
+                        <td><input class="form-control" type='text'></td>
                         <td><input type='button' value='Insert' class="btn btn-primary"></td>
                         </div>
                     </form>
@@ -49,6 +65,7 @@
                             <option value="pandahall">Pandahall</option>
                           </select>
                         </td>
+                        <td><input class="form-control" type='text' value="0987654321"></td>
                         <td><input type='button' value='Update' class="btn btn-primary"></td>
                         </div>
                     </form>

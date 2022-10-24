@@ -75,6 +75,7 @@ func main() {
 	http.HandleFunc("/error", Error)
 	http.HandleFunc("/dashboard", Dashboard)
 	http.HandleFunc("/products", Products)
+	http.HandleFunc("/upload", uploadHandler)
 	http.ListenAndServe(":8082", nil)
 }
 
