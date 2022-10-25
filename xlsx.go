@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"io"
-	"mime/multipart"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -27,7 +26,7 @@ func excel() {
 	}
 }
 
-func importfile(file multipart.File) {
+func importfile(file string) {
 	f, err := excelize.OpenFile(file)
 	if err != nil {
 		fmt.Println(err)
@@ -87,7 +86,7 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	importfile(dst)
+	importfile(dst.Name())
 
 	defer dst.Close()
 

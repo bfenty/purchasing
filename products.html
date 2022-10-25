@@ -20,56 +20,23 @@
         <table class="table table-striped">
             <thead class="thead-dark">
                 <tr>
-                    <th scope="col">Item #</th>
+                    <th scope="col">SKU</th>
                     <th scope="col">Description</th>
                     <th scope="col">Manufacturer</th>
                     <th scope="col">Manufacturer Part #</th>
+                    <th scope="col">Processing Request</th>
+                    <th scope="col">Sorting Team Request</th>
+                    <th scope="col">Unit</th>
+                    <th scope="col">Unit Price</th>
+                    <th scope="col">Currency</th>
+                    <th scope="col">Order Qty</th>
                     <th></th>
                 </tr>
             </thead>
             <tbody>
-                <tr>
-                    <form method="POST">
-                        <div class="form-group">
-                        <td><input class="form-control" type='text'></td>
-                        <td><input class="form-control" type='text'></td>
-                        <td><select class="custom-select mr-sm-2" id="manufacturer">
-                            <option value="pandahall">Pandahall</option>
-                          </select>
-                        </td>
-                        <td><input class="form-control" type='text'></td>
-                        <td><input type='button' value='Search' class="btn btn-primary"></td>
-                        </div>
-                    </form>
-                </tr>
-                <tr>
-                    <form method="POST">
-                        <div class="form-group">
-                        <td><input class="form-control" type='text'></td>
-                        <td><input class="form-control" type='text'></td>
-                        <td><select class="custom-select mr-sm-2" id="manufacturer">
-                            <option value="pandahall">Pandahall</option>
-                          </select>
-                        </td>
-                        <td><input class="form-control" type='text'></td>
-                        <td><input type='button' value='Insert' class="btn btn-primary"></td>
-                        </div>
-                    </form>
-                </tr>
-                <tr>
-                    <form>
-                        <div class="form-group">
-                        <td><input class="form-control" type='text' value="123456"></td>
-                        <td><input class="form-control" type='text' value="Glass 102"></td>
-                        <td><select class="custom-select mr-sm-2" id="manufacturer">
-                            <option value="pandahall">Pandahall</option>
-                          </select>
-                        </td>
-                        <td><input class="form-control" type='text' value="0987654321"></td>
-                        <td><input type='button' value='Update' class="btn btn-primary"></td>
-                        </div>
-                    </form>
-                </tr>
+                {{template "product"}}
+                {{template "product"}}
+                {{template "product"}}
             </tbody>
         </table>
   {{template "footer" .}}

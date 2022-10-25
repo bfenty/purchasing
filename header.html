@@ -204,3 +204,45 @@ border-radius: 15px;
   </div>
 </footer>
 {{end}}
+
+{{define "product"}}
+                  <tr>
+                    <form method="POST">
+                        <div class="form-group">
+                        <td><input class="form-control" type='text' id="sku" value="{{.sku}}"></td>
+                        <td><input class="form-control" type='text' id="description" value="{{.description}}"></td>
+                        <td>
+                          <select class="custom-select mr-sm-2" id="manufacturer">
+                            <option value='PW'>PW</option>
+                            <option value='W'>W</option>
+                            <option value='H'>H</option>
+                            <option value='B'>B</option>
+                            <option value='PH'>PH</option>
+                            <option value='G'>G</option>
+                            <option value='RKY'>RKY</option>
+                            <option value='NV'>NV</option>
+                            <option value='CBRO'>CBRO</option>
+                            <option value='CRBO'>CRBO</option>
+                            <option value='R'>R</option>
+                            <option value='PEG'>PEG</option>
+                            <option value='GB'>GB</option>
+                            <option value='NB'>NB</option>
+                            <option value='PG'>PG</option>
+                            <option value='VK'>VK</option>
+                          </select>
+                        </td>
+                        <td><input class="form-control" type='text' id="manufacturerpart" value="{{.manufacturerpart}}"></td>
+                        <td><input class="form-control" type='text' id="processrequest" value="{{.processrequest}}"></td>
+                        <td><input class="form-control" type='text' id="sortingrequest" value="{{.sortingrequest}}"></td>
+                        <td><input class="form-control" type='text' id="unit" value="{{.unit}}"></td>
+                        <td><input class="form-control" type='text' id="unitprice" value="{{.unitprice}}"></td>
+                        <td><select class="custom-select mr-sm-2" id="currency">
+                            <option value="USD">USD</option>
+                          </select>
+                        </td>
+                        <td><input class="form-control" type='text' id="orderqty" value="{{.orderqty}}"></td>
+                        <td><input type='button' value='Search' class="btn btn-primary"></td>
+                        </div>
+                    </form>
+                </tr>
+{{end}}
