@@ -10,20 +10,20 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-type Graph struct {
-	X *string
-	Y *float64
-	Z *float64
-}
+// type Graph struct {
+// 	X *string
+// 	Y *float64
+// 	Z *float64
+// }
 
-type Table struct {
-	Col1 *string
-	Col2 *string
-	Col3 *string
-	Col4 *string
-	Col5 *string
-	Col6 *string
-}
+// type Table struct {
+// 	Col1 *string
+// 	Col2 *string
+// 	Col3 *string
+// 	Col4 *string
+// 	Col5 *string
+// 	Col6 *string
+// }
 
 var db *sql.DB
 

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
-	"time"
 )
 
 type Product struct {
@@ -20,28 +19,28 @@ type Product struct {
 	Qty              *int
 }
 
-type OrderDetail struct {
-	ID       int
-	Picker   *string
-	Shipper  *string
-	Picktime time.Time
-	Shiptime time.Time
-}
+// type OrderDetail struct {
+// 	ID       int
+// 	Picker   *string
+// 	Shipper  *string
+// 	Picktime time.Time
+// 	Shiptime time.Time
+// }
 
 type Page struct {
-	Title       string
-	Message     Message
-	Order       OrderDetail
-	Permission  string
-	Startdate   string
-	Enddate     string
-	Graph1      []Graph
-	Graph2      []Graph
-	Graph3      []Graph
-	Graph4      []Graph
-	Graph5      []Graph
-	Graph6      []Graph
-	Table1      []Table
+	Title   string
+	Message Message
+	// Order       OrderDetail
+	Permission string
+	Startdate  string
+	Enddate    string
+	// Graph1      []Graph
+	// Graph2      []Graph
+	// Graph3      []Graph
+	// Graph4      []Graph
+	// Graph5      []Graph
+	// Graph6      []Graph
+	// Table1      []Table
 	ProductList []Product
 }
 
