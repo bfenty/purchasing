@@ -1,10 +1,8 @@
 package main
 
 import (
-	"bytes"
 	"database/sql"
 	"fmt"
-	"html/template"
 	"log"
 	"net/http"
 	"os"
@@ -155,22 +153,71 @@ func ProductList(limit int, r *http.Request) (message Message, products []Produc
 	}
 
 	var sku string
-	var query bytes.Buffer
+	var i []interface{}
 	var newquery string
 
 	sku = r.URL.Query().Get("sku")
+	manufacturer := r.URL.Query().Get("manufacturer")
+	manufacturerpart := r.URL.Query().Get("manufacturerpart")
+	processrequest := r.URL.Query().Get("processrequest")
+	sortingrequest := r.URL.Query().Get("sortingrequest")
+	unit := r.URL.Query().Get("unit")
+	unitprice := r.URL.Query().Get("unitprice")
+	currency := r.URL.Query().Get("currency")
+	orderqty := r.URL.Query().Get("orderqty")
 
-	tmpl, err := template.New("query").Parse("SELECT * FROM `skus` WHERE 1 {{if .}}AND sku_internal = ? {{end}}order by 1 limit ?")
-	err = tmpl.Execute(&query, sku)
-	newquery = query.String()
-
-	//Query
-	// var newquery string = "SELECT * FROM `skus` WHERE 1 AND sku_internal like ? || '%' order by 1 limit ?"
+	//Build the Query
+	newquery = "SELECT * FROM `skus` WHERE 1"
+	if sku != "" {
+		sku += "%"
+		i = append(i, sku)
+		newquery += " AND sku_internal LIKE ?"
+	}
+	if manufacturer != "" {
+		i = append(i, manufacturer)
+		newquery += " AND manufacturer_code = ?"
+	}
+	if manufacturerpart != "" {
+		manufacturerpart += "%"
+		i = append(i, manufacturerpart)
+		newquery += " AND sku_manufacturer LIKE ?"
+	}
+	if processrequest != "" {
+		processrequest = "%" + processrequest + "%"
+		i = append(i, processrequest)
+		newquery += " AND processing_request LIKE ?"
+	}
+	if sortingrequest != "" {
+		sortingrequest = "%" + sortingrequest + "%"
+		i = append(i, sortingrequest)
+		newquery += " AND sorting_request LIKE ?"
+	}
+	if unit != "" {
+		unit = "%" + unit + "%"
+		i = append(i, unit)
+		newquery += " AND unit LIKE ?"
+	}
+	if unitprice != "" {
+		i = append(i, unitprice)
+		newquery += " AND unit_price = ?"
+	}
+	if currency != "" {
+		i = append(i, currency)
+		newquery += " AND currency = ?"
+	}
+	if orderqty != "" {
+		i = append(i, orderqty)
+		newquery += " AND order_qty = ?"
+	}
+	newquery += " order by 1 limit ?"
 
 	//Run Query
+	i = append(i, limit) //always add the limit to the end
+	fmt.Println(i...)    //debug variables map
+	limit = 1
 	fmt.Println("Running Product List")
 	fmt.Println(newquery)
-	rows, err := db.Query(newquery, sku, limit)
+	rows, err := db.Query(newquery, i...)
 	if err != nil {
 		return handleerror(err), products
 	}

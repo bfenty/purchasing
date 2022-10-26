@@ -35,12 +35,12 @@
             </thead>
             <tbody>
                 <tr>
-                    <form method="POST">
+                    <form method="GET" action="/products">
                         <div class="form-group">
-                        <td><input class="form-control" type='text' id="sku"></td>
-                        <td><input class="form-control" type='text' id="description"></td>
+                        <td><input class="form-control" type='text' id="sku" name="sku"></td>
+                        <td><input class="form-control" type='text' id="description" name="description"></td>
                         <td>
-                          <select class="custom-select mr-sm-2" id="manufacturer">
+                          <select class="custom-select mr-sm-2" id="manufacturer" name="manufacturer">
                             <option disabled selected hidden value>Select an Option</option>
                             <option value='PW'>PW</option>
                             <option value='W'>W</option>
@@ -60,20 +60,20 @@
                             <option value='VK'>VK</option>
                           </select>
                         </td>
-                        <td><input class="form-control" type='text' id="manufacturerpart"></td>
-                        <td><input class="form-control" type='text' id="processrequest"></td>
-                        <td><input class="form-control" type='text' id="sortingrequest"></td>
-                        <td><input class="form-control" type='text' id="unit"></td>
-                        <td><input class="form-control" type='text' id="unitprice"></td>
-                        <td><select class="custom-select mr-sm-2" id="currency">
+                        <td><input class="form-control" type='text' id="manufacturerpart" name="manufacturerpart"></td>
+                        <td><input class="form-control" type='text' id="processrequest" name="processrequest"></td>
+                        <td><input class="form-control" type='text' id="sortingrequest" name="sortingrequest"></td>
+                        <td><input class="form-control" type='text' id="unit" name="unit"></td>
+                        <td><input class="form-control" type='text' id="unitprice" name="unitprice"></td>
+                        <td><select class="custom-select mr-sm-2" id="currency" name="currency">
                             <option disabled selected hidden value>Select an Option</option>
                             <option value="USD">USD</option>
                             <option value="CZK">CZK</option>
                             <option value="EUR">EUR</option>
                           </select>
                         </td>
-                        <td><input class="form-control" type='text' id="orderqty"></td>
-                        <td><input type='button' value='Search' class="btn btn-primary"></td>
+                        <td><input class="form-control" type='text' id="orderqty" name="orderqty"></td>
+                        <td><input type='submit' value='Search' class="btn btn-primary"></td>
                         </div>
                     </form>
                 </tr>
