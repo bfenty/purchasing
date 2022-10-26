@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"time"
+
 	"github.com/google/uuid"
 	// "io/ioutil"
 	//"html/template"
@@ -30,40 +31,40 @@ type Credentials struct {
 	Username string `json:"username"`
 }
 
-func Usercreate(w http.ResponseWriter, r *http.Request){
+func Usercreate(w http.ResponseWriter, r *http.Request) {
 	var creds Credentials
 	var message Message
 	var success bool
-				// fmt.Println("method:", r.Method) //get request method
-				r.ParseForm()
-				// logic part of log in
-				creds.Username = r.FormValue("username")
-				creds.Password = r.FormValue("password")
-				if creds.Password != r.FormValue("password2") {
-					message.Title = "Non-matching passwords"
-					message.Body = "Passwords do not match"
-					http.Redirect(w, r, "/signup?messagetitle="+message.Title+"&messagebody="+message.Body, http.StatusSeeOther)
-					return
-				}
-				fmt.Println("Creating user ",creds.Username,"...")
-				message, success = Updatepass(creds.Username,creds.Password,r.FormValue("secret"))
-				if success {
-					http.Redirect(w, r, "/dashboard?messagetitle="+message.Title+"&messagebody="+message.Body, http.StatusSeeOther)
-					return
-				}
-				http.Redirect(w, r, "/signup?messagetitle="+message.Title+"&messagebody="+message.Body, http.StatusSeeOther)
-				return
+	// fmt.Println("method:", r.Method) //get request method
+	r.ParseForm()
+	// logic part of log in
+	creds.Username = r.FormValue("username")
+	creds.Password = r.FormValue("password")
+	if creds.Password != r.FormValue("password2") {
+		message.Title = "Non-matching passwords"
+		message.Body = "Passwords do not match"
+		http.Redirect(w, r, "/signup?messagetitle="+message.Title+"&messagebody="+message.Body, http.StatusSeeOther)
+		return
+	}
+	fmt.Println("Creating user ", creds.Username, "...")
+	message, success = Updatepass(creds.Username, creds.Password, r.FormValue("secret"))
+	if success {
+		http.Redirect(w, r, "/products?messagetitle="+message.Title+"&messagebody="+message.Body, http.StatusSeeOther)
+		return
+	}
+	http.Redirect(w, r, "/signup?messagetitle="+message.Title+"&messagebody="+message.Body, http.StatusSeeOther)
+	return
 }
 
 func Signin(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Logging in...")
 	var creds Credentials
-				// fmt.Println("method:", r.Method) //get request method
-				r.ParseForm()
-				// logic part of log in
-					creds.Username = r.FormValue("username")
-					creds.Password = r.FormValue("password")
-	permission,message := userauth(creds.Username,creds.Password)
+	// fmt.Println("method:", r.Method) //get request method
+	r.ParseForm()
+	// logic part of log in
+	creds.Username = r.FormValue("username")
+	creds.Password = r.FormValue("password")
+	permission, message := userauth(creds.Username, creds.Password)
 	fmt.Println(message.Body)
 
 	// If a password exists for the given user
@@ -102,10 +103,10 @@ func Signin(w http.ResponseWriter, r *http.Request) {
 	})
 	// fmt.Println(sessions)
 
-	http.Redirect(w, r, "/dashboard", http.StatusSeeOther)
+	http.Redirect(w, r, "/products", http.StatusSeeOther)
 }
 
-func auth(w http.ResponseWriter, r *http.Request) (permission string){
+func auth(w http.ResponseWriter, r *http.Request) (permission string) {
 	c, err := r.Cookie("session_token")
 	if err != nil {
 		if err == http.ErrNoCookie {
@@ -185,6 +186,6 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 		Value:   "",
 		Expires: time.Now(),
 	})
-			//Redirect Login
-			http.Redirect(w, r, "/login?messagetitle=Logout Successful&messagebody=You have successfully been logged out", http.StatusSeeOther)
+	//Redirect Login
+	http.Redirect(w, r, "/login?messagetitle=Logout Successful&messagebody=You have successfully been logged out", http.StatusSeeOther)
 }

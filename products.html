@@ -17,8 +17,8 @@
     </tr>
   </table>
   </div>
-        <table class="table table-striped">
-            <thead class="thead-dark">
+        <table class="table table-striped table-hover">
+            <thead class="thead-dark" style="position: sticky; top: 0; z-index: 1;">
                 <tr>
                     <th scope="col">SKU</th>
                     <th scope="col">Description</th>
@@ -34,7 +34,7 @@
                 </tr>
             </thead>
             <tbody>
-                <tr>
+                <tr class="table-primary">
                     <form method="GET" action="/products">
                         <div class="form-group">
                         <td><input class="form-control" type='text' id="sku" name="sku"></td>
@@ -74,6 +74,49 @@
                         </td>
                         <td><input class="form-control" type='text' id="orderqty" name="orderqty"></td>
                         <td><input type='submit' value='Search' class="btn btn-primary"></td>
+                        </div>
+                    </form>
+                </tr>
+                <tr class="table-info">
+                    <form method="GET" action="/productsinsert">
+                        <div class="form-group">
+                        <td><input class="form-control" type='text' id="sku" name="sku"></td>
+                        <td><input class="form-control" type='text' id="description" name="description"></td>
+                        <td>
+                          <select class="custom-select mr-sm-2" id="manufacturer" name="manufacturer">
+                            <option disabled selected hidden value>Select an Option</option>
+                            <option value='PW'>PW</option>
+                            <option value='W'>W</option>
+                            <option value='H'>H</option>
+                            <option value='B'>B</option>
+                            <option value='PH'>PH</option>
+                            <option value='G'>G</option>
+                            <option value='RKY'>RKY</option>
+                            <option value='NV'>NV</option>
+                            <option value='CBRO'>CBRO</option>
+                            <option value='CRBO'>CRBO</option>
+                            <option value='R'>R</option>
+                            <option value='PEG'>PEG</option>
+                            <option value='GB'>GB</option>
+                            <option value='NB'>NB</option>
+                            <option value='PG'>PG</option>
+                            <option value='VK'>VK</option>
+                          </select>
+                        </td>
+                        <td><input class="form-control" type='text' id="manufacturerpart" name="manufacturerpart"></td>
+                        <td><input class="form-control" type='text' id="processrequest" name="processrequest"></td>
+                        <td><input class="form-control" type='text' id="sortingrequest" name="sortingrequest"></td>
+                        <td><input class="form-control" type='text' id="unit" name="unit"></td>
+                        <td><input class="form-control" type='text' id="unitprice" name="unitprice"></td>
+                        <td><select class="custom-select mr-sm-2" id="currency" name="currency">
+                            <option disabled selected hidden value>Select an Option</option>
+                            <option value="USD">USD</option>
+                            <option value="CZK">CZK</option>
+                            <option value="EUR">EUR</option>
+                          </select>
+                        </td>
+                        <td><input class="form-control" type='text' id="orderqty" name="orderqty"></td>
+                        <td><input type='submit' value='Insert' class="btn btn-primary"></td>
                         </div>
                     </form>
                 </tr>
@@ -120,6 +163,8 @@
                     </form>
                 </tr>
                 {{end}}
+                <tr><td></td></tr>
+                <tr><td></td></tr>
             </tbody>
         </table>
   {{template "footer" .}}
