@@ -8,6 +8,19 @@ import (
 	"time"
 )
 
+type Product struct {
+	SKU              string
+	Description      string
+	Manufacturer     string
+	ManufacturerPart string
+	ProcessRequest   string
+	SortingRequest   string
+	Unit             string
+	UnitPrice        float64
+	Currency         string
+	Qty              int
+}
+
 type OrderDetail struct {
 	ID       int
 	Picker   *string
@@ -17,19 +30,20 @@ type OrderDetail struct {
 }
 
 type Page struct {
-	Title      string
-	Message    Message
-	Order      OrderDetail
-	Permission string
-	Startdate  string
-	Enddate    string
-	Graph1     []Graph
-	Graph2     []Graph
-	Graph3     []Graph
-	Graph4     []Graph
-	Graph5     []Graph
-	Graph6     []Graph
-	Table1     []Table
+	Title       string
+	Message     Message
+	Order       OrderDetail
+	Permission  string
+	Startdate   string
+	Enddate     string
+	Graph1      []Graph
+	Graph2      []Graph
+	Graph3      []Graph
+	Graph4      []Graph
+	Graph5      []Graph
+	Graph6      []Graph
+	Table1      []Table
+	ProductList []Product
 }
 
 type Message struct {
@@ -63,7 +77,7 @@ func main() {
 	fmt.Println("Starting Server...")
 	excel()
 	var messagebox Message
-	// db, messagebox = opendb()
+	db, messagebox = opendb()
 	fmt.Println(messagebox.Body)
 	http.HandleFunc("/", login)
 	http.HandleFunc("/login", login)
@@ -118,19 +132,8 @@ func Products(w http.ResponseWriter, r *http.Request) {
 	t, _ := template.ParseFiles("products.html", "header.html", "login.js")
 	fmt.Println("Loading Products...")
 	page.Title = "Products"
-	var startdate time.Time
-	var enddate time.Time
-	if r.FormValue("startdate") != "" && r.FormValue("enddate") != "" {
-		startdate, _ = time.Parse("2006-01-02", r.FormValue("startdate"))
-		enddate, _ = time.Parse("2006-01-02", r.FormValue("enddate"))
-	} else {
-		startdate = time.Now().AddDate(0, 0, -21)
-		enddate = time.Now()
-	}
-	fmt.Println("Start:", r.FormValue("startdate"), " End:", enddate)
-	page.Startdate = startdate.Format("2006-01-02")
-	page.Enddate = enddate.Format("2006-01-02")
-	fmt.Println(page)
+	page.Message, page.ProductList = ProductList(100, r)
+	// fmt.Println(page)
 	t.Execute(w, page)
 }
 
