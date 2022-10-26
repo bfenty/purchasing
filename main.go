@@ -102,10 +102,12 @@ func Products(w http.ResponseWriter, r *http.Request) {
 func ProductInsertion(w http.ResponseWriter, r *http.Request) {
 	var page Page
 	page.Permission = auth(w, r)
-	t, _ := template.ParseFiles("products.html", "header.html", "login.js")
+	t, _ := template.ParseFiles("productsinsert.html", "header.html", "login.js")
 	fmt.Println("Loading Products...")
-	page.Title = "Products"
-	page.Message = ProductInsert(r)
+	page.Title = "New Product"
+	if r.URL.Query().Get("insert") == "true" {
+		page.Message = ProductInsert(r)
+	}
 	t.Execute(w, page)
 }
 
