@@ -214,7 +214,6 @@ func ProductList(limit int, r *http.Request) (message Message, products []Produc
 	//Run Query
 	i = append(i, limit) //always add the limit to the end
 	fmt.Println(i...)    //debug variables map
-	limit = 1
 	fmt.Println("Running Product List")
 	fmt.Println(newquery)
 	rows, err := db.Query(newquery, i...)

@@ -75,7 +75,7 @@ func handleerror(err error) (message Message) {
 
 func main() {
 	fmt.Println("Starting Server...")
-	excel()
+	// excel()
 	var messagebox Message
 	db, messagebox = opendb()
 	fmt.Println(messagebox.Body)
