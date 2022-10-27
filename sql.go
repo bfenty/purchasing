@@ -150,7 +150,7 @@ func ProductList(limit int, r *http.Request) (message Message, products []Produc
 	//Pull Data
 	for rows.Next() {
 		var r Product
-		err := rows.Scan(&r.SKU, &r.Manufacturer, &r.ManufacturerPart, &r.Description, &r.ProcessRequest, &r.SortingRequest, &r.Unit, &r.UnitPrice, &r.Currency, &r.Qty)
+		err := rows.Scan(&r.SKU, &r.Manufacturer, &r.ManufacturerPart, &r.Description, &r.ProcessRequest, &r.SortingRequest, &r.Unit, &r.UnitPrice, &r.Currency, &r.Qty, &r.Modified)
 		if err != nil {
 			return handleerror(err), products
 		}

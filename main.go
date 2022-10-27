@@ -17,6 +17,7 @@ type Product struct {
 	UnitPrice        *float64
 	Currency         string
 	Qty              *int
+	Modified         *string
 }
 
 // type OrderDetail struct {
