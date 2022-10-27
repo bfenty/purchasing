@@ -134,7 +134,7 @@ func ProductList(limit int, r *http.Request) (message Message, products []Produc
 		i = append(i, orderqty)
 		newquery += " AND order_qty = ?"
 	}
-	newquery += " order by 1 limit ?"
+	newquery += " order by 11 desc, 1 limit ?"
 
 	//Run Query
 	i = append(i, limit) //always add the limit to the end
@@ -179,6 +179,7 @@ func ProductInsert(r *http.Request) (message Message) {
 	var newquery string
 
 	sku := r.URL.Query().Get("sku")
+	descript := r.URL.Query().Get("description")
 	manufacturer := r.URL.Query().Get("manufacturer")
 	manufacturerpart := r.URL.Query().Get("manufacturerpart")
 	processrequest := r.URL.Query().Get("processrequest")
@@ -197,9 +198,10 @@ func ProductInsert(r *http.Request) (message Message) {
 	i = append(i, unitprice)
 	i = append(i, currency)
 	i = append(i, orderqty)
+	i = append(i, descript)
 
 	//Build the Query
-	newquery = "REPLACE INTO skus (`sku_internal`, `manufacturer_code`, `sku_manufacturer`, `processing_request`, `sorting_request`, `unit`, `unit_price`, `Currency`, `order_qty`) VALUES (?,?,?,?,?,?,?,?,?)"
+	newquery = "REPLACE INTO skus (`sku_internal`, `manufacturer_code`, `sku_manufacturer`, `processing_request`, `sorting_request`, `unit`, `unit_price`, `Currency`, `order_qty`,`product_option`) VALUES (?,?,?,?,?,?,?,?,?,?)"
 
 	//Run Query
 	fmt.Println(i...) //debug variables map
