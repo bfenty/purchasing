@@ -175,6 +175,7 @@ func ProductInsert(r *http.Request) (message Message) {
 		return handleerror(pingErr)
 	}
 
+	//Define Variables
 	var i []interface{}
 	var newquery string
 
@@ -189,6 +190,15 @@ func ProductInsert(r *http.Request) (message Message) {
 	currency := r.URL.Query().Get("currency")
 	orderqty := r.URL.Query().Get("orderqty")
 
+	//ensure that there are no null numerical values
+	if unitprice == "" {
+		unitprice = "0"
+	}
+	if orderqty == "" {
+		orderqty = "0"
+	}
+
+	//Create the fields to insert
 	i = append(i, sku)
 	i = append(i, manufacturer)
 	i = append(i, manufacturerpart)

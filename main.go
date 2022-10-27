@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
+	"strconv"
 )
 
 type Product struct {
@@ -86,6 +87,7 @@ func main() {
 	http.HandleFunc("/usercreate", Usercreate)
 	http.HandleFunc("/products", Products)
 	http.HandleFunc("/productsinsert", ProductInsertion)
+	http.HandleFunc("/productupdate", ProductUpdate)
 	http.HandleFunc("/upload", uploadHandler)
 	http.ListenAndServe(":8082", nil)
 }
@@ -93,11 +95,29 @@ func main() {
 func Products(w http.ResponseWriter, r *http.Request) {
 	var page Page
 	page.Permission = auth(w, r)
+	page.Message.Body = r.URL.Query().Get("message")
+	if r.URL.Query().Get("success") == "true" {
+		page.Message.Success = true
+	}
 	t, _ := template.ParseFiles("products.html", "header.html", "login.js")
 	fmt.Println("Loading Products...")
 	page.Title = "Products"
 	page.Message, page.ProductList = ProductList(100, r)
 	t.Execute(w, page)
+}
+
+func ProductUpdate(w http.ResponseWriter, r *http.Request) {
+	var page Page
+	page.Permission = auth(w, r)
+	// t, _ := template.ParseFiles("productsinsert.html", "header.html", "login.js")
+	fmt.Println("Updating Product...")
+	// page.Title = "New Product"
+	// page.Message, page.ProductList = ProductList(5, r)
+	// if r.URL.Query().Get("insert") == "true" {
+	page.Message = ProductInsert(r)
+	// }
+	// t.Execute(w, page)
+	http.Redirect(w, r, r.Header.Get("Referer")+"?message="+page.Message.Body+"&success="+strconv.FormatBool(page.Message.Success), 302)
 }
 
 func ProductInsertion(w http.ResponseWriter, r *http.Request) {
