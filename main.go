@@ -106,6 +106,7 @@ func ProductInsertion(w http.ResponseWriter, r *http.Request) {
 	t, _ := template.ParseFiles("productsinsert.html", "header.html", "login.js")
 	fmt.Println("Loading Products...")
 	page.Title = "New Product"
+	page.Message, page.ProductList = ProductList(5, r)
 	if r.URL.Query().Get("insert") == "true" {
 		page.Message = ProductInsert(r)
 	}
