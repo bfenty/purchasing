@@ -156,6 +156,10 @@ func ProductList(limit int, r *http.Request) (message Message, products []Produc
 		}
 		products = append(products, r)
 	}
+
+	//Debug Excel
+	excel(products)
+
 	return message, products
 }
 

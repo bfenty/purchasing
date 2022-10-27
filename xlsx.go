@@ -6,18 +6,47 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 	"time"
 
 	"github.com/xuri/excelize/v2"
 )
 
-func excel() {
+// Build an exported Excel file
+func excel(products []Product) {
+
 	f := excelize.NewFile()
+	var cell string
+	var row string
+	for i := 0; i < len(products); i++ {
+		row = strconv.Itoa(i + 1)
+		cell = "A" + row
+		fmt.Println(cell, ": ", products[i].SKU)
+		f.SetCellValue("Sheet1", cell, products[i].SKU)
+		cell = "B" + row
+		f.SetCellValue("Sheet1", cell, products[i].Description)
+		cell = "C" + row
+		f.SetCellValue("Sheet1", cell, products[i].Manufacturer)
+		cell = "D" + row
+		f.SetCellValue("Sheet1", cell, products[i].ManufacturerPart)
+		cell = "E" + row
+		f.SetCellValue("Sheet1", cell, products[i].ProcessRequest)
+		cell = "F" + row
+		f.SetCellValue("Sheet1", cell, products[i].SortingRequest)
+		cell = "G" + row
+		f.SetCellValue("Sheet1", cell, products[i].Unit)
+		cell = "H" + row
+		f.SetCellValue("Sheet1", cell, products[i].UnitPrice)
+		cell = "I" + row
+		f.SetCellValue("Sheet1", cell, products[i].Currency)
+		cell = "J" + row
+		f.SetCellValue("Sheet1", cell, products[i].Qty)
+	}
 	// Create a new sheet.
 	//index := f.NewSheet("Sheet2")
 	// Set value of a cell.
 	// f.SetCellValue("Sheet2", "A2", "Hello world.")
-	f.SetCellValue("Sheet1", "A2", 100)
+	// f.SetCellValue("Sheet1", "A2", 100)
 	// Set active sheet of the workbook.
 	// f.SetActiveSheet(index)
 	// Save spreadsheet by the given path.
