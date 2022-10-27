@@ -21,9 +21,9 @@
             <thead class="thead-dark" style="position: sticky; top: 0; z-index: 1;">
                 <tr>
                     <th scope="col">SKU</th>
-                    <th scope="col">Description</th>
-                    <th scope="col">Manufacturer</th>
                     <th scope="col">Manufacturer Part #</th>
+                    <th scope="col">Product Option</th>
+                    <th scope="col">Manufacturer</th>
                     <th scope="col">Processing Request</th>
                     <th scope="col">Sorting Team Request</th>
                     <th scope="col">Unit</th>
@@ -38,6 +38,7 @@
                     <form method="GET" action="/productsinsert">
                         <div class="form-group">
                         <td><input class="form-control" type='text' id="sku" name="sku"></td>
+                        <td><input class="form-control" type='text' id="manufacturerpart" name="manufacturerpart"></td>
                         <td><input class="form-control" type='text' id="description" name="description"></td>
                         <td>
                           <select class="custom-select mr-sm-2" id="manufacturer" name="manufacturer">
@@ -60,7 +61,6 @@
                             <option value='VK'>VK</option>
                           </select>
                         </td>
-                        <td><input class="form-control" type='text' id="manufacturerpart" name="manufacturerpart"></td>
                         <td><input class="form-control" type='text' id="processrequest" name="processrequest"></td>
                         <td><input class="form-control" type='text' id="sortingrequest" name="sortingrequest"></td>
                         <td><input class="form-control" type='text' id="unit" name="unit"></td>
