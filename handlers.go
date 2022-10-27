@@ -85,7 +85,7 @@ func Signin(w http.ResponseWriter, r *http.Request) {
 	// Create a new random session token
 	// we use the "github.com/google/uuid" library to generate UUIDs
 	sessionToken := uuid.NewString()
-	expiresAt := time.Now().Add(300 * time.Second)
+	expiresAt := time.Now().Add(900 * time.Second)
 	// fmt.Println("Authorized")
 
 	// Set the token in the session map, along with the session information
