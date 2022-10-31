@@ -10,21 +10,6 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-// type Graph struct {
-// 	X *string
-// 	Y *float64
-// 	Z *float64
-// }
-
-// type Table struct {
-// 	Col1 *string
-// 	Col2 *string
-// 	Col3 *string
-// 	Col4 *string
-// 	Col5 *string
-// 	Col6 *string
-// }
-
 var db *sql.DB
 
 func opendb() (db *sql.DB, messagebox Message) {
@@ -90,9 +75,10 @@ func ProductList(limit int, r *http.Request) (message Message, products []Produc
 	unitprice := r.URL.Query().Get("unitprice")
 	currency := r.URL.Query().Get("currency")
 	orderqty := r.URL.Query().Get("orderqty")
+	reorder := r.URL.Query().Get("reorder")
 
 	//Build the Query
-	newquery = "SELECT `sku_internal`,`manufacturer_code`,`sku_manufacturer`,`product_option`,`processing_request`,`sorting_request`,`unit`,`unit_price`,`Currency`,`order_qty`,`modified` FROM `skus` WHERE 1"
+	newquery = "SELECT `sku_internal`,`manufacturer_code`,`sku_manufacturer`,`product_option`,`processing_request`,`sorting_request`,`unit`,`unit_price`,`Currency`,`order_qty`,`modified`,`reorder`,`inventory_qty` FROM `skus` WHERE 1"
 	if sku != "" {
 		sku += "%"
 		i = append(i, sku)
@@ -134,6 +120,10 @@ func ProductList(limit int, r *http.Request) (message Message, products []Produc
 		i = append(i, orderqty)
 		newquery += " AND order_qty = ?"
 	}
+	if reorder != "" {
+		i = append(i, reorder)
+		newquery += " AND reorder = ?"
+	}
 	newquery += " order by 11 desc, 1 limit ?"
 
 	//Run Query
@@ -150,15 +140,12 @@ func ProductList(limit int, r *http.Request) (message Message, products []Produc
 	//Pull Data
 	for rows.Next() {
 		var r Product
-		err := rows.Scan(&r.SKU, &r.Manufacturer, &r.ManufacturerPart, &r.Description, &r.ProcessRequest, &r.SortingRequest, &r.Unit, &r.UnitPrice, &r.Currency, &r.Qty, &r.Modified)
+		err := rows.Scan(&r.SKU, &r.Manufacturer, &r.ManufacturerPart, &r.Description, &r.ProcessRequest, &r.SortingRequest, &r.Unit, &r.UnitPrice, &r.Currency, &r.Qty, &r.Modified, &r.Reorder, &r.InventoryQTY)
 		if err != nil {
 			return handleerror(err), products
 		}
 		products = append(products, r)
 	}
-
-	//Debug Excel
-	// excel(products)
 
 	return message, products
 }
@@ -189,6 +176,7 @@ func ProductInsert(r *http.Request) (message Message) {
 	unitprice := r.URL.Query().Get("unitprice")
 	currency := r.URL.Query().Get("currency")
 	orderqty := r.URL.Query().Get("orderqty")
+	reorder := r.URL.Query().Get("reorder")
 
 	//ensure that there are no null numerical values
 	if unitprice == "" {
@@ -209,9 +197,15 @@ func ProductInsert(r *http.Request) (message Message) {
 	i = append(i, currency)
 	i = append(i, orderqty)
 	i = append(i, descript)
+	if reorder == "yes" {
+		i = append(i, 1)
+	} else {
+		i = append(i, 0)
+	}
+	fmt.Println("Reorder: ", reorder)
 
 	//Build the Query
-	newquery = "REPLACE INTO skus (`sku_internal`, `manufacturer_code`, `sku_manufacturer`, `processing_request`, `sorting_request`, `unit`, `unit_price`, `Currency`, `order_qty`,`product_option`) VALUES (?,?,?,?,?,?,?,?,?,?)"
+	newquery = "REPLACE INTO skus (`sku_internal`, `manufacturer_code`, `sku_manufacturer`, `processing_request`, `sorting_request`, `unit`, `unit_price`, `Currency`, `order_qty`,`product_option`,`reorder`) VALUES (?,?,?,?,?,?,?,?,?,?,?)"
 
 	//Run Query
 	fmt.Println(i...) //debug variables map

@@ -19,6 +19,8 @@ type Product struct {
 	Currency         string
 	Qty              *int
 	Modified         *string
+	Reorder          *bool
+	InventoryQTY     *int
 }
 
 type Page struct {
