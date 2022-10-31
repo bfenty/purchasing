@@ -120,7 +120,7 @@
                           </select>
                         </td>
                         <td><input class="form-control" type='text' id="orderqty" name="orderqty" value="{{.Qty}}"></td>
-                        <td><input class="form-control" type='checkbox' id='reorder' name='reorder' value='yes' {{.Reorder}}{{if .Reorder}}checked{{end}}></td> 
+                        <td><input class="form-control" type='checkbox' id='reorder' name='reorder' value='yes' {{.Reorder}} {{with .Reorder}}checked{{end}}></td> 
                         <td><input class="form-control" type='text' id="inventoryqty" name="inventoryqty" value="{{.InventoryQTY}}" readonly></td>
                         <td><input type='submit' value='Update' class="btn btn-primary"></td>
                         </div>
