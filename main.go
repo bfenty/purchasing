@@ -21,28 +21,12 @@ type Product struct {
 	Modified         *string
 }
 
-// type OrderDetail struct {
-// 	ID       int
-// 	Picker   *string
-// 	Shipper  *string
-// 	Picktime time.Time
-// 	Shiptime time.Time
-// }
-
 type Page struct {
-	Title   string
-	Message Message
-	// Order       OrderDetail
-	Permission string
-	Startdate  string
-	Enddate    string
-	// Graph1      []Graph
-	// Graph2      []Graph
-	// Graph3      []Graph
-	// Graph4      []Graph
-	// Graph5      []Graph
-	// Graph6      []Graph
-	// Table1      []Table
+	Title       string
+	Message     Message
+	Permission  string
+	Startdate   string
+	Enddate     string
 	ProductList []Product
 }
 
@@ -89,6 +73,7 @@ func main() {
 	http.HandleFunc("/productsinsert", ProductInsertion)
 	http.HandleFunc("/productupdate", ProductUpdate)
 	http.HandleFunc("/upload", uploadHandler)
+	http.HandleFunc("/export", exportHandler)
 	http.ListenAndServe(":8082", nil)
 }
 
@@ -96,6 +81,7 @@ func Products(w http.ResponseWriter, r *http.Request) {
 	var page Page
 	page.Permission = auth(w, r)
 	page.Message.Body = r.URL.Query().Get("message")
+	// fmt.Println("Requested URL: ", strings.SplitN(r.URL.String(), "?", 1)[1])
 	if r.URL.Query().Get("success") == "true" {
 		page.Message.Success = true
 	}
@@ -103,20 +89,27 @@ func Products(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Loading Products...")
 	page.Title = "Products"
 	page.Message, page.ProductList = ProductList(100, r)
+	// if r.URL.Query().Get("action") == "export" {
+	// 	_, excelproductlist := ProductList(1000, r)
+	// 	excel(excelproductlist)
+	// }
 	t.Execute(w, page)
+}
+
+func exportHandler(w http.ResponseWriter, r *http.Request) {
+	var page Page
+	page.Permission = auth(w, r)
+	fmt.Println("Exporting Excel...")
+	page.Message, page.ProductList = ProductList(10000, r)
+	page.Message = excel(page.ProductList)
+	http.Redirect(w, r, r.Header.Get("Referer")+"?message="+page.Message.Body+"&success="+strconv.FormatBool(page.Message.Success), 302)
 }
 
 func ProductUpdate(w http.ResponseWriter, r *http.Request) {
 	var page Page
 	page.Permission = auth(w, r)
-	// t, _ := template.ParseFiles("productsinsert.html", "header.html", "login.js")
 	fmt.Println("Updating Product...")
-	// page.Title = "New Product"
-	// page.Message, page.ProductList = ProductList(5, r)
-	// if r.URL.Query().Get("insert") == "true" {
 	page.Message = ProductInsert(r)
-	// }
-	// t.Execute(w, page)
 	http.Redirect(w, r, r.Header.Get("Referer")+"?message="+page.Message.Body+"&success="+strconv.FormatBool(page.Message.Success), 302)
 }
 

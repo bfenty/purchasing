@@ -13,8 +13,9 @@ import (
 )
 
 // Build an exported Excel file
-func excel(products []Product) {
+func excel(products []Product) (message Message) {
 
+	fmt.Println("Creating Excel File...")
 	f := excelize.NewFile()
 	var cell string
 	var row string
@@ -24,23 +25,23 @@ func excel(products []Product) {
 		fmt.Println(cell, ": ", products[i].SKU)
 		f.SetCellValue("Sheet1", cell, products[i].SKU)
 		cell = "B" + row
-		f.SetCellValue("Sheet1", cell, products[i].Description)
+		f.SetCellValue("Sheet1", cell, *products[i].Description)
 		cell = "C" + row
 		f.SetCellValue("Sheet1", cell, products[i].Manufacturer)
 		cell = "D" + row
-		f.SetCellValue("Sheet1", cell, products[i].ManufacturerPart)
+		f.SetCellValue("Sheet1", cell, *products[i].ManufacturerPart)
 		cell = "E" + row
-		f.SetCellValue("Sheet1", cell, products[i].ProcessRequest)
+		f.SetCellValue("Sheet1", cell, *products[i].ProcessRequest)
 		cell = "F" + row
-		f.SetCellValue("Sheet1", cell, products[i].SortingRequest)
+		f.SetCellValue("Sheet1", cell, *products[i].SortingRequest)
 		cell = "G" + row
-		f.SetCellValue("Sheet1", cell, products[i].Unit)
+		f.SetCellValue("Sheet1", cell, *products[i].Unit)
 		cell = "H" + row
-		f.SetCellValue("Sheet1", cell, products[i].UnitPrice)
+		f.SetCellValue("Sheet1", cell, *products[i].UnitPrice)
 		cell = "I" + row
 		f.SetCellValue("Sheet1", cell, products[i].Currency)
 		cell = "J" + row
-		f.SetCellValue("Sheet1", cell, products[i].Qty)
+		f.SetCellValue("Sheet1", cell, *products[i].Qty)
 	}
 	// Create a new sheet.
 	//index := f.NewSheet("Sheet2")
@@ -50,9 +51,13 @@ func excel(products []Product) {
 	// Set active sheet of the workbook.
 	// f.SetActiveSheet(index)
 	// Save spreadsheet by the given path.
+	fmt.Println("Saving Excel File...")
 	if err := f.SaveAs("Book1.xlsx"); err != nil {
 		fmt.Println(err)
+		handleerror(err)
+		return message
 	}
+	return message
 }
 
 func importfile(file string) {

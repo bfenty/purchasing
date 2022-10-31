@@ -6,13 +6,14 @@
   {{template "navigation" .}}
   <br>
   {{template "messagebox" .}}
-  <div class="formentry">
+  <div class="formentry" style="width:200px; margin-left: 10%;">
   <table>
     <tr>
-        <td><label for="exampleFormControlFile1">Select file for upload:</label></td>
-        <form enctype="multipart/form-data" action="/upload" method="POST">
-            <td><input class="form-control-file" type="file" name="file" multiple /></td>
-            <td><button class="btn btn-primary" type="submit">Submit</button></td>
+        <td><label for="exampleFormControlFile1">Export current view:</label></td>
+        </tr>
+        <tr>
+        <form enctype="multipart/form-data" action="/export" method="GET">
+            <td><button class="btn btn-primary" type="submit">Export</button></td>
         </form>
     </tr>
   </table>

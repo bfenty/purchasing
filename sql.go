@@ -92,7 +92,7 @@ func ProductList(limit int, r *http.Request) (message Message, products []Produc
 	orderqty := r.URL.Query().Get("orderqty")
 
 	//Build the Query
-	newquery = "SELECT * FROM `skus` WHERE 1"
+	newquery = "SELECT `sku_internal`,`manufacturer_code`,`sku_manufacturer`,`product_option`,`processing_request`,`sorting_request`,`unit`,`unit_price`,`Currency`,`order_qty`,`modified` FROM `skus` WHERE 1"
 	if sku != "" {
 		sku += "%"
 		i = append(i, sku)
@@ -158,7 +158,7 @@ func ProductList(limit int, r *http.Request) (message Message, products []Produc
 	}
 
 	//Debug Excel
-	excel(products)
+	// excel(products)
 
 	return message, products
 }
