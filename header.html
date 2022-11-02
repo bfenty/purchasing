@@ -172,6 +172,11 @@ border-radius: 15px;
       <a class="nav-link" href="/productsinsert">New Product<span class="sr-only">(current)</span></a>
     </li>
     {{end}}
+  {{if or (eq .Permission "admin") (eq .Permission "manage")}}
+    <li class="nav-item active">
+      <a class="nav-link" href="/reorder">Reorders<span class="sr-only">(current)</span></a>
+    </li>
+    {{end}}
       {{if or (eq .Permission "admin") (eq .Permission "cs") (eq .Permission "manage")}}
       <li class="nav-item active">
         <a class="nav-link" href="/logout">Logout <span class="sr-only">(current)</span></a>

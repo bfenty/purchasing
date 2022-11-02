@@ -50,6 +50,40 @@ func opendb() (db *sql.DB, messagebox Message) {
 	return db, messagebox
 }
 
+// Reorders List
+func Reorderlist() (message Message, order Order) {
+	// Get a database handle.
+	var err error
+
+	//Test Connection
+	pingErr := db.Ping()
+	if pingErr != nil {
+		db, message = opendb()
+		return handleerror(pingErr), order
+	}
+	//Build the Query
+	newquery := "SELECT manufacturer_code, count(*) as 'skus' FROM `skus` WHERE inventory_qty = 0 and reorder = 1 group by manufacturer_code"
+
+	rows, err := db.Query(newquery)
+	if err != nil {
+		return handleerror(pingErr), order
+	}
+	defer rows.Close()
+
+	//Pull Data
+	for rows.Next() {
+		// var r OrderList
+		err := rows.Scan(&r.Manufacturer, &r.Skus)
+		if err != nil {
+			return handleerror(pingErr), order
+		}
+		orders = append(orders, r), orders
+	}
+
+	return message, orders
+
+}
+
 // Product List
 func ProductList(limit int, r *http.Request) (message Message, products []Product) {
 	// Get a database handle.
