@@ -8,6 +8,7 @@ import (
 )
 
 type Order struct {
+	Ordernum     int
 	Manufacturer *string
 	Products     []Product
 }
@@ -93,9 +94,9 @@ func reorder(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Query().Get("success") == "true" {
 		page.Message.Success = true
 	}
-	t, _ := template.ParseFiles("products.html", "header.html", "login.js")
+	t, _ := template.ParseFiles("reorders.html", "header.html", "login.js")
 	fmt.Println("Loading Products...")
-	page.Title = "Products"
+	page.Title = "Reorders"
 	page.Message, page.Orders = Reorderlist()
 	t.Execute(w, page)
 }
