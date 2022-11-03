@@ -8,9 +8,10 @@ import (
 )
 
 type Order struct {
-	Ordernum     int
-	Manufacturer *string
-	Products     []Product
+	Ordernum         int
+	Manufacturer     *string
+	ManufacturerName *string
+	Products         []Product
 }
 
 type Product struct {
@@ -84,7 +85,34 @@ func main() {
 	http.HandleFunc("/upload", uploadHandler)
 	http.HandleFunc("/export", exportHandler)
 	http.HandleFunc("/reorder", reorder)
+	http.HandleFunc("/ordercreate", ordercreate)
+	http.HandleFunc("/order", order)
 	http.ListenAndServe(":8082", nil)
+}
+
+func ordercreate(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("Creating Order...")
+	r.ParseForm()
+	manufacturer := r.FormValue("manufacturer")
+	fmt.Println(manufacturer)
+
+	//DO ALL THE THINGS TO CREATE AN ORDER HERE
+
+	//redirect to the order view page
+	http.Redirect(w, r, "/order?manufacturer="+manufacturer, http.StatusSeeOther)
+}
+
+func order(w http.ResponseWriter, r *http.Request) {
+	var page Page
+	page.Permission = auth(w, r)
+	page.Message.Body = "Test order for " + r.URL.Query().Get("manufacturer")
+	// if r.URL.Query().Get("success") == "true" {
+	page.Message.Success = true
+	// }
+	t, _ := template.ParseFiles("reorders.html", "header.html", "login.js")
+	page.Title = "Order"
+	// page.Message, page.Orders = Reorderlist()
+	t.Execute(w, page)
 }
 
 func reorder(w http.ResponseWriter, r *http.Request) {

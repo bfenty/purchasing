@@ -62,7 +62,7 @@ func Reorderlist() (message Message, orders []Order) {
 		return handleerror(pingErr), orders
 	}
 	//Build the Query
-	newquery := "SELECT manufacturer_code FROM `skus` WHERE inventory_qty = 0 and reorder = 1 group by manufacturer_code"
+	newquery := "SELECT skus.manufacturer_code, manufacturer_code.name FROM `skus` left join manufacturer_code on skus.manufacturer_code = manufacturer_code.code WHERE inventory_qty = 0 and reorder = 1 and manufacturer_code != '' group by skus.manufacturer_code, manufacturer_code.name"
 
 	orderrows, err := db.Query(newquery)
 	if err != nil {
@@ -73,12 +73,12 @@ func Reorderlist() (message Message, orders []Order) {
 	//Pull Data
 	for orderrows.Next() {
 		var r Order
-		err := orderrows.Scan(&r.Manufacturer)
+		err := orderrows.Scan(&r.Manufacturer, &r.ManufacturerName)
 		if err != nil {
 			return handleerror(pingErr), orders
 		}
 		//Build the Query for the skus in the order
-		newquery := "SELECT sku_internal FROM `skus` WHERE inventory_qty = 0 and reorder = 1 and manufacturer_code = ?"
+		newquery := "SELECT `sku_internal`,`manufacturer_code`,`sku_manufacturer`,`product_option`,`processing_request`,`sorting_request`,`unit`,`unit_price`,`Currency`,`order_qty`,`modified`,`reorder`,`inventory_qty` FROM `skus` WHERE inventory_qty = 0 and reorder = 1 and manufacturer_code = ?"
 		skurows, err := db.Query(newquery, r.Manufacturer)
 		if err != nil {
 			return handleerror(pingErr), orders
@@ -87,7 +87,7 @@ func Reorderlist() (message Message, orders []Order) {
 		defer skurows.Close()
 		for skurows.Next() {
 			var r Product
-			err := skurows.Scan(&r.SKU)
+			err := skurows.Scan(&r.SKU, &r.Manufacturer, &r.ManufacturerPart, &r.Description, &r.ProcessRequest, &r.SortingRequest, &r.Unit, &r.UnitPrice, &r.Currency, &r.Qty, &r.Modified, &r.Reorder, &r.InventoryQTY)
 			if err != nil {
 				return handleerror(pingErr), orders
 			}
