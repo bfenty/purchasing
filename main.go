@@ -7,6 +7,12 @@ import (
 	"strconv"
 )
 
+type Order struct {
+	Ordernum     int
+	Manufacturer *string
+	Products     []Product
+}
+
 type Product struct {
 	SKU              string
 	Description      *string
@@ -30,6 +36,7 @@ type Page struct {
 	Startdate   string
 	Enddate     string
 	ProductList []Product
+	Orders      []Order
 }
 
 type Message struct {
@@ -76,7 +83,22 @@ func main() {
 	http.HandleFunc("/productupdate", ProductUpdate)
 	http.HandleFunc("/upload", uploadHandler)
 	http.HandleFunc("/export", exportHandler)
+	http.HandleFunc("/reorder", reorder)
 	http.ListenAndServe(":8082", nil)
+}
+
+func reorder(w http.ResponseWriter, r *http.Request) {
+	var page Page
+	page.Permission = auth(w, r)
+	page.Message.Body = r.URL.Query().Get("message")
+	if r.URL.Query().Get("success") == "true" {
+		page.Message.Success = true
+	}
+	t, _ := template.ParseFiles("reorders.html", "header.html", "login.js")
+	fmt.Println("Loading Products...")
+	page.Title = "Reorders"
+	page.Message, page.Orders = Reorderlist()
+	t.Execute(w, page)
 }
 
 func Products(w http.ResponseWriter, r *http.Request) {

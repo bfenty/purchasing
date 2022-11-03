@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+    {{template "header"}}
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+</head>
+<body>
+    {{template "navigation" .}}
+    <br> 
+    {{template "messagebox" .}}
+  <div class="panel-group" id="accordion">
+    {{range $index, $value := .Orders}}
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h4 class="panel-title">
+          <a data-toggle="collapse" data-parent="#accordion" href="#collapse{{$index}}">{{.Manufacturer}}</a>
+        </h4>
+      </div>
+      <div id="collapse{{$index}}" class="panel-collapse collapse">
+        <div class="panel-body">
+            <table class="table table-striped table-hover">
+                <thead class="thead-dark" style="position: sticky; top: 0; z-index: 1;">
+                    <tr>
+                        <th scope="col">SKU</th>
+                        <th scope="col">Manufacturer Part #</th>
+                        <th scope="col">Product Option</th>
+                        <th scope="col">Manufacturer</th>
+                        <th scope="col">Processing Request</th>
+                        <th scope="col">Sorting Team Request</th>
+                        <th scope="col">Unit</th>
+                        <th scope="col">Unit Price</th>
+                        <th scope="col">Currency</th>
+                        <th scope="col">Order Qty</th>
+                        <th scope="col">Reorder</th>
+                        <th scope="col">Inventory</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{range .Products}}
+                    <tr class="table-info">
+                        <form method="GET" action="/productupdate">
+                            <div class="form-group">
+                            <td><input class="form-control" type='text' id="sku" name="sku" value = "{{.SKU}}"></td>
+                            <td><input class="form-control" type='text' id="manufacturerpart" name="manufacturerpart"></td>
+                            <td><input class="form-control" type='text' id="description" name="description"></td>
+                            <td>
+                              <select class="custom-select mr-sm-2" id="manufacturer" name="manufacturer">
+                                <option disabled selected hidden value>Select an Option</option>
+                                <option value='PW'>PW</option>
+                                <option value='W'>W</option>
+                                <option value='H'>H</option>
+                                <option value='B'>B</option>
+                                <option value='PH'>PH</option>
+                                <option value='G'>G</option>
+                                <option value='RKY'>RKY</option>
+                                <option value='NV'>NV</option>
+                                <option value='CBRO'>CBRO</option>
+                                <option value='CRBO'>CRBO</option>
+                                <option value='R'>R</option>
+                                <option value='PEG'>PEG</option>
+                                <option value='GB'>GB</option>
+                                <option value='NB'>NB</option>
+                                <option value='PG'>PG</option>
+                                <option value='VK'>VK</option>
+                              </select>
+                            </td>
+                            <td><input class="form-control" type='text' id="processrequest" name="processrequest"></td>
+                            <td><input class="form-control" type='text' id="sortingrequest" name="sortingrequest"></td>
+                            <td><input class="form-control" type='text' id="unit" name="unit"></td>
+                            <td><input class="form-control" type='text' id="unitprice" name="unitprice"></td>
+                            <td><select class="custom-select mr-sm-2" id="currency" name="currency">
+                                <option disabled selected hidden value>Select an Option</option>
+                                <option value="USD">USD</option>
+                                <option value="CZK">CZK</option>
+                                <option value="EUR">EUR</option>
+                              </select>
+                            </td>
+                            <td><input class="form-control" type='text' id="orderqty" name="orderqty"></td>
+                            <td><input class="form-control" type='checkbox' id='reorder' name='reorder' value='yes'></td> 
+                            <td></td>
+                            <td><input type="hidden" id="insert" name="insert" value="true"><input type='submit' value='Insert' class="btn btn-primary"></td>
+                            </div>
+                        </form>
+                    </tr>
+                    {{end}}
+                </tbody>
+            </table>
+        </div>
+      </div>
+    </div>
+    {{end}}
+  </div> 
+    
+</body>
+</html>

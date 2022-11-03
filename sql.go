@@ -50,6 +50,58 @@ func opendb() (db *sql.DB, messagebox Message) {
 	return db, messagebox
 }
 
+// Reorders List
+func Reorderlist() (message Message, orders []Order) {
+	// Get a database handle.
+	var err error
+
+	//Test Connection
+	pingErr := db.Ping()
+	if pingErr != nil {
+		db, message = opendb()
+		return handleerror(pingErr), orders
+	}
+	//Build the Query
+	newquery := "SELECT manufacturer_code FROM `skus` WHERE inventory_qty = 0 and reorder = 1 group by manufacturer_code"
+
+	orderrows, err := db.Query(newquery)
+	if err != nil {
+		return handleerror(pingErr), orders
+	}
+	defer orderrows.Close()
+
+	//Pull Data
+	for orderrows.Next() {
+		var r Order
+		err := orderrows.Scan(&r.Manufacturer)
+		if err != nil {
+			return handleerror(pingErr), orders
+		}
+		//Build the Query for the skus in the order
+		newquery := "SELECT sku_internal FROM `skus` WHERE inventory_qty = 0 and reorder = 1 and manufacturer_code = ?"
+		skurows, err := db.Query(newquery, r.Manufacturer)
+		if err != nil {
+			return handleerror(pingErr), orders
+		}
+		var skus []Product
+		defer skurows.Close()
+		for skurows.Next() {
+			var r Product
+			err := skurows.Scan(&r.SKU)
+			if err != nil {
+				return handleerror(pingErr), orders
+			}
+			skus = append(skus, r)
+		}
+		r.Products = skus
+		//Append to the orders
+		orders = append(orders, r)
+	}
+
+	return message, orders
+
+}
+
 // Product List
 func ProductList(limit int, r *http.Request) (message Message, products []Product) {
 	// Get a database handle.
