@@ -51,7 +51,89 @@ func opendb() (db *sql.DB, messagebox Message) {
 	return db, messagebox
 }
 
-func nextorder(manufacturer string) (message Message) {
+func orderlookup(ordernum int) (message Message, orders []Order) {
+	//Debug
+	fmt.Println("Getting Order...")
+
+	//Test Connection
+	pingErr := db.Ping()
+	if pingErr != nil {
+		db, message = opendb()
+		return handleerror(pingErr), orders
+	}
+	//Build the Query
+	newquery := "SELECT ordernum,trackingnum,comments,manufacturer FROM `orders` WHERE ordernum = ?"
+
+	orderrows, err := db.Query(newquery, ordernum)
+	if err != nil {
+		return handleerror(pingErr), orders
+	}
+	defer orderrows.Close()
+
+	//Pull Data
+	for orderrows.Next() {
+		var r Order
+		err := orderrows.Scan(&r.Manufacturer, &r.ManufacturerName)
+		if err != nil {
+			return handleerror(pingErr), orders
+		}
+		//Build the Query for the skus in the order
+		newquery := "SELECT `sku_internal`,`manufacturer_code`,`sku_manufacturer`,`product_option`,`processing_request`,`sorting_request`,`unit`,`unit_price`,`Currency`,`order_qty`,`modified`,`reorder`,`inventory_qty` FROM `skus` WHERE inventory_qty = 0 and reorder = 1 and manufacturer_code = ?"
+		skurows, err := db.Query(newquery, r.Manufacturer)
+		if err != nil {
+			return handleerror(pingErr), orders
+		}
+		var skus []Product
+		defer skurows.Close()
+		for skurows.Next() {
+			var r Product
+			err := skurows.Scan(&r.SKU, &r.Manufacturer, &r.ManufacturerPart, &r.Description, &r.ProcessRequest, &r.SortingRequest, &r.Unit, &r.UnitPrice, &r.Currency, &r.Qty, &r.Modified, &r.Reorder, &r.InventoryQTY)
+			if err != nil {
+				return handleerror(pingErr), orders
+			}
+			skus = append(skus, r)
+		}
+		r.Products = skus
+		//Append to the orders
+		orders = append(orders, r)
+	}
+
+	return message, orders
+}
+
+func listorders() (message Message, orders []Order) {
+	//Debug
+	fmt.Println("Getting Orders...")
+
+	//Test Connection
+	pingErr := db.Ping()
+	if pingErr != nil {
+		db, message = opendb()
+		return handleerror(pingErr), orders
+	}
+	//Build the Query
+	newquery := "SELECT ordernum,trackingnum,comments,manufacturer FROM `orders` WHERE 1"
+
+	//Run Query
+	rows, err := db.Query(newquery)
+	defer rows.Close()
+	if err != nil {
+		return handleerror(err), orders
+	}
+
+	//Pull Data
+	for rows.Next() {
+		var r Order
+		err := rows.Scan(&r.Ordernum, &r.Tracking, &r.Comments, &r.Manufacturer)
+		if err != nil {
+			return handleerror(err), orders
+		}
+		orders = append(orders, r)
+	}
+	return message, orders
+}
+
+func nextorder(manufacturer string) (message Message, order Order) {
 	// Get a database handle.
 	// var err error
 	var ordernum int
@@ -59,7 +141,7 @@ func nextorder(manufacturer string) (message Message) {
 	pingErr := db.Ping()
 	if pingErr != nil {
 		db, message = opendb()
-		return handleerror(pingErr)
+		return handleerror(pingErr), order
 	}
 	//Build the Query
 	newquery := "SELECT MAX(ordernum) ordernum  FROM `orders` WHERE 1"
@@ -67,7 +149,7 @@ func nextorder(manufacturer string) (message Message) {
 	rows, err := db.Query(newquery)
 	defer rows.Close()
 	if err != nil {
-		return handleerror(err)
+		return handleerror(err), order
 	}
 	// var val string
 	if rows.Next() {
@@ -82,7 +164,8 @@ func nextorder(manufacturer string) (message Message) {
 	orderinsert.Close()
 	message.Success = true
 	message.Body = "Successfully created order " + manufacturer + "-" + strconv.Itoa(ordernum)
-	return message
+	order.Ordernum = ordernum
+	return message, order
 }
 
 // Reorders List

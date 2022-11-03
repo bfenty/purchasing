@@ -18,7 +18,14 @@
             <td><input  class="form-control" type='text'></td>
             <td>Comments:</td>
             <td><input  class="form-control" type='text'></td>
+            <td><input type='submit' value='Update' class="btn btn-primary"></td>
             </div>
+        </form>
+        <form>
+            <td>
+                {{range $index, $value := .Orders}}<input type="hidden" value="{{.Ordernum}}" id="order" name="order">{{end}}
+                <input type='submit' value='Export' class="btn btn-primary">
+            </td>
         </form>
     </tr>
   </table>
@@ -41,6 +48,52 @@
         </tr>
     </thead>
     <tbody>
+        {{range .Orders}}
+        {{range .Products}}
+                <tr>
+                <form method="GET" action="/productupdate">
+                    <div class="form-group">
+                    <td><input class="form-control" type='text' id="sku" name="sku" value="{{.SKU}}" readonly></td>
+                    <td><input class="form-control" type='text' id="manufacturerpart" name="manufacturerpart" value="{{.ManufacturerPart}}"></td>
+                    <td><input class="form-control" type='text' id="description" name="description" value="{{.Description}}"></td>
+                    <td>
+                        <select class="custom-select mr-sm-2" id="manufacturer" name="manufacturer">
+                        <option value='PW' {{if eq .Manufacturer "PW"}}selected{{end}}>PW</option>
+                        <option value='W' {{if eq .Manufacturer "W"}}selected{{end}}>W</option>
+                        <option value='H' {{if eq .Manufacturer "H"}}selected{{end}}>H</option>
+                        <option value='B' {{if eq .Manufacturer "B"}}selected{{end}}>B</option>
+                        <option value='PH' {{if eq .Manufacturer "PH"}}selected{{end}}>PH</option>
+                        <option value='G' {{if eq .Manufacturer "G"}}selected{{end}}>G</option>
+                        <option value='RKY' {{if eq .Manufacturer "RKY"}}selected{{end}}>RKY</option>
+                        <option value='NV' {{if eq .Manufacturer "NV"}}selected{{end}}>NV</option>
+                        <option value='CBRO' {{if eq .Manufacturer "CBRO"}}selected{{end}}>CBRO</option>
+                        <option value='CRBO' {{if eq .Manufacturer "CRBO"}}selected{{end}}>CRBO</option>
+                        <option value='R' {{if eq .Manufacturer "R"}}selected{{end}}>R</option>
+                        <option value='PEG' {{if eq .Manufacturer "PEG"}}selected{{end}}>PEG</option>
+                        <option value='GB' {{if eq .Manufacturer "GB"}}selected{{end}}>GB</option>
+                        <option value='NB' {{if eq .Manufacturer "NB"}}selected{{end}}>NB</option>
+                        <option value='PG' {{if eq .Manufacturer "PG"}}selected{{end}}>PG</option>
+                        <option value='VK' {{if eq .Manufacturer "VK"}}selected{{end}}>VK</option>
+                        </select>
+                    </td>
+                    <td><input class="form-control" type='text' id="processrequest" name="processrequest" value="{{.ProcessRequest}}"></td>
+                    <td><input class="form-control" type='text' id="unit" name="unit" value="{{.Unit}}"></td>
+                    <td><input class="form-control" type='text' id="unitprice" name="unitprice" value="{{.UnitPrice}}"></td>
+                    <td><select class="custom-select mr-sm-2" id="currency" name="currency">
+                        <option value="USD"{{if eq .Currency "USD"}} selected{{end}}>USD</option>
+                        <option value="CZK"{{if eq .Currency "CZK"}} selected{{end}}>CZK</option>
+                        <option value="EUR"{{if eq .Currency "EUR"}} selected{{end}}>EUR</option>
+                        </select>
+                    </td>
+                    <td><input class="form-control" type='text' id="orderqty" name="orderqty" value="{{.Qty}}"></td>
+                    <td><input class="form-control" type='checkbox' id='reorder' name='reorder' value='yes' {{.Reorder}} {{with .Reorder}}checked{{end}}></td> 
+                    <td><input class="form-control" type='text' id="inventoryqty" name="inventoryqty" value="{{.InventoryQTY}}" readonly></td>
+                    <td><input type='submit' value='Update' class="btn btn-primary"></td>
+                    </div>
+                </form>
+            </tr>
+            {{end}}
+        {{end}}
     </tbody>
     </table>
   {{template "footer" .}}

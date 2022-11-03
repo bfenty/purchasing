@@ -17,6 +17,17 @@
         </tr>
     </thead>
     <tbody>
+        {{range .Orders}}
+        <tr>
+            <form action="/order" method="GET">
+            <td><input class="form-control" type='text' id="order" name="order" value="{{.Ordernum}}" readonly></td>
+            <td><input class="form-control" type='text'value="{{.Manufacturer}}" readonly></td>
+            <td><input class="form-control" type='text'value="{{.Status}}" readonly></td>
+            <td><input class="form-control" type='text'value="{{.Comments}}" readonly></td>
+            <td><input type='submit' value='Open' class="btn btn-primary"></td>
+            </form>
+        </tr>
+        {{end}}
     </tbody>
     </table>
     {{template "footer" .}}

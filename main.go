@@ -99,6 +99,7 @@ func orderlist(w http.ResponseWriter, r *http.Request) {
 	page.Permission = auth(w, r)
 	page.Message.Body = r.URL.Query().Get("message")
 	page.Message.Success, _ = strconv.ParseBool(r.URL.Query().Get("success"))
+	page.Message, page.Orders = listorders()
 	t, _ := template.ParseFiles("orderlist.html", "header.html", "login.js")
 	page.Title = "Orders"
 	t.Execute(w, page)
@@ -111,10 +112,10 @@ func ordercreate(w http.ResponseWriter, r *http.Request) {
 	fmt.Println(manufacturer)
 
 	//DO ALL THE THINGS TO CREATE AN ORDER HERE
-	message := nextorder(manufacturer)
+	message, order := nextorder(manufacturer)
 
 	//redirect to the order view page
-	http.Redirect(w, r, "/order?manufacturer="+manufacturer+"&success="+strconv.FormatBool(message.Success)+"&message="+message.Body, http.StatusSeeOther)
+	http.Redirect(w, r, "/order?order="+strconv.Itoa(order.Ordernum)+"&manufacturer="+manufacturer+"&success="+strconv.FormatBool(message.Success)+"&message="+message.Body, http.StatusSeeOther)
 }
 
 func order(w http.ResponseWriter, r *http.Request) {
@@ -126,6 +127,8 @@ func order(w http.ResponseWriter, r *http.Request) {
 	// }
 	t, _ := template.ParseFiles("order.html", "header.html", "login.js")
 	page.Title = "Order"
+	ordernum, _ := strconv.Atoi(r.URL.Query().Get("order"))
+	page.Message, page.Orders = orderlookup(ordernum)
 	// page.Message, page.Orders = Reorderlist()
 	t.Execute(w, page)
 }
