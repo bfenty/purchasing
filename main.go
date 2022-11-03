@@ -11,6 +11,9 @@ type Order struct {
 	Ordernum         int
 	Manufacturer     *string
 	ManufacturerName *string
+	Status           *string
+	Comments         *string
+	Tracking         *string
 	Products         []Product
 }
 
@@ -87,7 +90,18 @@ func main() {
 	http.HandleFunc("/reorder", reorder)
 	http.HandleFunc("/ordercreate", ordercreate)
 	http.HandleFunc("/order", order)
+	http.HandleFunc("/orderlist", orderlist)
 	http.ListenAndServe(":8082", nil)
+}
+
+func orderlist(w http.ResponseWriter, r *http.Request) {
+	var page Page
+	page.Permission = auth(w, r)
+	page.Message.Body = r.URL.Query().Get("message")
+	page.Message.Success, _ = strconv.ParseBool(r.URL.Query().Get("success"))
+	t, _ := template.ParseFiles("orderlist.html", "header.html", "login.js")
+	page.Title = "Orders"
+	t.Execute(w, page)
 }
 
 func ordercreate(w http.ResponseWriter, r *http.Request) {
@@ -97,19 +111,20 @@ func ordercreate(w http.ResponseWriter, r *http.Request) {
 	fmt.Println(manufacturer)
 
 	//DO ALL THE THINGS TO CREATE AN ORDER HERE
+	message := nextorder(manufacturer)
 
 	//redirect to the order view page
-	http.Redirect(w, r, "/order?manufacturer="+manufacturer, http.StatusSeeOther)
+	http.Redirect(w, r, "/order?manufacturer="+manufacturer+"&success="+strconv.FormatBool(message.Success)+"&message="+message.Body, http.StatusSeeOther)
 }
 
 func order(w http.ResponseWriter, r *http.Request) {
 	var page Page
 	page.Permission = auth(w, r)
-	page.Message.Body = "Test order for " + r.URL.Query().Get("manufacturer")
+	page.Message.Body = r.URL.Query().Get("message")
 	// if r.URL.Query().Get("success") == "true" {
-	page.Message.Success = true
+	page.Message.Success, _ = strconv.ParseBool(r.URL.Query().Get("success"))
 	// }
-	t, _ := template.ParseFiles("reorders.html", "header.html", "login.js")
+	t, _ := template.ParseFiles("order.html", "header.html", "login.js")
 	page.Title = "Order"
 	// page.Message, page.Orders = Reorderlist()
 	t.Execute(w, page)

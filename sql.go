@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -48,6 +49,40 @@ func opendb() (db *sql.DB, messagebox Message) {
 	messagebox.Success = true
 	messagebox.Body = "Success"
 	return db, messagebox
+}
+
+func nextorder(manufacturer string) (message Message) {
+	// Get a database handle.
+	// var err error
+	var ordernum int
+	//Test Connection
+	pingErr := db.Ping()
+	if pingErr != nil {
+		db, message = opendb()
+		return handleerror(pingErr)
+	}
+	//Build the Query
+	newquery := "SELECT MAX(ordernum) ordernum  FROM `orders` WHERE 1"
+
+	rows, err := db.Query(newquery)
+	defer rows.Close()
+	if err != nil {
+		return handleerror(err)
+	}
+	// var val string
+	if rows.Next() {
+		rows.Scan(&ordernum)
+	}
+	ordernum += 1
+	fmt.Println(manufacturer, "-", ordernum)
+
+	//insert new order into database
+	newquery = "INSERT INTO orders (`ordernum`,`manufacturer`) VALUES (?,?)"
+	orderinsert, err := db.Query(newquery, ordernum, manufacturer)
+	orderinsert.Close()
+	message.Success = true
+	message.Body = "Successfully created order " + manufacturer + "-" + strconv.Itoa(ordernum)
+	return message
 }
 
 // Reorders List

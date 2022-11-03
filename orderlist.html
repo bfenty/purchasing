@@ -1,0 +1,24 @@
+<html>
+<head>
+{{template "header"}}
+</head>
+<body>
+  {{template "navigation" .}}
+  <br>
+  {{template "messagebox" .}}
+  <table class="table table-striped table-hover">
+    <thead class="thead-dark" style="position: sticky; top: 0; z-index: 1;">
+        <tr>
+            <th scope="col">Order Number</th>
+            <th scope="col">Manufacturer</th>
+            <th scope="col">Status</th>
+            <th scope="col">Comments</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+    </tbody>
+    </table>
+    {{template "footer" .}}
+  </body>
+  </html>
