@@ -112,7 +112,7 @@ func ordercreate(w http.ResponseWriter, r *http.Request) {
 	fmt.Println(manufacturer)
 
 	//DO ALL THE THINGS TO CREATE AN ORDER HERE
-	message, order := nextorder(manufacturer)
+	message, order := nextorder(manufacturer) //create a new order number
 
 	//redirect to the order view page
 	http.Redirect(w, r, "/order?order="+strconv.Itoa(order.Ordernum)+"&manufacturer="+manufacturer+"&success="+strconv.FormatBool(message.Success)+"&message="+message.Body, http.StatusSeeOther)
