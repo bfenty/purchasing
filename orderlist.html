@@ -14,20 +14,28 @@
             <th scope="col">Status</th>
             <th scope="col">Comments</th>
             <th></th>
+            <th></th>
         </tr>
     </thead>
     <tbody>
         {{range .Orders}}
         <tr>
             <form action="/order" method="GET">
-            <td><input class="form-control" type='text' id="order" name="order" value="{{.Ordernum}}" readonly></td>
-            <td><input class="form-control" type='text'value="{{.Manufacturer}}" readonly></td>
-            <td><input class="form-control" type='text'value="{{.Status}}" readonly></td>
-            <td><input class="form-control" type='text'value="{{.Comments}}" readonly></td>
-            <td><input type='submit' value='Open' class="btn btn-primary"></td>
+            <td>{{.Ordernum}}</td>
+            <td>{{.Manufacturer}}</td>
+            <td>{{.Status}}</td>
+            <td>{{.Comments}}</td>
+            <input type="hidden" name="order" id="order" value="{{.Ordernum}}">
+            <td width="20px"><input type='submit' value='Open' class="btn btn-primary"></td>
+            </form>
+            <form>
+                <input type="hidden" name="order" id="order" value="{{.Ordernum}}">
+                <td width="20px"><input type='submit' value='Delete' class="btn btn-danger"></td>
             </form>
         </tr>
         {{end}}
+        <tr><td></td></tr>
+        <tr><td></td></tr>
     </tbody>
     </table>
     {{template "footer" .}}

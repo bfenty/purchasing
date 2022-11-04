@@ -13,7 +13,7 @@ import (
 )
 
 // Build an exported Excel file
-func excel(products []Product) (message Message) {
+func excel(name string, products []Product) (message Message) {
 
 	fmt.Println("Creating Excel File...")
 	f := excelize.NewFile()
@@ -52,7 +52,7 @@ func excel(products []Product) (message Message) {
 	// f.SetActiveSheet(index)
 	// Save spreadsheet by the given path.
 	fmt.Println("Saving Excel File...")
-	if err := f.SaveAs("Book1.xlsx"); err != nil {
+	if err := f.SaveAs("./orders/" + name + ".xlsx"); err != nil {
 		fmt.Println(err)
 		handleerror(err)
 		return message

@@ -51,9 +51,33 @@ func opendb() (db *sql.DB, messagebox Message) {
 	return db, messagebox
 }
 
+func orderskuadd(order int, sku string) (message Message) {
+	//Debug
+	fmt.Println("Inserting SKU/Order: ", sku, "/", order)
+
+	//Test Connection
+	pingErr := db.Ping()
+	if pingErr != nil {
+		db, message = opendb()
+		return handleerror(pingErr)
+	}
+	//Build the Query
+	newquery := "REPLACE INTO `orderskus`(`ordernum`, `sku_internal`) VALUES (?,?)"
+
+	rows, err := db.Query(newquery, order, sku)
+	rows.Close()
+	if err != nil {
+		return handleerror(err)
+	}
+
+	message.Body = "Successfully inserted SKU " + sku
+	message.Success = true
+	return message
+}
+
 func orderlookup(ordernum int) (message Message, orders []Order) {
 	//Debug
-	fmt.Println("Getting Order...")
+	fmt.Println("Getting Order: ", strconv.Itoa(ordernum))
 
 	//Test Connection
 	pingErr := db.Ping()
@@ -69,20 +93,21 @@ func orderlookup(ordernum int) (message Message, orders []Order) {
 		return handleerror(pingErr), orders
 	}
 	defer orderrows.Close()
-
+	fmt.Println("Orderrows: ", orderrows)
 	//Pull Data
 	for orderrows.Next() {
 		var r Order
-		err := orderrows.Scan(&r.Manufacturer, &r.ManufacturerName)
+		err := orderrows.Scan(&r.Ordernum, &r.Tracking, &r.Comments, &r.Manufacturer)
 		if err != nil {
 			return handleerror(pingErr), orders
 		}
 		//Build the Query for the skus in the order
-		newquery := "SELECT `sku_internal`,`manufacturer_code`,`sku_manufacturer`,`product_option`,`processing_request`,`sorting_request`,`unit`,`unit_price`,`Currency`,`order_qty`,`modified`,`reorder`,`inventory_qty` FROM `skus` WHERE inventory_qty = 0 and reorder = 1 and manufacturer_code = ?"
-		skurows, err := db.Query(newquery, r.Manufacturer)
+		newquery := "SELECT a.sku_internal,`manufacturer_code`,`sku_manufacturer`,`product_option`,`processing_request`,`sorting_request`,`unit`,`unit_price`,`Currency`,`order_qty`,`modified`,`reorder`,`inventory_qty` FROM orderskus a left join skus b on a.sku_internal = b.sku_internal WHERE a.ordernum = ?"
+		skurows, err := db.Query(newquery, r.Ordernum)
 		if err != nil {
 			return handleerror(pingErr), orders
 		}
+		fmt.Println("SKUrows: ", skurows)
 		var skus []Product
 		defer skurows.Close()
 		for skurows.Next() {
@@ -94,6 +119,7 @@ func orderlookup(ordernum int) (message Message, orders []Order) {
 			skus = append(skus, r)
 		}
 		r.Products = skus
+		fmt.Println("SKUS: ", skus)
 		//Append to the orders
 		orders = append(orders, r)
 	}

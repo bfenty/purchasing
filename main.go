@@ -109,10 +109,16 @@ func ordercreate(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Creating Order...")
 	r.ParseForm()
 	manufacturer := r.FormValue("manufacturer")
-	fmt.Println(manufacturer)
 
-	//DO ALL THE THINGS TO CREATE AN ORDER HERE
+	//Create a new order in the system
 	message, order := nextorder(manufacturer) //create a new order number
+	for key, values := range r.PostForm {     //cycle through all the skus and add them to the new order
+		if key == "sku" {
+			for _, v := range values {
+				orderskuadd(order.Ordernum, v)
+			}
+		}
+	}
 
 	//redirect to the order view page
 	http.Redirect(w, r, "/order?order="+strconv.Itoa(order.Ordernum)+"&manufacturer="+manufacturer+"&success="+strconv.FormatBool(message.Success)+"&message="+message.Body, http.StatusSeeOther)
@@ -122,14 +128,11 @@ func order(w http.ResponseWriter, r *http.Request) {
 	var page Page
 	page.Permission = auth(w, r)
 	page.Message.Body = r.URL.Query().Get("message")
-	// if r.URL.Query().Get("success") == "true" {
 	page.Message.Success, _ = strconv.ParseBool(r.URL.Query().Get("success"))
-	// }
 	t, _ := template.ParseFiles("order.html", "header.html", "login.js")
 	page.Title = "Order"
 	ordernum, _ := strconv.Atoi(r.URL.Query().Get("order"))
 	page.Message, page.Orders = orderlookup(ordernum)
-	// page.Message, page.Orders = Reorderlist()
 	t.Execute(w, page)
 }
 
@@ -169,10 +172,14 @@ func Products(w http.ResponseWriter, r *http.Request) {
 func exportHandler(w http.ResponseWriter, r *http.Request) {
 	var page Page
 	page.Permission = auth(w, r)
+	r.ParseForm()
+	ordernum, _ := strconv.Atoi(r.FormValue("order"))
 	fmt.Println("Exporting Excel...")
-	page.Message, page.ProductList = ProductList(10000, r)
-	page.Message = excel(page.ProductList)
-	http.Redirect(w, r, r.Header.Get("Referer")+"?message="+page.Message.Body+"&success="+strconv.FormatBool(page.Message.Success), 302)
+	page.Message, page.Orders = orderlookup(ordernum)
+	for _, num := range page.Orders {
+		page.Message = excel(strconv.Itoa(num.Ordernum), num.Products)
+	}
+	http.Redirect(w, r, r.Header.Get("Referer"), 302)
 }
 
 func ProductUpdate(w http.ResponseWriter, r *http.Request) {
