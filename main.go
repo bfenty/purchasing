@@ -91,6 +91,7 @@ func main() {
 	http.HandleFunc("/ordercreate", ordercreate)
 	http.HandleFunc("/order", order)
 	http.HandleFunc("/orderlist", orderlist)
+	http.HandleFunc("/orderdelete", orderdelete)
 	http.ListenAndServe(":8082", nil)
 }
 
@@ -133,6 +134,10 @@ func order(w http.ResponseWriter, r *http.Request) {
 	page.Title = "Order"
 	ordernum, _ := strconv.Atoi(r.URL.Query().Get("order"))
 	page.Message, page.Orders = orderlookup(ordernum)
+	if len(page.Orders) == 0 {
+		http.Redirect(w, r, "/orderlist", http.StatusSeeOther)
+	}
+	fmt.Println("Order Lookup: ", page.Orders)
 	t.Execute(w, page)
 }
 
@@ -171,14 +176,29 @@ func Products(w http.ResponseWriter, r *http.Request) {
 
 func exportHandler(w http.ResponseWriter, r *http.Request) {
 	var page Page
+	var filename string
 	page.Permission = auth(w, r)
 	r.ParseForm()
 	ordernum, _ := strconv.Atoi(r.FormValue("order"))
 	fmt.Println("Exporting Excel...")
 	page.Message, page.Orders = orderlookup(ordernum)
 	for _, num := range page.Orders {
-		page.Message = excel(strconv.Itoa(num.Ordernum), num.Products)
+		page.Message, filename = excel(strconv.Itoa(num.Ordernum), num.Products)
 	}
+	fmt.Println("FILE: ", filename)
+	// w.Header().Add("Content-Disposition", "Attachment")
+	w.Header().Set("Content-Disposition", "attachment; filename="+strconv.Quote(strconv.Itoa(ordernum)+".xlsx"))
+	w.Header().Set("Content-Type", "application/octet-stream")
+	http.ServeFile(w, r, filename)
+	http.Redirect(w, r, r.Header.Get("Referer"), 302)
+}
+
+func orderdelete(w http.ResponseWriter, r *http.Request) {
+	var page Page
+	page.Permission = auth(w, r)
+	r.ParseForm()
+	ordernum, _ := strconv.Atoi(r.FormValue("order"))
+	orderdeletesql(ordernum)
 	http.Redirect(w, r, r.Header.Get("Referer"), 302)
 }
 

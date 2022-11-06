@@ -51,6 +51,39 @@ func opendb() (db *sql.DB, messagebox Message) {
 	return db, messagebox
 }
 
+func orderdeletesql(order int) (message Message) {
+	//Debug
+	fmt.Println("Deleting order ", order, "...")
+
+	//Test Connection
+	pingErr := db.Ping()
+	if pingErr != nil {
+		db, message = opendb()
+		return handleerror(pingErr)
+	}
+
+	//Build the Query
+	newquery := "DELETE FROM `orderskus` WHERE ordernum = ?"
+	rows, err := db.Query(newquery, order)
+	rows.Close()
+	if err != nil {
+		return handleerror(err)
+	}
+
+	//Build the Query
+	newquery = "DELETE FROM `orders` WHERE ordernum = ?"
+	rows, err = db.Query(newquery, order)
+	rows.Close()
+	if err != nil {
+		return handleerror(err)
+	}
+
+	message.Success = true
+	message.Title = "Success"
+	message.Body = "Successfully deleted order " + strconv.Itoa(order)
+	return message
+}
+
 func orderskuadd(order int, sku string) (message Message) {
 	//Debug
 	fmt.Println("Inserting SKU/Order: ", sku, "/", order)
