@@ -13,16 +13,28 @@ import (
 )
 
 // Build an exported Excel file
-func excel(products []Product) (message Message) {
+func excel(name string, products []Product) (message Message, filename string) {
 
 	fmt.Println("Creating Excel File...")
 	f := excelize.NewFile()
 	var cell string
 	var row string
+
+	//set headers
+	f.SetCellValue("Sheet1", "A1", "SKU")
+	f.SetCellValue("Sheet1", "B1", "Description")
+	f.SetCellValue("Sheet1", "C1", "Manufacturer")
+	f.SetCellValue("Sheet1", "D1", "ManufacturerPart")
+	f.SetCellValue("Sheet1", "E1", "ProcessRequest")
+	f.SetCellValue("Sheet1", "F1", "SortingRequest")
+	f.SetCellValue("Sheet1", "G1", "Unit")
+	f.SetCellValue("Sheet1", "H1", "UnitPrice")
+	f.SetCellValue("Sheet1", "I1", "Currency")
+	f.SetCellValue("Sheet1", "J1", "Qty")
+
 	for i := 0; i < len(products); i++ {
-		row = strconv.Itoa(i + 1)
+		row = strconv.Itoa(i + 2)
 		cell = "A" + row
-		fmt.Println(cell, ": ", products[i].SKU)
 		f.SetCellValue("Sheet1", cell, products[i].SKU)
 		cell = "B" + row
 		f.SetCellValue("Sheet1", cell, *products[i].Description)
@@ -52,12 +64,13 @@ func excel(products []Product) (message Message) {
 	// f.SetActiveSheet(index)
 	// Save spreadsheet by the given path.
 	fmt.Println("Saving Excel File...")
-	if err := f.SaveAs("Book1.xlsx"); err != nil {
+	filename = "./orders/" + name + ".xlsx"
+	if err := f.SaveAs(filename); err != nil {
 		fmt.Println(err)
 		handleerror(err)
-		return message
+		return message, filename
 	}
-	return message
+	return message, filename
 }
 
 func importfile(file string) {

@@ -51,10 +51,43 @@ func opendb() (db *sql.DB, messagebox Message) {
 	return db, messagebox
 }
 
-func nextorder(manufacturer string) (message Message) {
-	// Get a database handle.
-	// var err error
-	var ordernum int
+func orderdeletesql(order int) (message Message) {
+	//Debug
+	fmt.Println("Deleting order ", order, "...")
+
+	//Test Connection
+	pingErr := db.Ping()
+	if pingErr != nil {
+		db, message = opendb()
+		return handleerror(pingErr)
+	}
+
+	//Build the Query
+	newquery := "DELETE FROM `orderskus` WHERE ordernum = ?"
+	rows, err := db.Query(newquery, order)
+	rows.Close()
+	if err != nil {
+		return handleerror(err)
+	}
+
+	//Build the Query
+	newquery = "DELETE FROM `orders` WHERE ordernum = ?"
+	rows, err = db.Query(newquery, order)
+	rows.Close()
+	if err != nil {
+		return handleerror(err)
+	}
+
+	message.Success = true
+	message.Title = "Success"
+	message.Body = "Successfully deleted order " + strconv.Itoa(order)
+	return message
+}
+
+func orderskuadd(order int, sku string) (message Message) {
+	//Debug
+	fmt.Println("Inserting SKU/Order: ", sku, "/", order)
+
 	//Test Connection
 	pingErr := db.Ping()
 	if pingErr != nil {
@@ -62,12 +95,120 @@ func nextorder(manufacturer string) (message Message) {
 		return handleerror(pingErr)
 	}
 	//Build the Query
+	newquery := "REPLACE INTO `orderskus`(`ordernum`, `sku_internal`) VALUES (?,?)"
+
+	rows, err := db.Query(newquery, order, sku)
+	rows.Close()
+	if err != nil {
+		return handleerror(err)
+	}
+
+	message.Body = "Successfully inserted SKU " + sku
+	message.Success = true
+	return message
+}
+
+func orderlookup(ordernum int) (message Message, orders []Order) {
+	//Debug
+	fmt.Println("Getting Order: ", strconv.Itoa(ordernum))
+
+	//Test Connection
+	pingErr := db.Ping()
+	if pingErr != nil {
+		db, message = opendb()
+		return handleerror(pingErr), orders
+	}
+	//Build the Query
+	newquery := "SELECT ordernum,trackingnum,comments,manufacturer FROM `orders` WHERE ordernum = ?"
+
+	orderrows, err := db.Query(newquery, ordernum)
+	if err != nil {
+		return handleerror(pingErr), orders
+	}
+	defer orderrows.Close()
+	fmt.Println("Orderrows: ", orderrows)
+	//Pull Data
+	for orderrows.Next() {
+		var r Order
+		err := orderrows.Scan(&r.Ordernum, &r.Tracking, &r.Comments, &r.Manufacturer)
+		if err != nil {
+			return handleerror(pingErr), orders
+		}
+		//Build the Query for the skus in the order
+		newquery := "SELECT a.sku_internal,`manufacturer_code`,`sku_manufacturer`,`product_option`,`processing_request`,`sorting_request`,`unit`,`unit_price`,`Currency`,`order_qty`,`modified`,`reorder`,`inventory_qty` FROM orderskus a left join skus b on a.sku_internal = b.sku_internal WHERE a.ordernum = ?"
+		skurows, err := db.Query(newquery, r.Ordernum)
+		if err != nil {
+			return handleerror(pingErr), orders
+		}
+		fmt.Println("SKUrows: ", skurows)
+		var skus []Product
+		defer skurows.Close()
+		for skurows.Next() {
+			var r Product
+			err := skurows.Scan(&r.SKU, &r.Manufacturer, &r.ManufacturerPart, &r.Description, &r.ProcessRequest, &r.SortingRequest, &r.Unit, &r.UnitPrice, &r.Currency, &r.Qty, &r.Modified, &r.Reorder, &r.InventoryQTY)
+			if err != nil {
+				return handleerror(pingErr), orders
+			}
+			skus = append(skus, r)
+		}
+		r.Products = skus
+		fmt.Println("SKUS: ", skus)
+		//Append to the orders
+		orders = append(orders, r)
+	}
+
+	return message, orders
+}
+
+func listorders() (message Message, orders []Order) {
+	//Debug
+	fmt.Println("Getting Orders...")
+
+	//Test Connection
+	pingErr := db.Ping()
+	if pingErr != nil {
+		db, message = opendb()
+		return handleerror(pingErr), orders
+	}
+	//Build the Query
+	newquery := "SELECT ordernum,trackingnum,comments,manufacturer FROM `orders` WHERE 1"
+
+	//Run Query
+	rows, err := db.Query(newquery)
+	defer rows.Close()
+	if err != nil {
+		return handleerror(err), orders
+	}
+
+	//Pull Data
+	for rows.Next() {
+		var r Order
+		err := rows.Scan(&r.Ordernum, &r.Tracking, &r.Comments, &r.Manufacturer)
+		if err != nil {
+			return handleerror(err), orders
+		}
+		orders = append(orders, r)
+	}
+	return message, orders
+}
+
+func nextorder(manufacturer string) (message Message, order Order) {
+	// Get a database handle.
+	// var err error
+	var ordernum int
+	//Test Connection
+	pingErr := db.Ping()
+	if pingErr != nil {
+		db, message = opendb()
+		return handleerror(pingErr), order
+	}
+	//Build the Query
 	newquery := "SELECT MAX(ordernum) ordernum  FROM `orders` WHERE 1"
 
 	rows, err := db.Query(newquery)
 	defer rows.Close()
 	if err != nil {
-		return handleerror(err)
+		return handleerror(err), order
 	}
 	// var val string
 	if rows.Next() {
@@ -82,7 +223,8 @@ func nextorder(manufacturer string) (message Message) {
 	orderinsert.Close()
 	message.Success = true
 	message.Body = "Successfully created order " + manufacturer + "-" + strconv.Itoa(ordernum)
-	return message
+	order.Ordernum = ordernum
+	return message, order
 }
 
 // Reorders List
@@ -113,7 +255,7 @@ func Reorderlist() (message Message, orders []Order) {
 			return handleerror(pingErr), orders
 		}
 		//Build the Query for the skus in the order
-		newquery := "SELECT `sku_internal`,`manufacturer_code`,`sku_manufacturer`,`product_option`,`processing_request`,`sorting_request`,`unit`,`unit_price`,`Currency`,`order_qty`,`modified`,`reorder`,`inventory_qty` FROM `skus` WHERE inventory_qty = 0 and reorder = 1 and manufacturer_code = ?"
+		newquery := "SELECT a.sku_internal,`manufacturer_code`,`sku_manufacturer`,`product_option`,`processing_request`,`sorting_request`,`unit`,`unit_price`,`Currency`,`order_qty`,`modified`,`reorder`,`inventory_qty` FROM `skus` a LEFT JOIN `orderskus` b on a.sku_internal = b.sku_internal WHERE inventory_qty = 0 and reorder = 1 and b.sku_internal is null and manufacturer_code = ?"
 		skurows, err := db.Query(newquery, r.Manufacturer)
 		if err != nil {
 			return handleerror(pingErr), orders

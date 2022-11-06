@@ -14,9 +14,52 @@
             <th scope="col">Status</th>
             <th scope="col">Comments</th>
             <th></th>
+            <th></th>
         </tr>
     </thead>
     <tbody>
+        {{range $index, $value := .Orders}}
+        <!-- Delete Modal -->
+        <div class="modal fade" id="ModalDelete{{$index}}" tabindex="-1" role="dialog" aria-labelledby="ModalDeleteLabel" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                <h5 class="modal-title" id="ModalDeleteLabel{{$index}}">Confirm Order Delete</h5>
+                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                </div>
+                <div class="modal-body">
+                This will permanently delete order {{.Ordernum}}, are you sure you want to proceed?
+                </div>
+                <div class="modal-footer">
+                    <form action="/orderdelete" method="POST">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <input type="hidden" value="{{.Ordernum}}" id="order" name="order">
+                        <button type="submit" class="btn btn-danger">Yes, Delete</button>
+                    </form>
+                </div>
+            </div>
+            </div>
+        </div>
+        <tr>
+            <form action="/order" method="GET">
+            <td>{{.Ordernum}}</td>
+            <td>{{.Manufacturer}}</td>
+            <td>{{.Status}}</td>
+            <td>{{.Comments}}</td>
+            <input type="hidden" name="order" id="order" value="{{.Ordernum}}">
+            <td width="20px"><input type='submit' value='Open' class="btn btn-primary"></td>
+            </form>
+            <form>
+                <input type="hidden" name="order" id="order" value="{{.Ordernum}}">
+                <td width="20px">
+                    <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#ModalDelete{{$index}}">Delete</button>
+            </form>
+        </tr>
+        {{end}}
+        <tr><td></td></tr>
+        <tr><td></td></tr>
     </tbody>
     </table>
     {{template "footer" .}}

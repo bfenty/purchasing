@@ -91,6 +91,7 @@ func main() {
 	http.HandleFunc("/ordercreate", ordercreate)
 	http.HandleFunc("/order", order)
 	http.HandleFunc("/orderlist", orderlist)
+	http.HandleFunc("/orderdelete", orderdelete)
 	http.ListenAndServe(":8082", nil)
 }
 
@@ -99,6 +100,7 @@ func orderlist(w http.ResponseWriter, r *http.Request) {
 	page.Permission = auth(w, r)
 	page.Message.Body = r.URL.Query().Get("message")
 	page.Message.Success, _ = strconv.ParseBool(r.URL.Query().Get("success"))
+	page.Message, page.Orders = listorders()
 	t, _ := template.ParseFiles("orderlist.html", "header.html", "login.js")
 	page.Title = "Orders"
 	t.Execute(w, page)
@@ -108,25 +110,34 @@ func ordercreate(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Creating Order...")
 	r.ParseForm()
 	manufacturer := r.FormValue("manufacturer")
-	fmt.Println(manufacturer)
 
-	//DO ALL THE THINGS TO CREATE AN ORDER HERE
-	message := nextorder(manufacturer)
+	//Create a new order in the system
+	message, order := nextorder(manufacturer) //create a new order number
+	for key, values := range r.PostForm {     //cycle through all the skus and add them to the new order
+		if key == "sku" {
+			for _, v := range values {
+				orderskuadd(order.Ordernum, v)
+			}
+		}
+	}
 
 	//redirect to the order view page
-	http.Redirect(w, r, "/order?manufacturer="+manufacturer+"&success="+strconv.FormatBool(message.Success)+"&message="+message.Body, http.StatusSeeOther)
+	http.Redirect(w, r, "/order?order="+strconv.Itoa(order.Ordernum)+"&manufacturer="+manufacturer+"&success="+strconv.FormatBool(message.Success)+"&message="+message.Body, http.StatusSeeOther)
 }
 
 func order(w http.ResponseWriter, r *http.Request) {
 	var page Page
 	page.Permission = auth(w, r)
 	page.Message.Body = r.URL.Query().Get("message")
-	// if r.URL.Query().Get("success") == "true" {
 	page.Message.Success, _ = strconv.ParseBool(r.URL.Query().Get("success"))
-	// }
 	t, _ := template.ParseFiles("order.html", "header.html", "login.js")
 	page.Title = "Order"
-	// page.Message, page.Orders = Reorderlist()
+	ordernum, _ := strconv.Atoi(r.URL.Query().Get("order"))
+	page.Message, page.Orders = orderlookup(ordernum)
+	if len(page.Orders) == 0 {
+		http.Redirect(w, r, "/orderlist", http.StatusSeeOther)
+	}
+	fmt.Println("Order Lookup: ", page.Orders)
 	t.Execute(w, page)
 }
 
@@ -165,11 +176,30 @@ func Products(w http.ResponseWriter, r *http.Request) {
 
 func exportHandler(w http.ResponseWriter, r *http.Request) {
 	var page Page
+	var filename string
 	page.Permission = auth(w, r)
+	r.ParseForm()
+	ordernum, _ := strconv.Atoi(r.FormValue("order"))
 	fmt.Println("Exporting Excel...")
-	page.Message, page.ProductList = ProductList(10000, r)
-	page.Message = excel(page.ProductList)
-	http.Redirect(w, r, r.Header.Get("Referer")+"?message="+page.Message.Body+"&success="+strconv.FormatBool(page.Message.Success), 302)
+	page.Message, page.Orders = orderlookup(ordernum)
+	for _, num := range page.Orders {
+		page.Message, filename = excel(strconv.Itoa(num.Ordernum), num.Products)
+	}
+	fmt.Println("FILE: ", filename)
+	// w.Header().Add("Content-Disposition", "Attachment")
+	w.Header().Set("Content-Disposition", "attachment; filename="+strconv.Quote(strconv.Itoa(ordernum)+".xlsx"))
+	w.Header().Set("Content-Type", "application/octet-stream")
+	http.ServeFile(w, r, filename)
+	http.Redirect(w, r, r.Header.Get("Referer"), 302)
+}
+
+func orderdelete(w http.ResponseWriter, r *http.Request) {
+	var page Page
+	page.Permission = auth(w, r)
+	r.ParseForm()
+	ordernum, _ := strconv.Atoi(r.FormValue("order"))
+	orderdeletesql(ordernum)
+	http.Redirect(w, r, r.Header.Get("Referer"), 302)
 }
 
 func ProductUpdate(w http.ResponseWriter, r *http.Request) {
