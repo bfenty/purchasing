@@ -18,6 +18,11 @@
             <td><input  class="form-control" type='text' value="{{.Manufacturer}}" readonly></td>
             <td style="padding:10px">Tracking Number:</td>
             <td><input  class="form-control" type='text' value="{{.Tracking}}"></td>
+            <td style="padding:10px">Order Status:</td>
+            <td>
+                <select class="custom-select mr-sm-2" id="status" name="status">
+                <option value='pending'>Pending</option>
+            </td>
             <td style="padding:10px">Comments:</td>
             <td><input  class="form-control" type='text' value="{{.Comments}}"></td>
             <td width="20"><input type='submit' value='Update' class="btn btn-primary"></td>
@@ -102,13 +107,14 @@
             <th scope="col">Unit Price</th>
             <th scope="col">Currency</th>
             <th scope="col">Order Qty</th>
-            <th scope="col">Reorder</th>
+            <!--<th scope="col">Reorder</th>-->
             <th scope="col">Inventory</th>
             <th></th>
         </tr>
     </thead>
     <tbody>
         {{range .Orders}}
+        {{$order := .Ordernum}}
         {{range .Products}}
                 <tr>
                     <div class="form-group">
@@ -121,8 +127,15 @@
                         <td>{{.UnitPrice}}</td>
                         <td>{{.Currency}}</td>
                         <td>{{.Qty}}</td>
-                        <td><input class="form-control" type='checkbox' name='sku' value='{{.SKU}}' checked></td> 
+                        <!--<td><input class="form-control" type='checkbox' name='sku' value='{{.SKU}}' checked></td> -->
                         <td>{{.InventoryQTY}}</td>
+                        <td>
+                            <form method="POST">
+                                <input type="hidden" value="{{.SKU}}" id="sku" name="sku">
+                                <input type="hidden" value="{{$order}}" id="order" name="order">
+                                <button type="submit" class="btn btn-danger">Remove</button>
+                            </form>
+                        </td>
                         </div>
             </tr>
             {{end}}
