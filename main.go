@@ -92,6 +92,7 @@ func main() {
 	http.HandleFunc("/order", order)
 	http.HandleFunc("/orderlist", orderlist)
 	http.HandleFunc("/orderdelete", orderdelete)
+	http.HandleFunc("/orderupdate", orderupdate)
 	http.ListenAndServe(":8082", nil)
 }
 
@@ -104,6 +105,19 @@ func orderlist(w http.ResponseWriter, r *http.Request) {
 	t, _ := template.ParseFiles("orderlist.html", "header.html", "login.js")
 	page.Title = "Orders"
 	t.Execute(w, page)
+}
+
+func orderupdate(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("Updating Order...")
+	r.ParseForm()
+	tracking := r.FormValue("tracking")
+	comment := r.FormValue("comments")
+	status := r.FormValue("status")
+	ordernum, _ := strconv.Atoi(r.FormValue("order"))
+	fmt.Println("Order details: ", ordernum, " ", comment)
+
+	orderupdatesql(ordernum, tracking, comment, status)
+	http.Redirect(w, r, r.Header.Get("Referer"), 302)
 }
 
 func ordercreate(w http.ResponseWriter, r *http.Request) {

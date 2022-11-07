@@ -11,6 +11,7 @@
         <tr>
             <th scope="col">Order Number</th>
             <th scope="col">Manufacturer</th>
+            <th scope="col">Tracking #</th>
             <th scope="col">Status</th>
             <th scope="col">Comments</th>
             <th></th>
@@ -46,6 +47,7 @@
             <form action="/order" method="GET">
             <td>{{.Ordernum}}</td>
             <td>{{.Manufacturer}}</td>
+            <td>{{.Tracking}}</td>
             <td>{{.Status}}</td>
             <td>{{.Comments}}</td>
             <input type="hidden" name="order" id="order" value="{{.Ordernum}}">

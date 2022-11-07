@@ -119,7 +119,7 @@ func orderlookup(ordernum int) (message Message, orders []Order) {
 		return handleerror(pingErr), orders
 	}
 	//Build the Query
-	newquery := "SELECT ordernum,trackingnum,comments,manufacturer FROM `orders` WHERE ordernum = ?"
+	newquery := "SELECT ordernum,trackingnum,comments,manufacturer,status FROM `orders` WHERE ordernum = ?"
 
 	orderrows, err := db.Query(newquery, ordernum)
 	if err != nil {
@@ -130,7 +130,7 @@ func orderlookup(ordernum int) (message Message, orders []Order) {
 	//Pull Data
 	for orderrows.Next() {
 		var r Order
-		err := orderrows.Scan(&r.Ordernum, &r.Tracking, &r.Comments, &r.Manufacturer)
+		err := orderrows.Scan(&r.Ordernum, &r.Tracking, &r.Comments, &r.Manufacturer, &r.Status)
 		if err != nil {
 			return handleerror(pingErr), orders
 		}
@@ -160,6 +160,32 @@ func orderlookup(ordernum int) (message Message, orders []Order) {
 	return message, orders
 }
 
+func orderupdatesql(order int, tracking string, comment string, status string) (message Message) {
+	//Test Connection
+	pingErr := db.Ping()
+	if pingErr != nil {
+		db, message = opendb()
+		return handleerror(pingErr)
+	}
+
+	//Build the Query
+	fmt.Println("Building Query...")
+	newquery := "UPDATE `orders` SET `trackingnum`=?,`comments`=?,`status`=? WHERE ordernum = ?"
+	fmt.Println("Query built: ", newquery)
+
+	//Run Query
+	rows, err := db.Query(newquery, tracking, comment, status, order)
+	fmt.Println("Query Run")
+	defer rows.Close()
+	fmt.Println("Rows Closed")
+	if err != nil {
+		return handleerror(err)
+	}
+	message.Body = "Successfully updated order " + strconv.Itoa(order)
+	message.Success = true
+	return message
+}
+
 func listorders() (message Message, orders []Order) {
 	//Debug
 	fmt.Println("Getting Orders...")
@@ -171,7 +197,7 @@ func listorders() (message Message, orders []Order) {
 		return handleerror(pingErr), orders
 	}
 	//Build the Query
-	newquery := "SELECT ordernum,trackingnum,comments,manufacturer FROM `orders` WHERE 1"
+	newquery := "SELECT ordernum,trackingnum,comments,manufacturer,status FROM `orders` WHERE 1"
 
 	//Run Query
 	rows, err := db.Query(newquery)
@@ -183,7 +209,7 @@ func listorders() (message Message, orders []Order) {
 	//Pull Data
 	for rows.Next() {
 		var r Order
-		err := rows.Scan(&r.Ordernum, &r.Tracking, &r.Comments, &r.Manufacturer)
+		err := rows.Scan(&r.Ordernum, &r.Tracking, &r.Comments, &r.Manufacturer, &r.Status)
 		if err != nil {
 			return handleerror(err), orders
 		}
