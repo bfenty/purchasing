@@ -22,11 +22,11 @@
             <td style="padding:10px">Order Status:</td>
             <td>
                 <select class="custom-select mr-sm-2" id="status" name="status">
-                <option value='Pending' {{if eq .Status ""}}{{end}}>Pending</option>
-                <option value='Ordered' >Ordered</option>
-                <option value='Shipped' >Shipped</option>
-                <option value='Received' >Received</option>
-                <option value='Closed' >Closed</option>
+                <option value='Pending' {{if eq .Status "pending"}}selected{{end}}>Pending</option>
+                <option value='Ordered' {{if eq .Status "Ordered"}}selected{{end}}>Ordered</option>
+                <option value='Shipped' {{if eq .Status "Shipped"}}selected{{end}}>Shipped</option>
+                <option value='Received' {{if eq .Status "Received"}}selected{{end}}>Received</option>
+                <option value='Closed' {{if eq .Status "Closed"}}selected{{end}}>Closed</option>
                 </select>
             </td>
             <td style="padding:10px">Comments:</td>

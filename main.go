@@ -11,7 +11,7 @@ type Order struct {
 	Ordernum         int
 	Manufacturer     *string
 	ManufacturerName *string
-	Status           *string
+	Status           string
 	Comments         *string
 	Tracking         *string
 	Products         []Product
@@ -108,6 +108,8 @@ func orderlist(w http.ResponseWriter, r *http.Request) {
 }
 
 func orderupdate(w http.ResponseWriter, r *http.Request) {
+	var page Page
+	page.Permission = auth(w, r)
 	fmt.Println("Updating Order...")
 	r.ParseForm()
 	tracking := r.FormValue("tracking")
@@ -121,6 +123,8 @@ func orderupdate(w http.ResponseWriter, r *http.Request) {
 }
 
 func ordercreate(w http.ResponseWriter, r *http.Request) {
+	var page Page
+	page.Permission = auth(w, r)
 	fmt.Println("Creating Order...")
 	r.ParseForm()
 	manufacturer := r.FormValue("manufacturer")
