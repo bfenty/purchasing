@@ -11,7 +11,7 @@
     <tr>{{range .Orders}}
         <form action="/orderupdate" method="POST">
             <div class="form-group">
-            <td><h2>Order:{{.Ordernum}}</h2><hr></td>
+            <td width="300px"><h2> Order: {{.Ordernum}}</h2><hr></td>
         </tr>
         <tr>
             <td width="20"></td>
@@ -21,6 +21,9 @@
             <td><input  class="form-control" type='text' name="tracking" id="tracking" value="{{.Tracking}}"></td>
             <td style="padding:10px">Order Status:</td>
             <td>
+                {{if eq .Status "Closed"}}
+                <input  class="form-control" type='text' value="{{.Status}}" readonly>
+                {{else}}
                 <select class="custom-select mr-sm-2" id="status" name="status">
                 <option value='Pending' {{if eq .Status "pending"}}selected{{end}}>Pending</option>
                 <option value='Ordered' {{if eq .Status "Ordered"}}selected{{end}}>Ordered</option>
@@ -28,11 +31,16 @@
                 <option value='Received' {{if eq .Status "Received"}}selected{{end}}>Received</option>
                 <option value='Closed' {{if eq .Status "Closed"}}selected{{end}}>Closed</option>
                 </select>
+                {{end}}
             </td>
             <td style="padding:10px">Comments:</td>
             <td><input  class="form-control" type='text' name="comments" id="comments" value="{{.Comments}}"></td>
-            <input class="hidden" id="order" name="order" value="{{.Ordernum}}">
-            <td width="20"><input type='submit' value='Update' class="btn btn-primary"></td>
+            <input type="hidden" id="order" name="order" value="{{.Ordernum}}">
+            <td width="20">
+                {{if eq .Status "Closed"}}<input type='button' value='Update' class="btn btn-secondary">
+                {{else}}<input type='submit' value='Update' class="btn btn-primary">
+                {{end}}
+            </td>
             </div>
         </form>
         {{end}}
@@ -45,7 +53,11 @@
         <form>
             <td width="20">
                 <input type="hidden" value="{{.Ordernum}}" id="order" name="order">
-                <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#ModalDelete">Delete</button>
+                {{if eq .Status "Closed"}}
+                    <button type="button" class="btn btn-secondary">Delete</button>
+                {{else}}
+                    <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#ModalDelete">Delete</button>
+                {{end}}
             </td>
             <td width="20"></td>
         </form>
@@ -124,6 +136,7 @@
     <tbody>
         {{range .Orders}}
         {{$order := .Ordernum}}
+        {{$status := .Status}}
         {{range .Products}}
                 <tr>
                     <div class="form-group">
@@ -142,7 +155,7 @@
                             <form method="POST">
                                 <input type="hidden" value="{{.SKU}}" id="sku" name="sku">
                                 <input type="hidden" value="{{$order}}" id="order" name="order">
-                                <button type="submit" class="btn btn-danger">Remove</button>
+                                {{if eq $status "Closed"}}{{else}}<button type="submit" class="btn btn-danger">Remove</button>{{end}}
                             </form>
                         </td>
                         </div>
