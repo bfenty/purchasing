@@ -32,6 +32,7 @@
                     <th scope="col">Reorder</th>
                     <th scope="col">Inventory</th>
                     <th></th>
+                    <th></th>
                 </tr>
             </thead>
             <tbody>
@@ -76,9 +77,34 @@
                         <td><input class="form-control" type='checkbox' id='reorder' name='reorder' value='yes'></td> 
                         <td></td>
                         <td><input type="hidden" id="insert" name="insert" value="true"><input type='submit' value='Insert' class="btn btn-primary"></td>
+                        <td></td>
                         </div>
                     </form>
-                </tr>{{range .ProductList}}
+                </tr>
+                {{range $index, $value := .ProductList}}
+                <!-- Delete Modal -->
+                      <div class="modal fade" id="ModalDelete{{$index}}" tabindex="-1" role="dialog" aria-labelledby="ModalDeleteLabel" aria-hidden="true">
+                        <div class="modal-dialog" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                            <h5 class="modal-title" id="ModalDeleteLabel{{$index}}">Confirm Order Delete</h5>
+                                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                            </div>
+                            <div class="modal-body">
+                            This will permanently delete SKU {{.SKU}}, are you sure you want to proceed?
+                            </div>
+                            <div class="modal-footer">
+                                <form action="/productdelete" method="POST">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                    <input type="hidden" value="{{.SKU}}" id="sku" name="sku">
+                                    <button type="submit" class="btn btn-danger">Yes, Delete</button>
+                                </form>
+                            </div>
+                        </div>
+                        </div>
+                    </div>
                 <tr>
                   <form method="GET" action="/productupdate">
                       <div class="form-group">
@@ -118,6 +144,7 @@
                       <td><input class="form-control" type='checkbox' id='reorder' name='reorder' value='yes' {{.Reorder}} {{with .Reorder}}checked{{end}}></td> 
                       <td><input class="form-control" type='text' id="inventoryqty" name="inventoryqty" value="{{.InventoryQTY}}" readonly></td>
                       <td><input type='submit' value='Update' class="btn btn-primary"></td>
+                      <td><button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#ModalDelete{{$index}}">Delete</button></td>
                       </div>
                   </form>
               </tr>

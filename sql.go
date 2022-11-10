@@ -84,6 +84,31 @@ func orderdeletesql(order int) (message Message) {
 	return message
 }
 
+func productdeletesql(sku string) (message Message) {
+	//Debug
+	fmt.Println("Deleting SKU ", sku, "...")
+
+	//Test Connection
+	pingErr := db.Ping()
+	if pingErr != nil {
+		db, message = opendb()
+		return handleerror(pingErr)
+	}
+
+	//Build the Query
+	newquery := "DELETE FROM `skus` WHERE sku_internal = ?"
+	rows, err := db.Query(newquery, sku)
+	rows.Close()
+	if err != nil {
+		return handleerror(err)
+	}
+
+	message.Success = true
+	message.Title = "Success"
+	message.Body = "Successfully deleted sku " + sku
+	return message
+}
+
 func orderskuadd(order int, sku string) (message Message) {
 	//Debug
 	fmt.Println("Inserting SKU/Order: ", sku, "/", order)

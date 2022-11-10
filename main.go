@@ -85,6 +85,7 @@ func main() {
 	http.HandleFunc("/products", Products)
 	http.HandleFunc("/productsinsert", ProductInsertion)
 	http.HandleFunc("/productupdate", ProductUpdate)
+	http.HandleFunc("/productdelete", productdelete)
 	http.HandleFunc("/upload", uploadHandler)
 	http.HandleFunc("/export", exportHandler)
 	http.HandleFunc("/reorder", reorder)
@@ -217,6 +218,15 @@ func orderdelete(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	ordernum, _ := strconv.Atoi(r.FormValue("order"))
 	orderdeletesql(ordernum)
+	http.Redirect(w, r, r.Header.Get("Referer"), 302)
+}
+
+func productdelete(w http.ResponseWriter, r *http.Request) {
+	var page Page
+	page.Permission = auth(w, r)
+	r.ParseForm()
+	sku := r.FormValue("sku")
+	productdeletesql(sku)
 	http.Redirect(w, r, r.Header.Get("Referer"), 302)
 }
 
