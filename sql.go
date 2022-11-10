@@ -356,9 +356,10 @@ func ProductList(limit int, r *http.Request) (message Message, products []Produc
 	currency := r.URL.Query().Get("currency")
 	orderqty := r.URL.Query().Get("orderqty")
 	reorder := r.URL.Query().Get("reorder")
+	season := r.URL.Query().Get("season")
 
 	//Build the Query
-	newquery = "SELECT `sku_internal`,`manufacturer_code`,`sku_manufacturer`,`product_option`,`processing_request`,`sorting_request`,`unit`,`unit_price`,`Currency`,`order_qty`,`modified`,`reorder`,`inventory_qty` FROM `skus` WHERE 1"
+	newquery = "SELECT `sku_internal`,`manufacturer_code`,`sku_manufacturer`,`product_option`,`processing_request`,`sorting_request`,`unit`,`unit_price`,`Currency`,`order_qty`,`modified`,`reorder`,`inventory_qty`,season FROM `skus` WHERE 1"
 	if sku != "" {
 		sku += "%"
 		i = append(i, sku)
@@ -404,6 +405,10 @@ func ProductList(limit int, r *http.Request) (message Message, products []Produc
 		i = append(i, reorder)
 		newquery += " AND reorder = ?"
 	}
+	if season != "" {
+		i = append(i, season)
+		newquery += " AND season = ?"
+	}
 	newquery += " order by 11 desc, 1 limit ?"
 
 	//Run Query
@@ -420,7 +425,7 @@ func ProductList(limit int, r *http.Request) (message Message, products []Produc
 	//Pull Data
 	for rows.Next() {
 		var r Product
-		err := rows.Scan(&r.SKU, &r.Manufacturer, &r.ManufacturerPart, &r.Description, &r.ProcessRequest, &r.SortingRequest, &r.Unit, &r.UnitPrice, &r.Currency, &r.Qty, &r.Modified, &r.Reorder, &r.InventoryQTY)
+		err := rows.Scan(&r.SKU, &r.Manufacturer, &r.ManufacturerPart, &r.Description, &r.ProcessRequest, &r.SortingRequest, &r.Unit, &r.UnitPrice, &r.Currency, &r.Qty, &r.Modified, &r.Reorder, &r.InventoryQTY, &r.Season)
 		if err != nil {
 			return handleerror(err), products
 		}
@@ -457,6 +462,7 @@ func ProductInsert(r *http.Request) (message Message) {
 	currency := r.URL.Query().Get("currency")
 	orderqty := r.URL.Query().Get("orderqty")
 	reorder := r.URL.Query().Get("reorder")
+	season := r.URL.Query().Get("season")
 
 	//ensure that there are no null numerical values
 	if unitprice == "" {
@@ -482,10 +488,11 @@ func ProductInsert(r *http.Request) (message Message) {
 	} else {
 		i = append(i, 0)
 	}
+	i = append(i, season)
 	fmt.Println("Reorder: ", reorder)
 
 	//Build the Query
-	newquery = "REPLACE INTO skus (`sku_internal`, `manufacturer_code`, `sku_manufacturer`, `processing_request`, `sorting_request`, `unit`, `unit_price`, `Currency`, `order_qty`,`product_option`,`reorder`) VALUES (?,?,?,?,?,?,?,?,?,?,?)"
+	newquery = "REPLACE INTO skus (`sku_internal`, `manufacturer_code`, `sku_manufacturer`, `processing_request`, `sorting_request`, `unit`, `unit_price`, `Currency`, `order_qty`,`product_option`,`reorder`,season) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)"
 
 	//Run Query
 	fmt.Println(i...) //debug variables map

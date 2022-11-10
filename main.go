@@ -29,8 +29,9 @@ type Product struct {
 	Currency         string
 	Qty              *int
 	Modified         *string
-	Reorder          *bool
+	Reorder          bool
 	InventoryQTY     *int
+	Season           string
 }
 
 type Page struct {
@@ -235,7 +236,7 @@ func ProductUpdate(w http.ResponseWriter, r *http.Request) {
 	page.Permission = auth(w, r)
 	fmt.Println("Updating Product...")
 	page.Message = ProductInsert(r)
-	http.Redirect(w, r, r.Header.Get("Referer")+"?message="+page.Message.Body+"&success="+strconv.FormatBool(page.Message.Success), 302)
+	http.Redirect(w, r, r.Header.Get("Referer"), 302)
 }
 
 func ProductInsertion(w http.ResponseWriter, r *http.Request) {

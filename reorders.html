@@ -4,6 +4,26 @@
     {{template "header"}}
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+  <script>
+    // Listen for click on toggle checkbox
+    function checkAll(ele) {
+     var checkboxes = document.getElementsByTagName('input');
+     if (ele.checked) {
+         for (var i = 0; i < checkboxes.length; i++) {
+             if (checkboxes[i].type == 'checkbox') {
+                 checkboxes[i].checked = true;
+             }
+         }
+     } else {
+         for (var i = 0; i < checkboxes.length; i++) {
+             console.log(i)
+             if (checkboxes[i].type == 'checkbox') {
+                 checkboxes[i].checked = false;
+             }
+         }
+     }
+ }
+  </script>
 </head>
 <body>
     {{template "navigation" .}}
@@ -41,8 +61,16 @@
       </div>
       <div id="collapse{{$index}}" class="panel-collapse collapse">
         <div class="panel-body">
+          <div class="form-group">
+          <table class="table">
+            <tr>
+              <td>
                 <input type="hidden" name="manufacturer" id="manufacturer" value="{{.Manufacturer}}">
                 <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal{{$index}}">Create Order</button>
+              </td>
+             </tr>
+            </table>
+            </div>
             <table class="table table-striped table-hover">
                 <thead class="thead-dark" style="position: sticky; top: 0; z-index: 1;">
                     <tr>
@@ -55,7 +83,7 @@
                         <th scope="col">Unit Price</th>
                         <th scope="col">Currency</th>
                         <th scope="col">Order Qty</th>
-                        <th scope="col">Add to Order</th>
+                        <th scope="col">Add to Order  <INPUT type="checkbox" onchange="checkAll(this)" name="chk[]" /></th>
                         <th scope="col">Inventory</th>
                         <th></th>
                     </tr>
@@ -73,7 +101,7 @@
                             <td>{{.UnitPrice}}</td>
                             <td>{{.Currency}}</td>
                             <td>{{.Qty}}</td>
-                            <td><input class="form-control" type='checkbox' name='sku' value='{{.SKU}}' checked></td> 
+                            <td><input class="form-control" type='checkbox' name='sku' value='{{.SKU}}'></td> 
                             <td>{{.InventoryQTY}}</td>
                             </div>
                     </tr>
