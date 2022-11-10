@@ -84,6 +84,7 @@
                         <th scope="col">Currency</th>
                         <th scope="col">Order Qty</th>
                         <th scope="col">Add to Order  <INPUT type="checkbox" onchange="checkAll(this)" name="chk[]" /></th>
+                        <th scope="col">Season</th>
                         <th scope="col">Inventory</th>
                         <th></th>
                     </tr>
@@ -102,6 +103,7 @@
                             <td>{{.Currency}}</td>
                             <td>{{.Qty}}</td>
                             <td><input class="form-control" type='checkbox' name='sku' value='{{.SKU}}'></td> 
+                            <td>{{.Season}}</td>
                             <td>{{.InventoryQTY}}</td>
                             </div>
                     </tr>

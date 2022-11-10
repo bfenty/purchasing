@@ -130,6 +130,7 @@
             {{if or (eq $permission "Purchasing") (eq $permission "admin")}}<th scope="col">Order Qty</th>{{end}}
             <!--<th scope="col">Reorder</th>-->
             <th scope="col">Inventory</th>
+            <th>Season</th>
             <th></th>
         </tr>
     </thead>
@@ -152,6 +153,7 @@
                         {{if or (eq $permission "Purchasing") (eq $permission "admin")}}<td>{{.Qty}}</td>{{end}}
                         <!--<td><input class="form-control" type='checkbox' name='sku' value='{{.SKU}}' checked></td> -->
                         <td>{{.InventoryQTY}}</td>
+                        <td>{{.Season}}</td>
                         <td>
                             <form method="POST">
                                 <input type="hidden" value="{{.SKU}}" id="sku" name="sku">
