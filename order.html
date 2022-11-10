@@ -6,6 +6,7 @@
   {{template "navigation" .}}
   <br>
   {{template "messagebox" .}}
+  {{$permission := .Permission}}
   <!-- Order Header Information -->
   <table width="100%">
     <tr>{{range .Orders}}
@@ -53,10 +54,10 @@
         <form>
             <td width="20">
                 <input type="hidden" value="{{.Ordernum}}" id="order" name="order">
-                {{if eq .Status "Closed"}}
-                    <button type="button" class="btn btn-secondary">Delete</button>
+                {{if eq .Status "Pending"}}
+                <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#ModalDelete">Delete</button>
                 {{else}}
-                    <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#ModalDelete">Delete</button>
+                <button type="button" class="btn btn-secondary">Delete</button>
                 {{end}}
             </td>
             <td width="20"></td>
@@ -124,9 +125,9 @@
             <th scope="col">Manufacturer</th>
             <th scope="col">Processing Request</th>
             <th scope="col">Unit</th>
-            <th scope="col">Unit Price</th>
-            <th scope="col">Currency</th>
-            <th scope="col">Order Qty</th>
+            {{if or (eq $permission "Purchasing") (eq $permission "admin")}}<th scope="col">Unit Price</th>{{end}}
+            {{if or (eq $permission "Purchasing") (eq $permission "admin")}}<th scope="col">Currency</th>{{end}}
+            {{if or (eq $permission "Purchasing") (eq $permission "admin")}}<th scope="col">Order Qty</th>{{end}}
             <!--<th scope="col">Reorder</th>-->
             <th scope="col">Inventory</th>
             <th></th>
@@ -146,16 +147,16 @@
                         <td>{{.Manufacturer}}</td>
                         <td>{{.ProcessRequest}}</td>
                         <td>{{.Unit}}</td>
-                        <td>{{.UnitPrice}}</td>
-                        <td>{{.Currency}}</td>
-                        <td>{{.Qty}}</td>
+                        {{if or (eq $permission "Purchasing") (eq $permission "admin")}}<td>{{.UnitPrice}}</td>{{end}}
+                        {{if or (eq $permission "Purchasing") (eq $permission "admin")}}<td>{{.Currency}}</td>{{end}}
+                        {{if or (eq $permission "Purchasing") (eq $permission "admin")}}<td>{{.Qty}}</td>{{end}}
                         <!--<td><input class="form-control" type='checkbox' name='sku' value='{{.SKU}}' checked></td> -->
                         <td>{{.InventoryQTY}}</td>
                         <td>
                             <form method="POST">
                                 <input type="hidden" value="{{.SKU}}" id="sku" name="sku">
                                 <input type="hidden" value="{{$order}}" id="order" name="order">
-                                {{if eq $status "Closed"}}{{else}}<button type="submit" class="btn btn-danger">Remove</button>{{end}}
+                                {{if eq $status "Pending"}}<button type="submit" class="btn btn-danger">Remove</button>{{end}}
                             </form>
                         </td>
                         </div>

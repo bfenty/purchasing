@@ -281,7 +281,7 @@ func Reorderlist() (message Message, orders []Order) {
 			return handleerror(pingErr), orders
 		}
 		//Build the Query for the skus in the order
-		newquery := "SELECT a.sku_internal,`manufacturer_code`,`sku_manufacturer`,`product_option`,`processing_request`,`sorting_request`,`unit`,`unit_price`,`Currency`,`order_qty`,`modified`,`reorder`,`inventory_qty` FROM `skus` a LEFT JOIN `orderskus` b on a.sku_internal = b.sku_internal left join orders c on b.ordernum = c.ordernum WHERE inventory_qty = 0 and reorder = 1 and (b.sku_internal is null OR c.status = 'Closed') and manufacturer_code = ?"
+		newquery := "SELECT a.sku_internal,`manufacturer_code`,`sku_manufacturer`,`product_option`,`processing_request`,`sorting_request`,`unit`,`unit_price`,`Currency`,`order_qty`,`modified`,`reorder`,`inventory_qty` FROM `skus` a LEFT JOIN (select sku_internal FROM orderskus a left join orders b on a.ordernum = b.ordernum where status != 'Closed') b on a.sku_internal = b.sku_internal WHERE inventory_qty = 0 and reorder = 1 and b.sku_internal is null and manufacturer_code = ?"
 		skurows, err := db.Query(newquery, r.Manufacturer)
 		if err != nil {
 			return handleerror(pingErr), orders

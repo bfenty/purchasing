@@ -20,6 +20,7 @@
     </thead>
     <tbody>
         {{range $index, $value := .Orders}}
+        {{$status := .Status}}
         <!-- Delete Modal -->
         <div class="modal fade" id="ModalDelete{{$index}}" tabindex="-1" role="dialog" aria-labelledby="ModalDeleteLabel" aria-hidden="true">
             <div class="modal-dialog" role="document">
@@ -56,7 +57,7 @@
             <form>
                 <input type="hidden" name="order" id="order" value="{{.Ordernum}}">
                 <td width="20px">
-                    <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#ModalDelete{{$index}}">Delete</button>
+                    {{if eq $status "Pending"}}<button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#ModalDelete{{$index}}">Delete</button>{{end}}
             </form>
         </tr>
         {{end}}
