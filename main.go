@@ -5,6 +5,9 @@ import (
 	"html/template"
 	"net/http"
 	"strconv"
+
+	"github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 )
 
 type Order struct {
@@ -37,11 +40,14 @@ type Product struct {
 type Page struct {
 	Title       string
 	Message     Message
-	Permission  string
-	Startdate   string
-	Enddate     string
+	Permission  Permissions
 	ProductList []Product
 	Orders      []Order
+}
+
+type Permissions struct {
+	User  string
+	Perms string
 }
 
 type Message struct {
@@ -49,6 +55,9 @@ type Message struct {
 	Title   string
 	Body    string
 }
+
+// initialize Logs
+var Logger = logrus.New()
 
 func message(r *http.Request) (messagebox Message) {
 	if r.URL.Query().Get("messagetitle") != "" {
@@ -63,7 +72,7 @@ func handleerror(err error) (message Message) {
 		message.Title = "Error"
 		message.Success = false
 		message.Body = err.Error()
-		fmt.Println("Message: ", message.Body)
+		log.Error(message.Body)
 		return message
 	}
 	message.Success = true
@@ -72,11 +81,10 @@ func handleerror(err error) (message Message) {
 }
 
 func main() {
-	fmt.Println("Starting Server...")
-	// excel()
-	var messagebox Message
-	db, messagebox = opendb()
-	fmt.Println(messagebox.Body)
+	log.Info("Starting Server")
+	var message Message
+	db, message = opendb()
+	fmt.Println(message.Body)
 	http.HandleFunc("/", login)
 	http.HandleFunc("/login", login)
 	http.HandleFunc("/signup", signup)
@@ -98,32 +106,31 @@ func main() {
 	http.ListenAndServe(":8082", nil)
 }
 
+// Page of list of all orders
 func orderlist(w http.ResponseWriter, r *http.Request) {
 	var page Page
 	page.Permission = auth(w, r)
-	page.Message.Body = r.URL.Query().Get("message")
-	page.Message.Success, _ = strconv.ParseBool(r.URL.Query().Get("success"))
 	page.Message, page.Orders = listorders()
 	t, _ := template.ParseFiles("orderlist.html", "header.html", "login.js")
 	page.Title = "Orders"
 	t.Execute(w, page)
 }
 
+// handle POST request for updating order
 func orderupdate(w http.ResponseWriter, r *http.Request) {
 	var page Page
 	page.Permission = auth(w, r)
-	fmt.Println("Updating Order...")
 	r.ParseForm()
 	tracking := r.FormValue("tracking")
 	comment := r.FormValue("comments")
 	status := r.FormValue("status")
 	ordernum, _ := strconv.Atoi(r.FormValue("order"))
-	fmt.Println("Order details: ", ordernum, " ", comment)
-
+	fmt.Println("Updating Order ", ordernum, "...")
 	orderupdatesql(ordernum, tracking, comment, status)
 	http.Redirect(w, r, r.Header.Get("Referer"), 302)
 }
 
+// Create a new order
 func ordercreate(w http.ResponseWriter, r *http.Request) {
 	var page Page
 	page.Permission = auth(w, r)
@@ -140,16 +147,14 @@ func ordercreate(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
-
 	//redirect to the order view page
 	http.Redirect(w, r, "/order?order="+strconv.Itoa(order.Ordernum)+"&manufacturer="+manufacturer+"&success="+strconv.FormatBool(message.Success)+"&message="+message.Body, http.StatusSeeOther)
 }
 
+// Single Order Page
 func order(w http.ResponseWriter, r *http.Request) {
 	var page Page
 	page.Permission = auth(w, r)
-	page.Message.Body = r.URL.Query().Get("message")
-	page.Message.Success, _ = strconv.ParseBool(r.URL.Query().Get("success"))
 	t, _ := template.ParseFiles("order.html", "header.html", "login.js")
 	page.Title = "Order"
 	ordernum, _ := strconv.Atoi(r.URL.Query().Get("order"))
@@ -161,13 +166,10 @@ func order(w http.ResponseWriter, r *http.Request) {
 	t.Execute(w, page)
 }
 
+// Reorders Page
 func reorder(w http.ResponseWriter, r *http.Request) {
 	var page Page
 	page.Permission = auth(w, r)
-	page.Message.Body = r.URL.Query().Get("message")
-	if r.URL.Query().Get("success") == "true" {
-		page.Message.Success = true
-	}
 	t, _ := template.ParseFiles("reorders.html", "header.html", "login.js")
 	fmt.Println("Loading Products...")
 	page.Title = "Reorders"
@@ -175,25 +177,18 @@ func reorder(w http.ResponseWriter, r *http.Request) {
 	t.Execute(w, page)
 }
 
+// Product List Page
 func Products(w http.ResponseWriter, r *http.Request) {
 	var page Page
 	page.Permission = auth(w, r)
-	page.Message.Body = r.URL.Query().Get("message")
-	// fmt.Println("Requested URL: ", strings.SplitN(r.URL.String(), "?", 1)[1])
-	if r.URL.Query().Get("success") == "true" {
-		page.Message.Success = true
-	}
 	t, _ := template.ParseFiles("products.html", "header.html", "login.js")
 	fmt.Println("Loading Products...")
 	page.Title = "Products"
 	page.Message, page.ProductList = ProductList(100, r)
-	// if r.URL.Query().Get("action") == "export" {
-	// 	_, excelproductlist := ProductList(1000, r)
-	// 	excel(excelproductlist)
-	// }
 	t.Execute(w, page)
 }
 
+// Handle export POST request
 func exportHandler(w http.ResponseWriter, r *http.Request) {
 	var page Page
 	var filename string
@@ -206,13 +201,13 @@ func exportHandler(w http.ResponseWriter, r *http.Request) {
 		page.Message, filename = excel(strconv.Itoa(num.Ordernum), num.Products)
 	}
 	fmt.Println("FILE: ", filename)
-	// w.Header().Add("Content-Disposition", "Attachment")
 	w.Header().Set("Content-Disposition", "attachment; filename="+strconv.Quote(strconv.Itoa(ordernum)+".xlsx"))
 	w.Header().Set("Content-Type", "application/octet-stream")
 	http.ServeFile(w, r, filename)
 	http.Redirect(w, r, r.Header.Get("Referer"), 302)
 }
 
+// Handle delete order POST request
 func orderdelete(w http.ResponseWriter, r *http.Request) {
 	var page Page
 	page.Permission = auth(w, r)
@@ -222,6 +217,7 @@ func orderdelete(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, r.Header.Get("Referer"), 302)
 }
 
+// Handle delete product POST request
 func productdelete(w http.ResponseWriter, r *http.Request) {
 	var page Page
 	page.Permission = auth(w, r)
@@ -231,6 +227,7 @@ func productdelete(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, r.Header.Get("Referer"), 302)
 }
 
+// Handle update/insert of product POST request
 func ProductUpdate(w http.ResponseWriter, r *http.Request) {
 	var page Page
 	page.Permission = auth(w, r)
@@ -239,6 +236,7 @@ func ProductUpdate(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, r.Header.Get("Referer"), 302)
 }
 
+// New Products Page
 func ProductInsertion(w http.ResponseWriter, r *http.Request) {
 	var page Page
 	page.Permission = auth(w, r)
@@ -252,6 +250,7 @@ func ProductInsertion(w http.ResponseWriter, r *http.Request) {
 	t.Execute(w, page)
 }
 
+// Login page
 func login(w http.ResponseWriter, r *http.Request) {
 	t, _ := template.ParseFiles("login.html", "header.html", "login.js")
 	var page Page
@@ -261,6 +260,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 	t.Execute(w, page)
 }
 
+// Signup Page
 func signup(w http.ResponseWriter, r *http.Request) {
 	t, _ := template.ParseFiles("signup.html", "header.html", "login.js")
 	var page Page

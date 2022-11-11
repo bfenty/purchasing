@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"time"
 
+	log "github.com/sirupsen/logrus"
 	"github.com/xuri/excelize/v2"
 )
 
@@ -66,7 +67,6 @@ func excel(name string, products []Product) (message Message, filename string) {
 	fmt.Println("Saving Excel File...")
 	filename = "./orders/" + name + ".xlsx"
 	if err := f.SaveAs(filename); err != nil {
-		fmt.Println(err)
 		handleerror(err)
 		return message, filename
 	}
@@ -75,34 +75,30 @@ func excel(name string, products []Product) (message Message, filename string) {
 
 func importfile(file string) {
 	f, err := excelize.OpenFile(file)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
+	handleerror(err)
 	defer func() {
 		// Close the spreadsheet.
 		if err := f.Close(); err != nil {
-			fmt.Println(err)
+			handleerror(err)
 		}
 	}()
 	// Get value from cell by given worksheet name and cell reference.
 	cell, err := f.GetCellValue("Sheet1", "B2")
 	if err != nil {
-		fmt.Println(err)
+		handleerror(err)
 		return
 	}
 	fmt.Println(cell)
 	// Get all the rows in the Sheet1.
 	rows, err := f.GetRows("Sheet1")
 	if err != nil {
-		fmt.Println(err)
+		handleerror(err)
 		return
 	}
 	for _, row := range rows {
 		for _, colCell := range row {
-			fmt.Print(colCell, "\t")
+			log.Debug(colCell, "\t")
 		}
-		fmt.Println()
 	}
 }
 
@@ -111,7 +107,7 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 	// of the file input on the frontend
 	file, fileHeader, err := r.FormFile("file")
 	if err != nil {
-		fmt.Println(err)
+		handleerror(err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -145,5 +141,5 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Fprintf(w, "Upload successful")
+	log.Debug(w, "Upload successful")
 }
