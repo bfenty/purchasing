@@ -2,13 +2,11 @@ package main
 
 import (
 	// "encoding/json"
-	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/google/uuid"
-	// "io/ioutil"
-	//"html/template"
+	log "github.com/sirupsen/logrus"
 )
 
 // this map stores the users sessions. For larger scale applications, you can use a database or cache for this purpose
@@ -35,7 +33,7 @@ func Usercreate(w http.ResponseWriter, r *http.Request) {
 	var creds Credentials
 	var message Message
 	var success bool
-	// fmt.Println("method:", r.Method) //get request method
+	// log.Debug("method:", r.Method) //get request method
 	r.ParseForm()
 	// logic part of log in
 	creds.Username = r.FormValue("username")
@@ -46,7 +44,7 @@ func Usercreate(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/signup?messagetitle="+message.Title+"&messagebody="+message.Body, http.StatusSeeOther)
 		return
 	}
-	fmt.Println("Creating user ", creds.Username, "...")
+	log.Debug("Creating user ", creds.Username, "...")
 	message, success = Updatepass(creds.Username, creds.Password, r.FormValue("secret"))
 	if success {
 		http.Redirect(w, r, "/products?messagetitle="+message.Title+"&messagebody="+message.Body, http.StatusSeeOther)
@@ -57,27 +55,27 @@ func Usercreate(w http.ResponseWriter, r *http.Request) {
 }
 
 func Signin(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("Logging in...")
+	log.Debug("Logging in...")
 	var creds Credentials
-	// fmt.Println("method:", r.Method) //get request method
+	// log.Debug("method:", r.Method) //get request method
 	r.ParseForm()
 	// logic part of log in
 	creds.Username = r.FormValue("username")
 	creds.Password = r.FormValue("password")
 	permission, message := userauth(creds.Username, creds.Password)
-	fmt.Println(message.Body)
+	log.Debug(message.Body)
 
 	// If a password exists for the given user
 	// AND, if it is the same as the password we received, the we can move ahead
 	// if NOT, then we return an "Unauthorized" status
 	if permission == "notfound" {
-		fmt.Println(message.Body)
+		log.Debug(message.Body)
 		http.Redirect(w, r, "/login?messagetitle="+message.Title+"&messagebody="+message.Body, http.StatusSeeOther)
 		return
 	}
 
 	if permission == "newuser" {
-		fmt.Println(message.Body)
+		log.Debug(message.Body)
 		http.Redirect(w, r, "/signup?messagetitle="+message.Title+"&messagebody="+message.Body, http.StatusSeeOther)
 		return
 	}
@@ -86,7 +84,7 @@ func Signin(w http.ResponseWriter, r *http.Request) {
 	// we use the "github.com/google/uuid" library to generate UUIDs
 	sessionToken := uuid.NewString()
 	expiresAt := time.Now().Add(1800 * time.Second)
-	// fmt.Println("Authorized")
+	// log.Debug("Authorized")
 
 	// Set the token in the session map, along with the session information
 	sessions[sessionToken] = session{
@@ -101,19 +99,20 @@ func Signin(w http.ResponseWriter, r *http.Request) {
 		Value:   sessionToken,
 		Expires: expiresAt,
 	})
-	// fmt.Println(sessions)
+	// log.Debug(sessions)
 
 	http.Redirect(w, r, "/productsinsert", http.StatusSeeOther)
 }
 
-func auth(w http.ResponseWriter, r *http.Request) (permission string) {
+func auth(w http.ResponseWriter, r *http.Request) (permission Permissions) {
 	c, err := r.Cookie("session_token")
 	if err != nil {
 		if err == http.ErrNoCookie {
 			//Redirect Login
 			http.Redirect(w, r, "/login?messagetitle=User Unauthorized&messagebody=Please login to use this site", http.StatusSeeOther)
 			// If the cookie is not set, return an unauthorized status
-			return "Unauthorized"
+			permission.Perms = "Unauthorized"
+			return permission
 		}
 	}
 	sessionToken := c.Value
@@ -123,20 +122,22 @@ func auth(w http.ResponseWriter, r *http.Request) (permission string) {
 	if !exists {
 		// If the session token is not present in session map, return an unauthorized error
 		// w.WriteHeader(http.StatusUnauthorized)
-		fmt.Println("Unauthorized")
+		log.Debug("Unauthorized")
 		http.Redirect(w, r, "/login?messagetitle=User Unauthorized&messagebody=Please login to use this site", http.StatusSeeOther)
-		return "Unauthorized"
+		permission.Perms = "Unauthorized"
+		return permission
 	}
 	if userSession.isExpired() {
 		delete(sessions, sessionToken)
 		// w.WriteHeader(http.StatusUnauthorized)
-		fmt.Println("Unauthorized")
+		log.Debug("Unauthorized")
 		http.Redirect(w, r, "/login?messagetitle=User Unauthorized&messagebody=Please login to use this site", http.StatusSeeOther)
-		return "Unauthorized"
+
+		permission.Perms = "Unauthorized"
+		return permission
 	}
 	// Finally, return the welcome message to the user
-	// w.Write([]byte(fmt.Sprintf("Welcome %s!", userSession.username)))
-	fmt.Println("Authorized")
+	log.Debug("Authorized")
 	// If the previous session is valid, create a new session token for the current user
 	newSessionToken := uuid.NewString()
 	expiresAt := time.Now().Add(1800 * time.Second)

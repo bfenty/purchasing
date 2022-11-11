@@ -6,7 +6,7 @@
   {{template "navigation" .}}
   <br>
   {{template "messagebox" .}}
-  {{$permission := .Permission}}
+  {{$permission := .Permission.Perms}}
   <!-- Order Header Information -->
   <table width="100%">
     <tr>{{range .Orders}}

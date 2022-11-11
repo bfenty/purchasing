@@ -2,39 +2,39 @@ package main
 
 import (
 	"database/sql"
-	"fmt"
-	"log"
+
+	// "log"
 	"net/http"
 	"os"
 	"strconv"
 
 	_ "github.com/go-sql-driver/mysql"
+	log "github.com/sirupsen/logrus"
 )
 
 var db *sql.DB
 
 func opendb() (db *sql.DB, messagebox Message) {
+	var err error
 	user := os.Getenv("USER")
 	pass := os.Getenv("PASS")
 	server := os.Getenv("SERVER")
 	port := os.Getenv("PORT")
 	// Get a database handle.
-	var err error
-	// var user string
-	fmt.Println("Connecting to DB...")
-	fmt.Println("user:", user)
-	fmt.Println("pass:", pass)
-	fmt.Println("server:", server)
-	fmt.Println("port:", port)
-	fmt.Println("Opening Database...")
+	log.Info("Connecting to DB...")
+	log.Debug("user:", user)
+	log.Debug("pass:", pass)
+	log.Debug("server:", server)
+	log.Debug("port:", port)
+	log.Debug("Opening Database...")
 	connectstring := os.Getenv("USER") + ":" + os.Getenv("PASS") + "@tcp(" + os.Getenv("SERVER") + ":" + os.Getenv("PORT") + ")/purchasing?parseTime=true"
-	fmt.Println("Connection: ", connectstring)
+	log.Debug("Connection: ", connectstring)
 	db, err = sql.Open("mysql",
 		connectstring)
 	if err != nil {
 		messagebox.Success = false
 		messagebox.Body = err.Error()
-		fmt.Println("Message: ", messagebox.Body)
+		log.Debug("Message: ", messagebox.Body)
 		return nil, messagebox
 	}
 
@@ -45,15 +45,15 @@ func opendb() (db *sql.DB, messagebox Message) {
 	}
 
 	//Success!
-	fmt.Println("Returning Open DB...")
+	log.Info("Returning Open DB...")
 	messagebox.Success = true
 	messagebox.Body = "Success"
 	return db, messagebox
 }
 
-func orderdeletesql(order int) (message Message) {
+func orderdeletesql(order int, permission Permissions) (message Message) {
 	//Debug
-	fmt.Println("Deleting order ", order, "...")
+	log.WithFields(log.Fields{"username": permission.User}).Info("Deleting order ", order, "...")
 
 	//Test Connection
 	pingErr := db.Ping()
@@ -84,9 +84,9 @@ func orderdeletesql(order int) (message Message) {
 	return message
 }
 
-func productdeletesql(sku string) (message Message) {
+func productdeletesql(sku string, permission Permissions) (message Message) {
 	//Debug
-	fmt.Println("Deleting SKU ", sku, "...")
+	log.WithFields(log.Fields{"username": permission.User}).Info("Deleting SKU ", sku, "...")
 
 	//Test Connection
 	pingErr := db.Ping()
@@ -106,12 +106,14 @@ func productdeletesql(sku string) (message Message) {
 	message.Success = true
 	message.Title = "Success"
 	message.Body = "Successfully deleted sku " + sku
+	//Logging
+	log.WithFields(log.Fields{"username": permission.User}).Info("Deleted Product ", sku)
 	return message
 }
 
-func orderskuadd(order int, sku string) (message Message) {
+func orderskuadd(order int, sku string, permission Permissions) (message Message) {
 	//Debug
-	fmt.Println("Inserting SKU/Order: ", sku, "/", order)
+	log.WithFields(log.Fields{"username": permission.User}).Info("Inserting SKU/Order: ", sku, "/", order)
 
 	//Test Connection
 	pingErr := db.Ping()
@@ -133,9 +135,9 @@ func orderskuadd(order int, sku string) (message Message) {
 	return message
 }
 
-func orderlookup(ordernum int) (message Message, orders []Order) {
+func orderlookup(ordernum int, permission Permissions) (message Message, orders []Order) {
 	//Debug
-	fmt.Println("Getting Order: ", strconv.Itoa(ordernum))
+	log.WithFields(log.Fields{"username": permission.User}).Debug("Getting Order: ", strconv.Itoa(ordernum))
 
 	//Test Connection
 	pingErr := db.Ping()
@@ -151,7 +153,7 @@ func orderlookup(ordernum int) (message Message, orders []Order) {
 		return handleerror(pingErr), orders
 	}
 	defer orderrows.Close()
-	fmt.Println("Orderrows: ", orderrows)
+	log.WithFields(log.Fields{"username": permission.User}).Debug("Orderrows: ", orderrows)
 	//Pull Data
 	for orderrows.Next() {
 		var r Order
@@ -165,7 +167,7 @@ func orderlookup(ordernum int) (message Message, orders []Order) {
 		if err != nil {
 			return handleerror(pingErr), orders
 		}
-		fmt.Println("SKUrows: ", skurows)
+		log.WithFields(log.Fields{"username": permission.User}).Debug("SKUrows: ", skurows)
 		var skus []Product
 		defer skurows.Close()
 		for skurows.Next() {
@@ -177,7 +179,7 @@ func orderlookup(ordernum int) (message Message, orders []Order) {
 			skus = append(skus, r)
 		}
 		r.Products = skus
-		fmt.Println("SKUS: ", skus)
+		log.WithFields(log.Fields{"username": permission.User}).Debug("SKUS: ", skus)
 		//Append to the orders
 		orders = append(orders, r)
 	}
@@ -185,7 +187,7 @@ func orderlookup(ordernum int) (message Message, orders []Order) {
 	return message, orders
 }
 
-func orderupdatesql(order int, tracking string, comment string, status string) (message Message) {
+func orderupdatesql(order int, tracking string, comment string, status string, permission Permissions) (message Message) {
 	//Test Connection
 	pingErr := db.Ping()
 	if pingErr != nil {
@@ -194,26 +196,25 @@ func orderupdatesql(order int, tracking string, comment string, status string) (
 	}
 
 	//Build the Query
-	fmt.Println("Building Query...")
+	log.WithFields(log.Fields{"username": permission.User}).Debug("Building Query...")
 	newquery := "UPDATE `orders` SET `trackingnum`=?,`comments`=?,`status`=? WHERE ordernum = ?"
-	fmt.Println("Query built: ", newquery)
 
 	//Run Query
 	rows, err := db.Query(newquery, tracking, comment, status, order)
-	fmt.Println("Query Run")
 	defer rows.Close()
-	fmt.Println("Rows Closed")
 	if err != nil {
 		return handleerror(err)
 	}
 	message.Body = "Successfully updated order " + strconv.Itoa(order)
 	message.Success = true
+	//Logging
+	log.WithFields(log.Fields{"username": permission.User}).Info("Updated Order ", strconv.Itoa(order))
 	return message
 }
 
-func listorders() (message Message, orders []Order) {
+func listorders(permission Permissions) (message Message, orders []Order) {
 	//Debug
-	fmt.Println("Getting Orders...")
+	log.WithFields(log.Fields{"username": permission.User}).Debug("Getting Orders...")
 
 	//Test Connection
 	pingErr := db.Ping()
@@ -243,7 +244,7 @@ func listorders() (message Message, orders []Order) {
 	return message, orders
 }
 
-func nextorder(manufacturer string) (message Message, order Order) {
+func nextorder(manufacturer string, permission Permissions) (message Message, order Order) {
 	// Get a database handle.
 	// var err error
 	var ordernum int
@@ -266,7 +267,7 @@ func nextorder(manufacturer string) (message Message, order Order) {
 		rows.Scan(&ordernum)
 	}
 	ordernum += 1
-	fmt.Println(manufacturer, "-", ordernum)
+	log.WithFields(log.Fields{"username": permission.User}).Debug(manufacturer, "-", ordernum)
 
 	//insert new order into database
 	newquery = "INSERT INTO orders (`ordernum`,`manufacturer`) VALUES (?,?)"
@@ -279,7 +280,7 @@ func nextorder(manufacturer string) (message Message, order Order) {
 }
 
 // Reorders List
-func Reorderlist() (message Message, orders []Order) {
+func Reorderlist(permission Permissions) (message Message, orders []Order) {
 	// Get a database handle.
 	var err error
 
@@ -331,7 +332,7 @@ func Reorderlist() (message Message, orders []Order) {
 }
 
 // Product List
-func ProductList(limit int, r *http.Request) (message Message, products []Product) {
+func ProductList(limit int, r *http.Request, permission Permissions) (message Message, products []Product) {
 	// Get a database handle.
 	var err error
 
@@ -412,10 +413,10 @@ func ProductList(limit int, r *http.Request) (message Message, products []Produc
 	newquery += " order by 11 desc, 1 limit ?"
 
 	//Run Query
-	i = append(i, limit) //always add the limit to the end
-	fmt.Println(i...)    //debug variables map
-	fmt.Println("Running Product List")
-	fmt.Println(newquery)
+	i = append(i, limit)                                                //always add the limit to the end
+	log.WithFields(log.Fields{"username": permission.User}).Debug(i...) //debug variables map
+	log.WithFields(log.Fields{"username": permission.User}).Debug("Running Product List")
+	log.WithFields(log.Fields{"username": permission.User}).Debug(newquery)
 	rows, err := db.Query(newquery, i...)
 	if err != nil {
 		return handleerror(err), products
@@ -436,7 +437,7 @@ func ProductList(limit int, r *http.Request) (message Message, products []Produc
 }
 
 // Product Insert
-func ProductInsert(r *http.Request) (message Message) {
+func ProductInsert(r *http.Request, permission Permissions) (message Message) {
 	// Get a database handle.
 	var err error
 
@@ -489,15 +490,15 @@ func ProductInsert(r *http.Request) (message Message) {
 		i = append(i, 0)
 	}
 	i = append(i, season)
-	fmt.Println("Reorder: ", reorder)
+	log.WithFields(log.Fields{"username": permission.User}).Debug("Reorder: ", reorder)
 
 	//Build the Query
 	newquery = "REPLACE INTO skus (`sku_internal`, `manufacturer_code`, `sku_manufacturer`, `processing_request`, `sorting_request`, `unit`, `unit_price`, `Currency`, `order_qty`,`product_option`,`reorder`,season) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)"
 
 	//Run Query
-	fmt.Println(i...) //debug variables map
-	fmt.Println("Running Product List")
-	fmt.Println(newquery)
+	log.WithFields(log.Fields{"username": permission.User}).Debug(i...) //debug variables map
+	log.WithFields(log.Fields{"username": permission.User}).Debug("Running Product List")
+	log.WithFields(log.Fields{"username": permission.User}).Debug(newquery)
 	rows, err := db.Query(newquery, i...)
 	if err != nil {
 		return handleerror(err)
@@ -512,6 +513,9 @@ func ProductInsert(r *http.Request) (message Message) {
 			return handleerror(err)
 		}
 	}
+
+	//Logging
+	log.WithFields(log.Fields{"username": permission.User}).Info("Inserted Product ", sku)
 	message.Title = "Success"
 	message.Body = "Successfully inserted row"
 	message.Success = true
@@ -533,7 +537,7 @@ func Updatepass(user string, pass string, secret string) (message Message, succe
 	}
 
 	hashpass := hashAndSalt([]byte(pass))
-	fmt.Println("Creating password hash of length ", len(hashpass), ": ", hashpass)
+	log.Debug("Creating password hash of length ", len(hashpass), ": ", hashpass)
 	var newquery string = "update users set password = ? where username = ? and password = ''"
 	rows, err := db.Query(newquery, hashpass, user)
 	if err != nil {
@@ -559,7 +563,7 @@ func userauth(user string, pass string) (permission string, message Message) {
 	//set Variables
 	//Query
 	var newquery string = "select password, permissions from users where username = ?"
-	// fmt.Println(newquery)
+	// log.WithFields(log.Fields{"username": permission.User}).Debug(newquery)
 	rows, err := db.Query(newquery, user)
 	if err != nil {
 		return "notfound", handleerror(err)
@@ -577,7 +581,7 @@ func userauth(user string, pass string) (permission string, message Message) {
 		return "notfound", handleerror(err)
 	}
 
-	fmt.Println("Checking Permissions: ", permission)
+	log.Debug("Checking Permissions: ", permission)
 	//If user has not set a password
 	if dbpass == "" {
 		message.Title = "Set Password"
@@ -606,36 +610,38 @@ func userauth(user string, pass string) (permission string, message Message) {
 }
 
 // Authenticate user from DB
-func userdata(user string) (permission string) {
+func userdata(user string) (permission Permissions) {
+	permission.User = user
 	// Get a database handle.
 	var err error
 	//Test Connection
 	pingErr := db.Ping()
 	if pingErr != nil {
-		log.Fatal(pingErr)
+		handleerror(pingErr)
 	}
 	//set Variables
 	//Query
 	var newquery string = "select permissions from users where username = ?"
-	// fmt.Println(newquery)
+	// log.WithFields(log.Fields{"username": permission.User}).Debug(newquery)
 	rows, err := db.Query(newquery, user)
 	if err != nil {
-		log.Fatal(err)
+		handleerror(err)
 	}
 	defer rows.Close()
 	//Pull Data
 	for rows.Next() {
-		err := rows.Scan(&permission)
+		err := rows.Scan(&permission.Perms)
 		if err != nil {
-			log.Fatal(err)
+			handleerror(err)
 		}
 	}
 	err = rows.Err()
 	if err != nil {
-		log.Fatal(err)
+		handleerror(err)
 	}
-	if permission == "" {
-		return "notfound"
+	if permission.Perms == "" {
+		permission.Perms = "notfound"
+		return permission
 	}
 
 	return permission
