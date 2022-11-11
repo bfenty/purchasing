@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"html/template"
 	"net/http"
 	"strconv"
@@ -62,7 +61,7 @@ var Logger = logrus.New()
 func message(r *http.Request) (messagebox Message) {
 	if r.URL.Query().Get("messagetitle") != "" {
 		messagebox.Body = r.URL.Query().Get("messagebody")
-		fmt.Println("Message: ", messagebox)
+		log.Info("Message: ", messagebox)
 	}
 	return messagebox
 }
@@ -84,7 +83,7 @@ func main() {
 	log.Info("Starting Server")
 	var message Message
 	db, message = opendb()
-	fmt.Println(message.Body)
+	log.Info(message.Body)
 	http.HandleFunc("/", login)
 	http.HandleFunc("/login", login)
 	http.HandleFunc("/signup", signup)
@@ -110,7 +109,7 @@ func main() {
 func orderlist(w http.ResponseWriter, r *http.Request) {
 	var page Page
 	page.Permission = auth(w, r)
-	page.Message, page.Orders = listorders()
+	page.Message, page.Orders = listorders(page.Permission)
 	t, _ := template.ParseFiles("orderlist.html", "header.html", "login.js")
 	page.Title = "Orders"
 	t.Execute(w, page)
@@ -125,8 +124,8 @@ func orderupdate(w http.ResponseWriter, r *http.Request) {
 	comment := r.FormValue("comments")
 	status := r.FormValue("status")
 	ordernum, _ := strconv.Atoi(r.FormValue("order"))
-	fmt.Println("Updating Order ", ordernum, "...")
-	orderupdatesql(ordernum, tracking, comment, status)
+	log.Info("Updating Order ", ordernum, "...")
+	orderupdatesql(ordernum, tracking, comment, status, page.Permission)
 	http.Redirect(w, r, r.Header.Get("Referer"), 302)
 }
 
@@ -134,16 +133,16 @@ func orderupdate(w http.ResponseWriter, r *http.Request) {
 func ordercreate(w http.ResponseWriter, r *http.Request) {
 	var page Page
 	page.Permission = auth(w, r)
-	fmt.Println("Creating Order...")
+	log.Debug("Creating Order...")
 	r.ParseForm()
 	manufacturer := r.FormValue("manufacturer")
 
 	//Create a new order in the system
-	message, order := nextorder(manufacturer) //create a new order number
-	for key, values := range r.PostForm {     //cycle through all the skus and add them to the new order
+	message, order := nextorder(manufacturer, page.Permission) //create a new order number
+	for key, values := range r.PostForm {                      //cycle through all the skus and add them to the new order
 		if key == "sku" {
 			for _, v := range values {
-				orderskuadd(order.Ordernum, v)
+				orderskuadd(order.Ordernum, v, page.Permission)
 			}
 		}
 	}
@@ -158,11 +157,11 @@ func order(w http.ResponseWriter, r *http.Request) {
 	t, _ := template.ParseFiles("order.html", "header.html", "login.js")
 	page.Title = "Order"
 	ordernum, _ := strconv.Atoi(r.URL.Query().Get("order"))
-	page.Message, page.Orders = orderlookup(ordernum)
+	page.Message, page.Orders = orderlookup(ordernum, page.Permission)
 	if len(page.Orders) == 0 {
 		http.Redirect(w, r, "/orderlist", http.StatusSeeOther)
 	}
-	fmt.Println("Order Lookup: ", page.Orders)
+	log.Debug("Order Lookup: ", page.Orders)
 	t.Execute(w, page)
 }
 
@@ -171,9 +170,9 @@ func reorder(w http.ResponseWriter, r *http.Request) {
 	var page Page
 	page.Permission = auth(w, r)
 	t, _ := template.ParseFiles("reorders.html", "header.html", "login.js")
-	fmt.Println("Loading Products...")
+	log.Debug("Loading Products...")
 	page.Title = "Reorders"
-	page.Message, page.Orders = Reorderlist()
+	page.Message, page.Orders = Reorderlist(page.Permission)
 	t.Execute(w, page)
 }
 
@@ -182,9 +181,9 @@ func Products(w http.ResponseWriter, r *http.Request) {
 	var page Page
 	page.Permission = auth(w, r)
 	t, _ := template.ParseFiles("products.html", "header.html", "login.js")
-	fmt.Println("Loading Products...")
+	log.Debug("Loading Products...")
 	page.Title = "Products"
-	page.Message, page.ProductList = ProductList(100, r)
+	page.Message, page.ProductList = ProductList(100, r, page.Permission)
 	t.Execute(w, page)
 }
 
@@ -195,12 +194,12 @@ func exportHandler(w http.ResponseWriter, r *http.Request) {
 	page.Permission = auth(w, r)
 	r.ParseForm()
 	ordernum, _ := strconv.Atoi(r.FormValue("order"))
-	fmt.Println("Exporting Excel...")
-	page.Message, page.Orders = orderlookup(ordernum)
+	log.Debug("Exporting Excel...")
+	page.Message, page.Orders = orderlookup(ordernum, page.Permission)
 	for _, num := range page.Orders {
 		page.Message, filename = excel(strconv.Itoa(num.Ordernum), num.Products)
 	}
-	fmt.Println("FILE: ", filename)
+	log.Debug("FILE: ", filename)
 	w.Header().Set("Content-Disposition", "attachment; filename="+strconv.Quote(strconv.Itoa(ordernum)+".xlsx"))
 	w.Header().Set("Content-Type", "application/octet-stream")
 	http.ServeFile(w, r, filename)
@@ -213,7 +212,7 @@ func orderdelete(w http.ResponseWriter, r *http.Request) {
 	page.Permission = auth(w, r)
 	r.ParseForm()
 	ordernum, _ := strconv.Atoi(r.FormValue("order"))
-	orderdeletesql(ordernum)
+	orderdeletesql(ordernum, page.Permission)
 	http.Redirect(w, r, r.Header.Get("Referer"), 302)
 }
 
@@ -223,7 +222,7 @@ func productdelete(w http.ResponseWriter, r *http.Request) {
 	page.Permission = auth(w, r)
 	r.ParseForm()
 	sku := r.FormValue("sku")
-	productdeletesql(sku)
+	productdeletesql(sku, page.Permission)
 	http.Redirect(w, r, r.Header.Get("Referer"), 302)
 }
 
@@ -231,8 +230,8 @@ func productdelete(w http.ResponseWriter, r *http.Request) {
 func ProductUpdate(w http.ResponseWriter, r *http.Request) {
 	var page Page
 	page.Permission = auth(w, r)
-	fmt.Println("Updating Product...")
-	page.Message = ProductInsert(r)
+	log.Debug("Updating Product...")
+	page.Message = ProductInsert(r, page.Permission)
 	http.Redirect(w, r, r.Header.Get("Referer"), 302)
 }
 
@@ -241,11 +240,11 @@ func ProductInsertion(w http.ResponseWriter, r *http.Request) {
 	var page Page
 	page.Permission = auth(w, r)
 	t, _ := template.ParseFiles("productsinsert.html", "header.html", "login.js")
-	fmt.Println("Loading Products...")
+	log.Debug("Loading Products...")
 	page.Title = "New Product"
-	page.Message, page.ProductList = ProductList(5, r)
+	page.Message, page.ProductList = ProductList(5, r, page.Permission)
 	if r.URL.Query().Get("insert") == "true" {
-		page.Message = ProductInsert(r)
+		page.Message = ProductInsert(r, page.Permission)
 	}
 	t.Execute(w, page)
 }
@@ -256,7 +255,7 @@ func login(w http.ResponseWriter, r *http.Request) {
 	var page Page
 	page.Title = "Login"
 	page.Message = message(r)
-	fmt.Println(page)
+	log.Debug(page)
 	t.Execute(w, page)
 }
 
@@ -266,6 +265,6 @@ func signup(w http.ResponseWriter, r *http.Request) {
 	var page Page
 	page.Title = "Sign Up"
 	page.Message = message(r)
-	fmt.Println(page)
+	log.Debug(page)
 	t.Execute(w, page)
 }

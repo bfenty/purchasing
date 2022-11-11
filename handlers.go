@@ -2,7 +2,6 @@ package main
 
 import (
 	// "encoding/json"
-	// "fmt"
 	"net/http"
 	"time"
 
@@ -138,7 +137,6 @@ func auth(w http.ResponseWriter, r *http.Request) (permission Permissions) {
 		return permission
 	}
 	// Finally, return the welcome message to the user
-	// w.Write([]byte(fmt.Sprintf("Welcome %s!", userSession.username)))
 	log.Debug("Authorized")
 	// If the previous session is valid, create a new session token for the current user
 	newSessionToken := uuid.NewString()
