@@ -185,30 +185,30 @@ border-radius: 15px;
 <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
   <span class="navbar-toggler-icon"></span>
 </button>
-
+{{$permission := .Permission.Perms}}
 <div class="collapse navbar-collapse" id="navbarSupportedContent">
   <ul class="navbar-nav mr-auto">
-  {{if or (eq .Permission "admin") (eq .Permission "Purchasing")}}
+  {{if or (eq $permission "admin") (eq $permission "Purchasing")}}
     <li class="nav-item active">
       <a class="nav-link" href="/products">Products<span class="sr-only">(current)</span></a>
     </li>
     {{end}}
-  {{if or (eq .Permission "admin") (eq .Permission "Purchasing")}}
+  {{if or (eq $permission "admin") (eq $permission "Purchasing")}}
     <li class="nav-item active">
       <a class="nav-link" href="/productsinsert">New Product<span class="sr-only">(current)</span></a>
     </li>
     {{end}}
-  {{if or (eq .Permission "admin") (eq .Permission "Purchasing")}}
+  {{if or (eq $permission "admin") (eq $permission "Purchasing")}}
     <li class="nav-item active">
       <a class="nav-link" href="/reorder">Reorders<span class="sr-only">(current)</span></a>
     </li>
     {{end}}
-  {{if or (eq .Permission "admin") (eq .Permission "Receiving") (eq .Permission "Purchasing")}}
+  {{if or (eq $permission "admin") (eq $permission "Receiving") (eq $permission "Purchasing")}}
     <li class="nav-item active">
       <a class="nav-link" href="/orderlist">Orders<span class="sr-only">(current)</span></a>
     </li>
     {{end}}
-      {{if or (eq .Permission "admin") (eq .Permission "Receiving") (eq .Permission "Purchasing")}}
+      {{if or (eq $permission "admin") (eq $permission "Receiving") (eq $permission "Purchasing")}}
       <li class="nav-item active">
         <a class="nav-link" href="/logout">Logout <span class="sr-only">(current)</span></a>
       </li>
