@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"fmt"
 
 	// "log"
 	"net/http"
@@ -645,4 +646,37 @@ func userdata(user string) (permission Permissions) {
 	}
 
 	return permission
+}
+
+func QTYUpdate(skus []sku) {
+
+	// //open connection to database
+	// connectstring := os.Getenv("USER") + ":" + os.Getenv("PASS") + "@tcp(" + os.Getenv("SERVER") + ":" + os.Getenv("PORT") + ")/purchasing"
+	// db, err := sql.Open("mysql",
+	// 	connectstring)
+	// if err != nil {
+	// 	fmt.Println("Message: ", err.Error())
+	// }
+
+	// //Test Connection
+	// pingErr := db.Ping()
+	// if pingErr != nil {
+	// 	fmt.Println("Message: ", err.Error())
+	// }
+
+	for i := range skus {
+		var newquery string = "UPDATE `skus` SET `inventory_qty`=?,url_thumb=?,url_standard=?,url_tiny=? WHERE sku_internal=?"
+		rows, err := db.Query(newquery, skus[i].Qty, skus[i].Skuimage.URL_Thumb, skus[i].Skuimage.URL_Standard, skus[i].Skuimage.URL_Tiny, skus[i].SKU)
+		defer rows.Close()
+		if err != nil {
+			fmt.Println("Message: ", err.Error())
+			rows.Close()
+		}
+		err = rows.Err()
+		if err != nil {
+			fmt.Println("Message: ", err.Error())
+			rows.Close()
+		}
+		rows.Close()
+	}
 }
