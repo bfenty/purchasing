@@ -125,7 +125,9 @@ func printProducts(products product) (page int, link string) {
 		tempsku.ID = products.Data[i].ID
 		tempsku.Factory = products.Data[i].Brand_ID
 		tempsku.SupplySKU = products.Data[i].MPN
-		tempsku.Skuimage = products.Data[i].Images[0]
+		if len(products.Data[i].Images) > 0 {
+			tempsku.Skuimage = products.Data[i].Images[0]
+		}
 		skulist = append(skulist, tempsku)
 		//			}
 	}
