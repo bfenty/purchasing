@@ -361,7 +361,7 @@ func ProductList(limit int, r *http.Request, permission Permissions) (message Me
 	season := r.URL.Query().Get("season")
 
 	//Build the Query
-	newquery = "SELECT `sku_internal`,`manufacturer_code`,`sku_manufacturer`,`product_option`,`processing_request`,`sorting_request`,`unit`,`unit_price`,`Currency`,`order_qty`,`modified`,`reorder`,`inventory_qty`,season FROM `skus` WHERE 1"
+	newquery = "SELECT `sku_internal`,`manufacturer_code`,`sku_manufacturer`,`product_option`,`processing_request`,`sorting_request`,`unit`,`unit_price`,`Currency`,`order_qty`,`modified`,`reorder`,`inventory_qty`,season,url_standard,url_thumb,url_tiny FROM `skus` WHERE 1"
 	if sku != "" {
 		sku += "%"
 		i = append(i, sku)
@@ -427,7 +427,7 @@ func ProductList(limit int, r *http.Request, permission Permissions) (message Me
 	//Pull Data
 	for rows.Next() {
 		var r Product
-		err := rows.Scan(&r.SKU, &r.Manufacturer, &r.ManufacturerPart, &r.Description, &r.ProcessRequest, &r.SortingRequest, &r.Unit, &r.UnitPrice, &r.Currency, &r.Qty, &r.Modified, &r.Reorder, &r.InventoryQTY, &r.Season)
+		err := rows.Scan(&r.SKU, &r.Manufacturer, &r.ManufacturerPart, &r.Description, &r.ProcessRequest, &r.SortingRequest, &r.Unit, &r.UnitPrice, &r.Currency, &r.Qty, &r.Modified, &r.Reorder, &r.InventoryQTY, &r.Season, &r.Image.URL_Standard, &r.Image.URL_Thumb, &r.Image.URL_Tiny)
 		if err != nil {
 			return handleerror(err), products
 		}
@@ -514,6 +514,9 @@ func ProductInsert(r *http.Request, permission Permissions) (message Message) {
 			return handleerror(err)
 		}
 	}
+
+	//add image and qty to new row
+	qty(sku)
 
 	//Logging
 	log.WithFields(log.Fields{"username": permission.User}).Info("Inserted Product ", sku)

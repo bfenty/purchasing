@@ -42,9 +42,9 @@ type product struct {
 }
 
 type Image struct {
-	URL_Standard string `json:"url_standard"`
-	URL_Thumb    string `json:"url_thumbnail"`
-	URL_Tiny     string `json:"url_tiny"`
+	URL_Standard *string `json:"url_standard"`
+	URL_Thumb    *string `json:"url_thumbnail"`
+	URL_Tiny     *string `json:"url_tiny"`
 }
 
 type customfield struct {

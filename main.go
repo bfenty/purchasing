@@ -34,6 +34,7 @@ type Product struct {
 	Reorder          bool
 	InventoryQTY     *int
 	Season           string
+	Image            Image
 }
 
 type Page struct {
@@ -58,6 +59,7 @@ type Message struct {
 // initialize Logs
 var Logger = logrus.New()
 
+// Handle Messages
 func message(r *http.Request) (messagebox Message) {
 	if r.URL.Query().Get("messagetitle") != "" {
 		messagebox.Body = r.URL.Query().Get("messagebody")
@@ -66,6 +68,7 @@ func message(r *http.Request) (messagebox Message) {
 	return messagebox
 }
 
+// Handle Error Messages
 func handleerror(err error) (message Message) {
 	if err != nil {
 		message.Title = "Error"
@@ -79,6 +82,7 @@ func handleerror(err error) (message Message) {
 	return message
 }
 
+// Main function
 func main() {
 	log.Info("Starting Server")
 	var message Message
