@@ -2,8 +2,9 @@ package main
 
 import (
     "fmt"
-    "log"
+    // "log"
     "golang.org/x/crypto/bcrypt"
+	log "github.com/sirupsen/logrus"
 )
 
 func getPwd() []byte {    // Prompt the user to enter a password
@@ -11,7 +12,7 @@ func getPwd() []byte {    // Prompt the user to enter a password
     var pwd string    // Read the users input
     _, err := fmt.Scan(&pwd)
     if err != nil {
-        log.Println(err)
+        handleerror(err)
     }    // Return the users input as a byte slice which will save us
     // from having to do this conversion later on
     return []byte(pwd)}
@@ -25,7 +26,7 @@ func hashAndSalt(pwd []byte) string {
     // than the MinCost (4)
     hash, err := bcrypt.GenerateFromPassword(pwd, bcrypt.MinCost)
     if err != nil {
-        log.Println(err)
+        handleerror(err)
     }    // GenerateFromPassword returns a byte slice so we need to
     // convert the bytes to a string and return it
     return string(hash)
@@ -38,9 +39,9 @@ func comparePasswords(hashedPwd string, plainPwd []byte) bool {
     byteHash := []byte(hashedPwd)
     err := bcrypt.CompareHashAndPassword(byteHash, plainPwd)
     if err != nil {
-        log.Println(err)
-        fmt.Println("Passwords do not match")
+        handleerror(err)
+        log.Debug("Passwords do not match")
         return false
     }
-    fmt.Println("Passwords match")
+    Log.Debug("Passwords match")
     return true}
