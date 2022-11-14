@@ -4,14 +4,15 @@ import (
 	// "encoding/csv"
 
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
-	"log"
+
+	// "log"
 	"net/http"
 	"os"
 	"strconv"
 	"time"
-	// log "github.com/sirupsen/logrus"
+
+	log "github.com/sirupsen/logrus"
 )
 
 type product struct {
@@ -67,20 +68,20 @@ var skulist []sku
 // Creates the URL by combining the url and link
 func urlmake(url string, linkvalue string) (urlfinal string) {
 	value := url + linkvalue
-	fmt.Println(value)
+	log.Debug(value)
 	return value
 }
 
 // loads JSON and returns a slice
 func jsonLoad(url string) (products product) {
-	fmt.Println("Loading JSON")
+	log.Debug("Loading JSON")
 	//Define the Request Client
 	commerceClient := http.Client{
 		Timeout: time.Second * 20, // Timeout after 2 seconds
 	}
 
 	//HTTP Request
-	fmt.Println("HTTP Request formatting")
+	log.Debug("HTTP Request formatting")
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		log.Fatal(err)
@@ -104,7 +105,7 @@ func jsonLoad(url string) (products product) {
 		log.Fatal(readErr)
 	}
 
-	fmt.Println(string(body))
+	log.Debug(string(body))
 
 	//unmarshall JSON
 	products = product{}
@@ -112,7 +113,7 @@ func jsonLoad(url string) (products product) {
 	if jsonErr != nil {
 		log.Fatal(jsonErr)
 	}
-	fmt.Println("Products:", products)
+	log.Debug("Products:", products)
 	return products
 }
 
@@ -131,7 +132,7 @@ func printProducts(products product) (page int, link string) {
 		skulist = append(skulist, tempsku)
 		//			}
 	}
-	fmt.Println("SKU LIST: ", skulist)
+	log.Debug("SKU LIST: ", skulist)
 	QTYUpdate(skulist)
 	link = products.Meta.Pagination.Links.Next
 	return products.Meta.Pagination.CurrentPage, link
@@ -145,17 +146,16 @@ func qty(sku string) {
 	limit := 250
 
 	//Define the Request URL
-	// sku := "CAP-263"
 	link = "?sku=" + sku + "&include=images&include_fields=sku,inventory_level,inventory_warning_level,mpn,brand_id&limit=" + strconv.Itoa(limit)
 	url = "https://api.bigcommerce.com/stores/" + storeid + "/v3/catalog/products"
 
 	//Loop through the pages
 	totalpages := jsonLoad(urlmake(url, link)).Meta.Pagination.TotalPages
-	fmt.Println("Total Pages:", totalpages)
+	log.Debug("Total Pages:", totalpages)
 	i := 0
 	for i < totalpages {
 		page, newlink := printProducts(jsonLoad(urlmake(url, link)))
-		fmt.Println("Next Page Query:", page, newlink)
+		log.Debug("Next Page Query:", page, newlink)
 		link = newlink
 		i = page
 	}
