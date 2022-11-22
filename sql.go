@@ -493,7 +493,7 @@ func ProductInsert(r *http.Request, permission Permissions) (message Message) {
 	log.WithFields(log.Fields{"username": permission.User}).Debug("Reorder: ", reorder)
 
 	//Build the Query
-	newquery = "REPLACE INTO skus (`sku_internal`, `manufacturer_code`, `sku_manufacturer`, `processing_request`, `sorting_request`, `unit`, `unit_price`, `Currency`, `order_qty`,`product_option`,`reorder`,season) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)"
+	newquery = "REPLACE INTO skus (`sku_internal`, `manufacturer_code`, `sku_manufacturer`, `processing_request`, `sorting_request`, `unit`, `unit_price`, `Currency`, `order_qty`,`product_option`,`reorder`,season) VALUES (REPLACE(?,' ',''),?,?,?,?,?,?,?,?,?,?,?)"
 
 	//Run Query
 	log.WithFields(log.Fields{"username": permission.User}).Debug(i...) //debug variables map
