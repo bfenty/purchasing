@@ -75,6 +75,7 @@
                             <option value="USD">USD</option>
                             <option value="CZK">CZK</option>
                             <option value="EUR">EUR</option>
+                            <option value="GBP">GBP</option>
                           </select>
                         </td>
                         <td><input class="form-control" type='text' id="orderqty" name="orderqty"></td>
@@ -174,6 +175,7 @@
                             <option value="USD"{{if eq .Currency "USD"}} selected{{end}}>USD</option>
                             <option value="CZK"{{if eq .Currency "CZK"}} selected{{end}}>CZK</option>
                             <option value="EUR"{{if eq .Currency "EUR"}} selected{{end}}>EUR</option>
+                            <option value="GBP"{{if eq .Currency "GBP"}} selected{{end}}>GBP</option>
                           </select>
                         </td>
                         <td><input class="form-control" type='text' id="orderqty" name="orderqty" value="{{.Qty}}"></td>
