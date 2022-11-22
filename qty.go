@@ -145,8 +145,15 @@ func qty(sku string) {
 	storeid := os.Getenv("BIGCOMMERCE_STOREID")
 	limit := 250
 
+	var skus []string
+
+	skus = append(skus, " BF-GEMS-3863")
+	skus = append(skus, "BF-GEMS-3863")
+
+	log.Println(skus)
+
 	//Define the Request URL
-	link = "?sku=" + sku + "&include=images&include_fields=sku,inventory_level,inventory_warning_level,mpn,brand_id&limit=" + strconv.Itoa(limit)
+	link = "?sku:in=" + sku + "%2C%20" + sku + "&include=images&include_fields=sku,inventory_level,inventory_warning_level,mpn,brand_id&limit=" + strconv.Itoa(limit)
 	url = "https://api.bigcommerce.com/stores/" + storeid + "/v3/catalog/products"
 
 	//Loop through the pages
