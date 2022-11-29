@@ -435,6 +435,11 @@ func ProductList(limit int, r *http.Request) (message Message, products []Produc
 	return message, products
 }
 
+// Check if a product exists already in the DB
+func ProductExist(sku string) {
+
+}
+
 // Product Insert
 func ProductInsert(r *http.Request) (message Message) {
 	// Get a database handle.
