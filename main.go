@@ -1,8 +1,10 @@
 package main
 
 import (
+	"fmt"
 	"html/template"
 	"net/http"
+	"os"
 	"strconv"
 
 	"github.com/sirupsen/logrus"
@@ -84,6 +86,11 @@ func handleerror(err error) (message Message) {
 
 // Main function
 func main() {
+	if os.Getenv("LOGLEVEL") == "DEBUG" {
+		log.SetLevel(log.DebugLevel)
+	} else {
+		log.SetLevel(log.InfoLevel)
+	}
 	log.Info("Starting Server")
 	var message Message
 	db, message = opendb()
@@ -95,6 +102,7 @@ func main() {
 	http.HandleFunc("/signin", Signin)
 	http.HandleFunc("/usercreate", Usercreate)
 	http.HandleFunc("/products", Products)
+	http.HandleFunc("/productexist", ProductExist)
 	http.HandleFunc("/productsinsert", ProductInsertion)
 	http.HandleFunc("/productupdate", ProductUpdate)
 	http.HandleFunc("/productdelete", productdelete)
@@ -107,6 +115,12 @@ func main() {
 	http.HandleFunc("/orderdelete", orderdelete)
 	http.HandleFunc("/orderupdate", orderupdate)
 	http.ListenAndServe(":8082", nil)
+}
+
+func ProductExist(w http.ResponseWriter, r *http.Request) {
+	exists, message := ProductExistSQL("CZ-4510")
+	fmt.Fprintf(w, exists)
+	log.Debug(message)
 }
 
 // Page of list of all orders

@@ -51,6 +51,17 @@ func opendb() (db *sql.DB, messagebox Message) {
 	return db, messagebox
 }
 
+func ProductExistSQL(sku string) (exists string, message Message) {
+	//Test Connection
+	pingErr := db.Ping()
+	if pingErr != nil {
+		db, message = opendb()
+		return exists, handleerror(pingErr)
+	}
+
+	return "yes", message
+}
+
 func orderdeletesql(order int, permission Permissions) (message Message) {
 	//Debug
 	log.WithFields(log.Fields{"username": permission.User}).Info("Deleting order ", order, "...")
