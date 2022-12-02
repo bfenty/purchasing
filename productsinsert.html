@@ -4,10 +4,20 @@
 <script>
 $(document).ready(function(){
   $(document).on('click', '#btnInsert', function(){ 
-      alert(document.getElementById('insertform').elements[0].value);
-      $.get("/productexist", function(data){
-        alert("Data: " + data);
-      });
+      const Http = new XMLHttpRequest();
+      const url='/productexist?sku='+document.getElementById('insertform').elements[0].value;
+      Http.open("GET", url);
+      Http.send();
+      Http.onreadystatechange=(e)=>{
+      if (Http.responseText=="FALSE") {
+        document.getElementById("insertform").submit(); 
+      } else if (Http.responseText=="TRUE") {
+        $('#ModalInsert').modal('toggle');
+      }
+      }
+  });
+  $(document).on('click', '#btnOverwrite', function(){
+        document.getElementById("insertform").submit(); 
   });
 });
 </script>
@@ -48,6 +58,26 @@ $(document).ready(function(){
                 </tr>
             </thead>
             <tbody>
+              <!-- Insert Modal -->
+                          <div class="modal fade" id="ModalInsert" tabindex="-1" role="dialog" aria-labelledby="ModalInsertLabel" aria-hidden="true">
+                            <div class="modal-dialog" role="document">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                <h5 class="modal-title" id="ModalInsertLabel">SKU Exists</h5>
+                                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                                </div>
+                                <div class="modal-body">
+                                  <p>This SKU already exists. Overwrite?</p>
+                                </div>
+                                <div class="modal-footer">
+                                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                      <button type="button" class="btn btn-danger" data-bs-dismiss="modal" id="btnOverwrite">Yes, Overwrite</button>
+                                </div>
+                            </div>
+                            </div>
+                        </div>
                 <tr class="table-info">
                     <form method="GET" action="/productupdate" id="insertform">
                         <div class="form-group">
@@ -100,7 +130,10 @@ $(document).ready(function(){
                         </select>
                       </td>
                         <td></td>
-                        <td><input type="hidden" id="insert" name="insert" value="true"><input type='submit' value='Insert' class="btn btn-primary" id="btnInsert"></td>
+                        <td>
+                          <input type="hidden" id="insert" name="insert" value="true">
+                          <button type="button" class="btn btn-primary submit" id="btnInsert">Insert</button>
+                        </td>
                         <td></td>
                         </div>
                     </form>

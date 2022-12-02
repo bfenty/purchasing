@@ -118,7 +118,9 @@ func main() {
 }
 
 func ProductExist(w http.ResponseWriter, r *http.Request) {
-	exists, message := ProductExistSQL("CZ-4510")
+	r.ParseForm()
+	log.Info("Checking if product ", r.FormValue("sku"), " exists")
+	exists, message := ProductExistSQL(r.FormValue("sku"))
 	fmt.Fprintf(w, exists)
 	log.Debug(message)
 }

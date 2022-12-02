@@ -52,6 +52,7 @@ func opendb() (db *sql.DB, messagebox Message) {
 }
 
 func ProductExistSQL(sku string) (exists string, message Message) {
+	log.Info("SKU: ", sku)
 	//Test Connection
 	pingErr := db.Ping()
 	if pingErr != nil {
@@ -59,7 +60,22 @@ func ProductExistSQL(sku string) (exists string, message Message) {
 		return exists, handleerror(pingErr)
 	}
 
-	return "yes", message
+	// sku = "TEST"
+	newquery := "SELECT COUNT(*) from skus where sku_internal = ?"
+	var count int
+	err := db.QueryRow(newquery, sku).Scan(&count)
+	if err != nil {
+		handleerror(err)
+	}
+	log.Info("Count: ", count)
+
+	if count == 0 {
+		exists = "FALSE"
+	} else {
+		exists = "TRUE"
+	}
+
+	return exists, message
 }
 
 func orderdeletesql(order int, permission Permissions) (message Message) {
