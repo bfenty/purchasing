@@ -1,0 +1,31 @@
+<html>
+<head>
+{{template "header"}}
+</head>
+<body>
+  {{template "navigation" .}}
+  <br>
+  {{template "messagebox" .}}
+  <table>
+    <thead class="thead-dark" style="position: sticky; top: 0; z-index: 1;">
+      <tr>
+          <th scope="col">SKU</th>
+          <th scope="col">Manufacturer Part #</th>
+          <th scope="col">Product Option</th>
+          <th scope="col">Manufacturer</th>
+          <th scope="col">Processing Request</th>
+          <th scope="col">Unit</th>
+          <th scope="col">Unit Price</th>
+          <th scope="col">Currency</th>
+          <th scope="col">Order Qty</th>
+          <th scope="col">Reorder</th>
+          <th scope="col">Season</th>
+          <th scope="col">Inventory</th>
+          <th></th>
+          <th></th>
+      </tr>
+  </thead>
+  </table>
+  {{template "footer" .}}
+</body>
+</html>

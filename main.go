@@ -95,7 +95,22 @@ func main() {
 	http.HandleFunc("/orderlist", orderlist)
 	http.HandleFunc("/orderdelete", orderdelete)
 	http.HandleFunc("/orderupdate", orderupdate)
+	http.HandleFunc("/sorting", Sorting)
 	http.ListenAndServe(":8082", nil)
+}
+
+func Sorting(w http.ResponseWriter, r *http.Request) {
+	var page Page
+	page.Permission = auth(w, r)
+	page.Message.Body = r.URL.Query().Get("message")
+	if r.URL.Query().Get("success") == "true" {
+		page.Message.Success = true
+	}
+	t, _ := template.ParseFiles("sorting.html", "header.html", "login.js")
+	fmt.Println("Loading Sorting...")
+	page.Title = "Sorting"
+	page.Message, page.ProductList = ProductList(100, r)
+	t.Execute(w, page)
 }
 
 func orderlist(w http.ResponseWriter, r *http.Request) {
@@ -179,7 +194,6 @@ func Products(w http.ResponseWriter, r *http.Request) {
 	var page Page
 	page.Permission = auth(w, r)
 	page.Message.Body = r.URL.Query().Get("message")
-	// fmt.Println("Requested URL: ", strings.SplitN(r.URL.String(), "?", 1)[1])
 	if r.URL.Query().Get("success") == "true" {
 		page.Message.Success = true
 	}
@@ -187,10 +201,6 @@ func Products(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Loading Products...")
 	page.Title = "Products"
 	page.Message, page.ProductList = ProductList(100, r)
-	// if r.URL.Query().Get("action") == "export" {
-	// 	_, excelproductlist := ProductList(1000, r)
-	// 	excel(excelproductlist)
-	// }
 	t.Execute(w, page)
 }
 
