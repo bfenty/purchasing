@@ -114,7 +114,22 @@ func main() {
 	http.HandleFunc("/orderlist", orderlist)
 	http.HandleFunc("/orderdelete", orderdelete)
 	http.HandleFunc("/orderupdate", orderupdate)
+	http.HandleFunc("/sorting", Sorting)
 	http.ListenAndServe(":8082", nil)
+}
+
+func Sorting(w http.ResponseWriter, r *http.Request) {
+	var page Page
+	page.Permission = auth(w, r)
+	page.Message.Body = r.URL.Query().Get("message")
+	if r.URL.Query().Get("success") == "true" {
+		page.Message.Success = true
+	}
+	t, _ := template.ParseFiles("sorting.html", "header.html", "login.js")
+	fmt.Println("Loading Sorting...")
+	page.Title = "Sorting"
+	page.Message, page.ProductList = ProductList(100, r)
+	t.Execute(w, page)
 }
 
 func ProductExist(w http.ResponseWriter, r *http.Request) {
