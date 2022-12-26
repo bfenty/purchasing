@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"fmt"
 
 	// "log"
 	"net/http"
@@ -466,6 +467,86 @@ func ProductList(limit int, r *http.Request, permission Permissions) (message Me
 // Check if a product exists already in the DB
 func ProductExist(sku string) {
 
+}
+
+// Product Insert
+func SortingInsert(r *http.Request) (message Message) {
+	// Get a database handle.
+	var err error
+
+	//Test Connection
+	pingErr := db.Ping()
+	if pingErr != nil {
+		db, message = opendb()
+		return handleerror(pingErr)
+	}
+
+	//Define Variables
+	var i []interface{}
+	var newquery string
+
+	sku := r.URL.Query().Get("sku")
+	descript := r.URL.Query().Get("description")
+	instruct := r.URL.Query().Get("instructions")
+	weightin := r.URL.Query().Get("weightin")
+	weightout := r.URL.Query().Get("weightout")
+	pieces := r.URL.Query().Get("pieces")
+	hours := r.URL.Query().Get("hours")
+	checkout := r.URL.Query().Get("checkout")
+	checkin := r.URL.Query().Get("checkin")
+	sorter := r.URL.Query().Get("sorter")
+
+	//ensure that there are no null numerical values
+	if pieces == "" {
+		pieces = "0"
+	}
+	if weightin == "" {
+		weightin = "0"
+	}
+	if weightout == "" {
+		weightout = "0"
+	}
+	if hours == "" {
+		hours = "0"
+	}
+
+	//Create the fields to insert
+	i = append(i, sku)
+	i = append(i, descript)
+	i = append(i, instruct)
+	i = append(i, weightin)
+	i = append(i, weightout)
+	i = append(i, pieces)
+	i = append(i, hours)
+	i = append(i, checkout)
+	i = append(i, checkin)
+	i = append(i, sorter)
+
+	//Build the Query
+	newquery = "REPLACE INTO skus (`sku_internal`, `manufacturer_code`, `sku_manufacturer`, `processing_request`, `sorting_request`, `unit`, `unit_price`, `Currency`, `order_qty`,`product_option`,`reorder`,season) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)"
+
+	//Run Query
+	fmt.Println(i...) //debug variables map
+	fmt.Println("Running Product List")
+	fmt.Println(newquery)
+	rows, err := db.Query(newquery, i...)
+	if err != nil {
+		return handleerror(err)
+	}
+	defer rows.Close()
+
+	//Pull Data
+	for rows.Next() {
+		var r Product
+		err := rows.Scan(&r.SKU, &r.Manufacturer, &r.ManufacturerPart, &r.Description, &r.ProcessRequest, &r.SortingRequest, &r.Unit, &r.UnitPrice, &r.Currency, &r.Qty)
+		if err != nil {
+			return handleerror(err)
+		}
+	}
+	message.Title = "Success"
+	message.Body = "Successfully inserted row"
+	message.Success = true
+	return message
 }
 
 // Product Insert

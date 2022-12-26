@@ -39,6 +39,19 @@ type Product struct {
 	Image            Image
 }
 
+type SortRequest struct {
+	SKU          string
+	Description  *string
+	Instructions *string
+	Weightin     *float64
+	Weightout    *float64
+	Pieces       *int
+	Hours        *float64
+	Checkout     *string
+	Checkin      *string
+	Sorter       *string
+}
+
 type Page struct {
 	Title       string
 	Message     Message
