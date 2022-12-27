@@ -114,6 +114,8 @@ func main() {
 	http.HandleFunc("/orderlist", orderlist)
 	http.HandleFunc("/orderdelete", orderdelete)
 	http.HandleFunc("/orderupdate", orderupdate)
+	http.HandleFunc("/sorting", Sorting)
+	http.HandleFunc("/sortingupdate", Sortingupdate)
 	http.ListenAndServe(":8082", nil)
 }
 
@@ -131,6 +133,16 @@ func orderlist(w http.ResponseWriter, r *http.Request) {
 	page.Permission = auth(w, r)
 	page.Message, page.Orders = listorders(page.Permission)
 	t, _ := template.ParseFiles("orderlist.html", "header.html", "login.js")
+	page.Title = "Orders"
+	t.Execute(w, page)
+}
+
+// Page of list of all orders
+func Sorting(w http.ResponseWriter, r *http.Request) {
+	var page Page
+	page.Permission = auth(w, r)
+	page.Message, page.Orders = listorders(page.Permission)
+	t, _ := template.ParseFiles("sorting.html", "header.html", "login.js")
 	page.Title = "Orders"
 	t.Execute(w, page)
 }
@@ -243,6 +255,15 @@ func productdelete(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	sku := r.FormValue("sku")
 	productdeletesql(sku, page.Permission)
+	http.Redirect(w, r, r.Header.Get("Referer"), 302)
+}
+
+// Handle update/insert of product POST request
+func Sortingupdate(w http.ResponseWriter, r *http.Request) {
+	var page Page
+	page.Permission = auth(w, r)
+	log.Debug("Updating sort request...")
+	page.Message = Sortinginsert(r, page.Permission)
 	http.Redirect(w, r, r.Header.Get("Referer"), 302)
 }
 

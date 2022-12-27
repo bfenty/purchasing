@@ -1,0 +1,45 @@
+<html>
+<head>
+{{template "header"}}
+</head>
+<body>
+  {{template "navigation" .}}
+  <br>
+  {{template "messagebox" .}}
+  <table class="table table-striped table-hover">
+    <thead class="thead-dark" style="position: sticky; top: 0; z-index: 1;">
+      <tr>
+          <th scope="col">SKU</th>
+          <th scope="col">Description</th>
+          <th scope="col">Instructions</th>
+          <th scope="col">Weight In</th>
+          <th scope="col">Weight Out</th>
+          <th scope="col">Pieces</th>
+          <th scope="col">Hours</th>
+          <th scope="col">Checkout Date</th>
+          <th scope="col">Checkin Date</th>
+          <th scope="col">Sorter</th>
+          <th></th>
+      </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <form method="GET" action="/sortingupdate">
+        <input type="hidden" id="id" name="id">
+      <td><input class="form-control" type='text' id="sku" name="sku"></td>
+      <td><input class="form-control" type='text' id="description" name="description"></td>
+      <td><input class="form-control" type='text' id="instructions" name="instructions"></td>
+      <td><input class="form-control" type='text' id="weightin"></td>
+      <td><input class="form-control" type='text' id="weightout"></td>
+      <td><input class="form-control" type='text' id="pieces"></td>
+      <td><input class="form-control" type='text' id="hours"></td>
+      <td><input type="date" class="form-control" type='text' id="checkout"></td>      
+      <td><input type="date" class="form-control" type='text' id="checkin"></td>
+      <td><input class="form-control" type='text' id="sorter"></td>
+      <td><input type='submit' value='Update' class="btn btn-primary"></td>
+    </tr>
+  </tbody>
+  </table>
+  {{template "footer" .}}
+</body>
+</html>

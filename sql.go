@@ -464,6 +464,87 @@ func ProductList(limit int, r *http.Request, permission Permissions) (message Me
 }
 
 // Product Insert
+func Sortinginsert(r *http.Request, permission Permissions) (message Message) {
+	// Get a database handle.
+	var err error
+
+	//Test Connection
+	pingErr := db.Ping()
+	if pingErr != nil {
+		db, message = opendb()
+		return handleerror(pingErr)
+	}
+
+	//Define Variables
+	var i []interface{}
+	var newquery string
+
+	sku := r.URL.Query().Get("sku")
+	descript := r.URL.Query().Get("description")
+	instructions := r.URL.Query().Get("instructions")
+	// weightin := r.URL.Query().Get("weightin")
+	// weightout := r.URL.Query().Get("weightout")
+	// pieces := r.URL.Query().Get("pieces")
+	// hours := r.URL.Query().Get("hours")
+	// checkout := r.URL.Query().Get("checkout")
+	// checkin := r.URL.Query().Get("checkin")
+	// sorter := r.URL.Query().Get("sorter")
+
+	//ensure that there are no null numerical values
+	// if unitprice == "" {
+	// 	unitprice = "0"
+	// }
+	// if orderqty == "" {
+	// 	orderqty = "0"
+	// }
+
+	//Create the fields to insert
+	i = append(i, sku)
+	i = append(i, descript)
+	i = append(i, instructions)
+	// i = append(i, weightin)
+	// i = append(i, weightout)
+	// i = append(i, pieces)
+	// i = append(i, hours)
+	// i = append(i, checkout)
+	// i = append(i, checkin)
+	// i = append(i, sorter)
+	log.WithFields(log.Fields{"username": permission.User}).Debug(i)
+
+	//Build the Query
+	newquery = "REPLACE INTO sortrequest (`sku`, `description`, `instructions`) VALUES (REPLACE(?,' ',''),?,?)"
+
+	//Run Query
+	log.WithFields(log.Fields{"username": permission.User}).Debug(i...) //debug variables map
+	log.WithFields(log.Fields{"username": permission.User}).Debug("Running Product List")
+	log.WithFields(log.Fields{"username": permission.User}).Debug(newquery)
+	rows, err := db.Query(newquery, i...)
+	if err != nil {
+		return handleerror(err)
+	}
+	defer rows.Close()
+
+	//Pull Data
+	// for rows.Next() {
+	// 	var r Product
+	// 	err := rows.Scan(&r.SKU, &r.Manufacturer, &r.ManufacturerPart, &r.Description, &r.ProcessRequest, &r.SortingRequest, &r.Unit, &r.UnitPrice, &r.Currency, &r.Qty)
+	// 	if err != nil {
+	// 		return handleerror(err)
+	// 	}
+	// }
+
+	//add image and qty to new row
+	// qty(sku)
+
+	//Logging
+	log.WithFields(log.Fields{"username": permission.User}).Info("Inserted Product ", sku)
+	message.Title = "Success"
+	message.Body = "Successfully inserted row"
+	message.Success = true
+	return message
+}
+
+// Product Insert
 func ProductInsert(r *http.Request, permission Permissions) (message Message) {
 	// Get a database handle.
 	var err error
