@@ -239,6 +239,38 @@ func orderupdatesql(order int, tracking string, comment string, status string, p
 	return message
 }
 
+func listusers(role string, permission Permissions) (message Message, users []User) {
+	//Debug
+	log.WithFields(log.Fields{"username": permission.User}).Debug("Getting users with role ", role, "...")
+
+	//Test Connection
+	pingErr := db.Ping()
+	if pingErr != nil {
+		db, message = opendb()
+		return handleerror(pingErr), users
+	}
+	//Build the Query
+	newquery := "SELECT username from users where permissions='sorting'"
+
+	//Run Query
+	rows, err := db.Query(newquery)
+	defer rows.Close()
+	if err != nil {
+		return handleerror(err), users
+	}
+
+	//Pull Data
+	for rows.Next() {
+		var r User
+		err := rows.Scan(&r.Username)
+		if err != nil {
+			return handleerror(err), users
+		}
+		users = append(users, r)
+	}
+	return message, users
+}
+
 func listorders(permission Permissions) (message Message, orders []Order) {
 	//Debug
 	log.WithFields(log.Fields{"username": permission.User}).Debug("Getting Orders...")
@@ -269,6 +301,46 @@ func listorders(permission Permissions) (message Message, orders []Order) {
 		orders = append(orders, r)
 	}
 	return message, orders
+}
+
+// List of all sorting requests
+func listsortrequests(permission Permissions, action string) (message Message, sortrequests []SortRequest) {
+	//Debug
+	log.WithFields(log.Fields{"username": permission.User}).Debug("Getting Sort Requests...")
+
+	//Test Connection
+	pingErr := db.Ping()
+	if pingErr != nil {
+		db, message = opendb()
+		return handleerror(pingErr), sortrequests
+	}
+
+	var newquery string
+
+	//Build the Query
+	if action == "all" {
+		newquery = "SELECT requestid, sku,description,instructions from sortrequest WHERE 1"
+	} else if action == "checkout" {
+		newquery = "SELECT requestid, sku,description,instructions from sortrequest WHERE 1 and sorter is null"
+	}
+
+	//Run Query
+	rows, err := db.Query(newquery)
+	defer rows.Close()
+	if err != nil {
+		return handleerror(err), sortrequests
+	}
+
+	//Pull Data
+	for rows.Next() {
+		var r SortRequest
+		err := rows.Scan(&r.ID, &r.SKU, &r.Description, &r.Instructions)
+		if err != nil {
+			return handleerror(err), sortrequests
+		}
+		sortrequests = append(sortrequests, r)
+	}
+	return message, sortrequests
 }
 
 func nextorder(manufacturer string, permission Permissions) (message Message, order Order) {
@@ -463,7 +535,7 @@ func ProductList(limit int, r *http.Request, permission Permissions) (message Me
 	return message, products
 }
 
-// Product Insert
+// Sorting Insert
 func Sortinginsert(r *http.Request, permission Permissions) (message Message) {
 	// Get a database handle.
 	var err error
@@ -480,6 +552,7 @@ func Sortinginsert(r *http.Request, permission Permissions) (message Message) {
 	var newquery string
 
 	sku := r.URL.Query().Get("sku")
+	id := r.URL.Query().Get("requestid")
 	descript := r.URL.Query().Get("description")
 	instructions := r.URL.Query().Get("instructions")
 	// weightin := r.URL.Query().Get("weightin")
@@ -502,6 +575,7 @@ func Sortinginsert(r *http.Request, permission Permissions) (message Message) {
 	i = append(i, sku)
 	i = append(i, descript)
 	i = append(i, instructions)
+	i = append(i, id)
 	// i = append(i, weightin)
 	// i = append(i, weightout)
 	// i = append(i, pieces)
@@ -509,10 +583,10 @@ func Sortinginsert(r *http.Request, permission Permissions) (message Message) {
 	// i = append(i, checkout)
 	// i = append(i, checkin)
 	// i = append(i, sorter)
-	log.WithFields(log.Fields{"username": permission.User}).Debug(i)
+	log.WithFields(log.Fields{"username": permission.User}).Debug("Inserting Sorting Request: ", i)
 
 	//Build the Query
-	newquery = "REPLACE INTO sortrequest (`sku`, `description`, `instructions`) VALUES (REPLACE(?,' ',''),?,?)"
+	newquery = "REPLACE INTO sortrequest (`sku`, `description`, `instructions`, `requestid`) VALUES (REPLACE(?,' ',''),?,?,?)"
 
 	//Run Query
 	log.WithFields(log.Fields{"username": permission.User}).Debug(i...) //debug variables map
@@ -541,6 +615,31 @@ func Sortinginsert(r *http.Request, permission Permissions) (message Message) {
 	message.Title = "Success"
 	message.Body = "Successfully inserted row"
 	message.Success = true
+	return message
+}
+
+func sortrequestdeletesql(requestid int, permission Permissions) (message Message) {
+	//Debug
+	log.WithFields(log.Fields{"username": permission.User}).Info("Deleting order ", order, "...")
+
+	//Test Connection
+	pingErr := db.Ping()
+	if pingErr != nil {
+		db, message = opendb()
+		return handleerror(pingErr)
+	}
+
+	//Build the Query
+	newquery := "DELETE FROM `sortrequest` WHERE requestid = ?"
+	rows, err := db.Query(newquery, requestid)
+	rows.Close()
+	if err != nil {
+		return handleerror(err)
+	}
+
+	message.Success = true
+	message.Title = "Success"
+	message.Body = "Successfully deleted Sorting Request ID  " + strconv.Itoa(requestid)
 	return message
 }
 
