@@ -366,27 +366,27 @@ func Sortinginsert(r *http.Request, permission Permissions) (message Message) {
 	id := r.URL.Query().Get("requestid")
 	descript := r.URL.Query().Get("description")
 	instructions := r.URL.Query().Get("instructions")
-	weightin := r.URL.Query().Get("weightin")
-	weightout := r.URL.Query().Get("weightout")
-	pieces := r.URL.Query().Get("pieces")
-	hours := r.URL.Query().Get("hours")
+	weightin, _ := strconv.Atoi(r.URL.Query().Get("weightin"))
+	weightout, _ := strconv.Atoi(r.URL.Query().Get("weightout"))
+	pieces, _ := strconv.Atoi(r.URL.Query().Get("pieces"))
+	hours, _ := strconv.Atoi(r.URL.Query().Get("hours"))
 	checkout := r.URL.Query().Get("checkout")
 	checkin := r.URL.Query().Get("checkin")
 	sorter := r.URL.Query().Get("sorter")
 
 	//ensure that there are no null numerical values
-	if weightin == "" {
-		weightin = "0"
-	}
-	if weightout == "" {
-		weightout = "0"
-	}
-	if pieces == "" {
-		pieces = "0"
-	}
-	if hours == "" {
-		hours = "0"
-	}
+	// if weightin == nil {
+	// 	weightin = "0"
+	// }
+	// if weightout == "" {
+	// 	weightout = "0"
+	// }
+	// if pieces == "" {
+	// 	pieces = "0"
+	// }
+	// if hours == "" {
+	// 	hours = "0"
+	// }
 
 	//Create the fields to insert
 	i = append(i, sku)
