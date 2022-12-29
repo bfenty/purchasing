@@ -1,0 +1,94 @@
+<html>
+<head>
+{{template "header"}}
+</head>
+<body>
+  {{template "navigation" .}}
+  <br>
+  {{template "messagebox" .}}
+  {{$permission := .Permission.Perms}}
+  <table class="table table-striped table-hover">
+    <thead class="thead-dark" style="position: sticky; top: 0; z-index: 1;">
+      <tr>
+          <th scope="col" width=70px>ID</th>
+          <th scope="col" width="90px">SKU</th>
+          <th scope="col" width=190px>Description</th>
+          <th scope="col">Instructions</th>
+          <th scope="col" width=60px>Weight In</th>
+          <th scope="col" width=60px>Weight Out</th>
+          <th scope="col" width=60px>Pieces</th>
+          <th scope="col" width=60px>Hours</th>
+          <th scope="col" width=60px>Checkout Date</th>
+          <th scope="col" width=100px>Checkin Date</th>
+          <th scope="col" width=90px>Sorter</th>
+          <th width=80px></th>
+          <th width=80px></th>
+      </tr>
+  </thead>
+  <tbody>
+    <tr class="table-info">
+      <form method="GET" action="/sortingupdate">
+      <td></td>
+      <td><input class="form-control" type='text' id="sku" name="sku"></td>
+      <td><input class="form-control" type='text' id="description" name="description"></td>
+      <td><input class="form-control" type='text' id="instructions" name="instructions"></td>
+      <td><input class="form-control" type='text' id="weightin"></td>
+      <td><input class="form-control" type='text' id="weightout"></td>
+      <td><input class="form-control" type='text' id="pieces"></td>
+      <td><input class="form-control" type='text' id="hours"></td>
+      <td><input type="date" class="form-control" type='text' id="checkout"></td>
+      <td><input type="date" class="form-control" type='text' id="checkin"></td>
+      <td><input class="form-control" type='text' id="sorter"></td>
+      <td><input type='submit' value='Insert' class="btn btn-primary"></td>
+      <td></td>
+      </form>
+    </tr>
+    {{range $index, $value := .SortRequests}}
+    <!-- Delete Modal -->
+          <div class="modal fade" id="ModalDelete{{$index}}" tabindex="-1" role="dialog" aria-labelledby="ModalDeleteLabel" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                <h5 class="modal-title" id="ModalDeleteLabel{{$index}}">Confirm Sorting Request Delete</h5>
+                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                </div>
+                <div class="modal-body">
+                This will permanently delete Sorting Request ID#{{.ID}}, are you sure you want to proceed?
+                </div>
+                <div class="modal-footer">
+                    <form action="/sortrequestdelete" method="POST">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <input type="hidden" value="{{.ID}}" id="requestid" name="requestid">
+                        <button type="submit" class="btn btn-danger">Yes, Delete</button>
+                    </form>
+                </div>
+            </div>
+            </div>
+        </div>
+    <tr>
+      <form method="GET" action="/sortingupdate">
+      <td><input class="form-control" type="text" id="requestid" name="requestid" value="{{.ID}}" readonly></td>
+      <td><input class="form-control" type='text' id="sku" name="sku" value="{{.SKU}}"{{if ne $permission "admin"}} readonly{{end}}></td>
+      <td><input class="form-control" type='text' id="description" name="description" value="{{.Description}}"{{if ne $permission "admin"}} readonly{{end}}></td>
+      <td><input class="form-control" type='text' id="instructions" name="instructions" value="{{.Instructions}}"{{if ne $permission "admin"}} readonly{{end}}></td>
+      <td><input class="form-control" type='text' id="weightout" name="weightout" value="{{.Weightout}}"></td>
+      <td><input class="form-control" type='text' id="weightin" name="weightin" value="{{.Weightin}}"></td>
+      <td><input class="form-control" type='text' id="pieces" name="pieces" value="{{.Pieces}}"></td>
+      <td><input class="form-control" type='text' id="hours" name="hours" value="{{.Hours}}"></td>
+      <td><input type="date" class="form-control" id="checkout" name="checkout" value="{{.Checkout}}"></td>
+      <td><input type="date" class="form-control" id="checkin" name="checkin" value="{{.Checkin}}"></td>
+      <td><input class="form-control" type='text' id="sorter" name="sorter" value="{{.Sorter}}"readonly></td>
+      <td><input type='submit' value='Update' class="btn btn-primary"></td>
+      <td><button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#ModalDelete{{$index}}">Delete</button></td>
+      </form>
+    </tr>
+    {{end}}
+    <tr></tr>
+    <tr></tr>
+  </tbody>
+  </table>
+  {{template "footer" .}}
+</body>
+</html>

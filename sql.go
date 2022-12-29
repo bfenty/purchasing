@@ -239,6 +239,38 @@ func orderupdatesql(order int, tracking string, comment string, status string, p
 	return message
 }
 
+func listusers(role string, permission Permissions) (message Message, users []User) {
+	//Debug
+	log.WithFields(log.Fields{"username": permission.User}).Debug("Getting users with role ", role, "...")
+
+	//Test Connection
+	pingErr := db.Ping()
+	if pingErr != nil {
+		db, message = opendb()
+		return handleerror(pingErr), users
+	}
+	//Build the Query
+	newquery := "SELECT username from users where permissions='sorting'"
+
+	//Run Query
+	rows, err := db.Query(newquery)
+	defer rows.Close()
+	if err != nil {
+		return handleerror(err), users
+	}
+
+	//Pull Data
+	for rows.Next() {
+		var r User
+		err := rows.Scan(&r.Username)
+		if err != nil {
+			return handleerror(err), users
+		}
+		users = append(users, r)
+	}
+	return message, users
+}
+
 func listorders(permission Permissions) (message Message, orders []Order) {
 	//Debug
 	log.WithFields(log.Fields{"username": permission.User}).Debug("Getting Orders...")
@@ -269,6 +301,135 @@ func listorders(permission Permissions) (message Message, orders []Order) {
 		orders = append(orders, r)
 	}
 	return message, orders
+}
+
+// List of all sorting requests
+func listsortrequests(permission Permissions, action string) (message Message, sortrequests []SortRequest) {
+	//Debug
+	log.WithFields(log.Fields{"username": permission.User}).Debug("Getting Sort Requests...")
+
+	//Test Connection
+	pingErr := db.Ping()
+	if pingErr != nil {
+		db, message = opendb()
+		return handleerror(pingErr), sortrequests
+	}
+
+	var newquery string
+
+	//Build the Query
+	if action == "all" {
+		//retrieves all records
+		newquery = "SELECT requestid, sku,description,instructions,weightin,weightout,pieces,hours,checkout,checkint,sorter from sortrequest WHERE 1 order by 1 desc"
+	} else if action == "checkout" {
+		//retrieves only records that have not been checked out yet
+		newquery = "SELECT requestid, sku,description,instructions,weightin,weightout,pieces,hours,checkout,checkint,sorter from sortrequest WHERE 1 and sorter is null or sorter='' order by 1 desc"
+	}
+
+	//Run Query
+	rows, err := db.Query(newquery)
+	defer rows.Close()
+	if err != nil {
+		return handleerror(err), sortrequests
+	}
+
+	//Pull Data
+	for rows.Next() {
+		var r SortRequest
+		err := rows.Scan(&r.ID, &r.SKU, &r.Description, &r.Instructions, &r.Weightin, &r.Weightout, &r.Pieces, &r.Hours, &r.Checkout, &r.Checkin, &r.Sorter)
+		if err != nil {
+			return handleerror(err), sortrequests
+		}
+		sortrequests = append(sortrequests, r)
+	}
+	return message, sortrequests
+}
+
+// Sorting Insert
+func Sortinginsert(r *http.Request, permission Permissions) (message Message) {
+	//Test DB Connection
+	pingErr := db.Ping()
+	if pingErr != nil {
+		db, message = opendb()
+		return handleerror(pingErr)
+	}
+
+	//Define Variables
+	var i []interface{}
+	var newquery string
+
+	//Retrieve variables from POST request
+	sku := r.URL.Query().Get("sku")
+	id := r.URL.Query().Get("requestid")
+	descript := r.URL.Query().Get("description")
+	instructions := r.URL.Query().Get("instructions")
+	weightin := r.URL.Query().Get("weightin")
+	weightout := r.URL.Query().Get("weightout")
+	pieces := r.URL.Query().Get("pieces")
+	hours := r.URL.Query().Get("hours")
+	checkout := r.URL.Query().Get("checkout")
+	checkin := r.URL.Query().Get("checkin")
+	sorter := r.URL.Query().Get("sorter")
+
+	//ensure that there are no null numerical values
+	if weightin == "" {
+		weightin = "0"
+	}
+	if weightout == "" {
+		weightout = "0"
+	}
+	if pieces == "" {
+		pieces = "0"
+	}
+	if hours == "" {
+		hours = "0"
+	}
+
+	//Create the fields to insert
+	i = append(i, sku)
+	i = append(i, descript)
+	i = append(i, instructions)
+	if id != "" {
+		i = append(i, id)
+	} //ensure that the id isn't null before inserting
+	i = append(i, weightin)
+	i = append(i, weightout)
+	i = append(i, pieces)
+	i = append(i, hours)
+	i = append(i, checkout)
+	i = append(i, checkin)
+	i = append(i, sorter)
+	log.WithFields(log.Fields{"username": permission.User}).Debug("Inserting Sorting Request: ", i)
+	log.WithFields(log.Fields{"username": permission.User}).Debug(i...) //debug variables map
+	log.WithFields(log.Fields{"username": permission.User}).Debug("Running Product List")
+
+	//Build the Query
+	if id != "" {
+		//Run the query if ID isn't null
+		newquery = "REPLACE INTO sortrequest (`sku`, `description`, `instructions`, `requestid`,`weightin`, `weightout`, `pieces`, `hours`, `checkout`, `checkint`, `sorter`) VALUES (REPLACE(?,' ',''),?,?,?,?,?,?,?,?,?,?)"
+		log.WithFields(log.Fields{"username": permission.User}).Debug("Query: ", newquery)
+		rows, err := db.Query(newquery, i...)
+		if err != nil {
+			return handleerror(err)
+		}
+		defer rows.Close()
+	} else {
+		//Run the query to insert a new row
+		newquery = "INSERT INTO sortrequest (`sku`, `description`, `instructions`, `weightin`, `weightout`, `pieces`, `hours`, `checkout`, `checkint`, `sorter`) VALUES (REPLACE(?,' ',''),?,?,?,?,?,?,?,?,?)"
+		log.WithFields(log.Fields{"username": permission.User}).Debug("Query: ", newquery)
+		rows, err := db.Query(newquery, i...)
+		if err != nil {
+			return handleerror(err)
+		}
+		defer rows.Close()
+	}
+
+	//Logging
+	log.WithFields(log.Fields{"username": permission.User}).Info("Inserted Product ", sku)
+	message.Title = "Success"
+	message.Body = "Successfully inserted row"
+	message.Success = true
+	return message
 }
 
 func nextorder(manufacturer string, permission Permissions) (message Message, order Order) {
@@ -461,6 +622,31 @@ func ProductList(limit int, r *http.Request, permission Permissions) (message Me
 	}
 
 	return message, products
+}
+
+func sortrequestdeletesql(requestid int, permission Permissions) (message Message) {
+	//Debug
+	log.WithFields(log.Fields{"username": permission.User}).Info("Deleting order ", order, "...")
+
+	//Test Connection
+	pingErr := db.Ping()
+	if pingErr != nil {
+		db, message = opendb()
+		return handleerror(pingErr)
+	}
+
+	//Build the Query
+	newquery := "DELETE FROM `sortrequest` WHERE requestid = ?"
+	rows, err := db.Query(newquery, requestid)
+	rows.Close()
+	if err != nil {
+		return handleerror(err)
+	}
+
+	message.Success = true
+	message.Title = "Success"
+	message.Body = "Successfully deleted Sorting Request ID  " + strconv.Itoa(requestid)
+	return message
 }
 
 // Product Insert

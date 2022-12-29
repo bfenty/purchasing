@@ -21,6 +21,20 @@ type Order struct {
 	Products         []Product
 }
 
+type SortRequest struct {
+	ID           int
+	SKU          string
+	Description  *string
+	Instructions *string
+	Weightin     *float64
+	Weightout    *float64
+	Pieces       *int
+	Hours        *float64
+	Checkout     *string
+	Checkin      *string
+	Sorter       *string
+}
+
 type Product struct {
 	SKU              string
 	Description      *string
@@ -40,11 +54,13 @@ type Product struct {
 }
 
 type Page struct {
-	Title       string
-	Message     Message
-	Permission  Permissions
-	ProductList []Product
-	Orders      []Order
+	Title        string
+	Message      Message
+	Permission   Permissions
+	ProductList  []Product
+	Orders       []Order
+	SortRequests []SortRequest
+	Users        []User
 }
 
 type Permissions struct {
@@ -56,6 +72,12 @@ type Message struct {
 	Success bool
 	Title   string
 	Body    string
+}
+
+type User struct {
+	Username string
+	Usercode int
+	Role     string
 }
 
 // initialize Logs
@@ -114,6 +136,10 @@ func main() {
 	http.HandleFunc("/orderlist", orderlist)
 	http.HandleFunc("/orderdelete", orderdelete)
 	http.HandleFunc("/orderupdate", orderupdate)
+	http.HandleFunc("/sorting", Sorting)
+	http.HandleFunc("/checkout", Checkout)
+	http.HandleFunc("/sortingupdate", Sortingupdate)
+	http.HandleFunc("/sortrequestdelete", sortrequestdelete)
 	http.ListenAndServe(":8082", nil)
 }
 
@@ -133,6 +159,37 @@ func orderlist(w http.ResponseWriter, r *http.Request) {
 	t, _ := template.ParseFiles("orderlist.html", "header.html", "login.js")
 	page.Title = "Orders"
 	t.Execute(w, page)
+}
+
+// Page of list of all Sort Requests
+func Sorting(w http.ResponseWriter, r *http.Request) {
+	var page Page
+	page.Permission = auth(w, r)
+	page.Message, page.SortRequests = listsortrequests(page.Permission, "all")
+	page.Message, page.Users = listusers("sorting", page.Permission)
+	t, _ := template.ParseFiles("sorting.html", "header.html", "login.js")
+	page.Title = "Sorting"
+	t.Execute(w, page)
+}
+
+// Page to Check Out sorting
+func Checkout(w http.ResponseWriter, r *http.Request) {
+	var page Page
+	page.Permission = auth(w, r)
+	page.Message, page.SortRequests = listsortrequests(page.Permission, "checkout")
+	t, _ := template.ParseFiles("checkout.html", "header.html", "login.js")
+	page.Title = "Check Out"
+	t.Execute(w, page)
+}
+
+// Handle delete order POST request
+func sortrequestdelete(w http.ResponseWriter, r *http.Request) {
+	var page Page
+	page.Permission = auth(w, r)
+	r.ParseForm()
+	requestid, _ := strconv.Atoi(r.FormValue("requestid"))
+	sortrequestdeletesql(requestid, page.Permission)
+	http.Redirect(w, r, r.Header.Get("Referer"), 302)
 }
 
 // handle POST request for updating order
@@ -243,6 +300,15 @@ func productdelete(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	sku := r.FormValue("sku")
 	productdeletesql(sku, page.Permission)
+	http.Redirect(w, r, r.Header.Get("Referer"), 302)
+}
+
+// Handle update/insert of product POST request
+func Sortingupdate(w http.ResponseWriter, r *http.Request) {
+	var page Page
+	page.Permission = auth(w, r)
+	log.Debug("Updating sort request...")
+	page.Message = Sortinginsert(r, page.Permission)
 	http.Redirect(w, r, r.Header.Get("Referer"), 302)
 }
 

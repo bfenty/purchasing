@@ -208,6 +208,28 @@ border-radius: 15px;
       <a class="nav-link" href="/orderlist">Orders<span class="sr-only">(current)</span></a>
     </li>
     {{end}}
+  {{if or (eq $permission "admin") (eq $permission "Receiving") (eq $permission "Purchasing") (eq $permission "Sorting")}}
+    <li class="nav-item active">
+      <a class="nav-link" href="/sorting">Sorting<span class="sr-only">(current)</span></a>
+    </li>
+    {{end}}
+  {{if or (eq $permission "admin") (eq $permission "Receiving") (eq $permission "Purchasing") (eq $permission "Sorting")}}
+    <li class="nav-item active">
+      <a class="nav-link" href="/checkout">Checkout<span class="sr-only">(current)</span></a>
+    </li>
+    {{end}}
+    
+    <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+          Dropdown
+        </a>
+        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+          <a class="dropdown-item" href="#">Action</a>
+          <a class="dropdown-item" href="#">Another action</a>
+          <div class="dropdown-divider"></div>
+          <a class="dropdown-item" href="#">Something else here</a>
+        </div>
+      </li>
       {{if or (eq $permission "admin") (eq $permission "Receiving") (eq $permission "Purchasing")}}
       <li class="nav-item active">
         <a class="nav-link" href="/logout">Logout <span class="sr-only">(current)</span></a>
