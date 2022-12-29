@@ -323,7 +323,7 @@ func listsortrequests(permission Permissions, action string) (message Message, s
 		newquery = "SELECT requestid, sku,description,instructions,weightin,weightout,pieces,hours,checkout,checkint,sorter from sortrequest WHERE 1 order by 1 desc"
 	} else if action == "checkout" {
 		//retrieves only records that have not been checked out yet
-		newquery = "SELECT requestid, sku,description,instructions,weightin,weightout,pieces,hours,checkout,checkint,sorter from sortrequest WHERE 1 and sorter is null or sorter='' order by 1 desc"
+		newquery = "SELECT requestid, sku,description,instructions,weightin,weightout,pieces,hours,checkout,checkint,sorter from sortrequest WHERE 1 and sorter is null or sorter='' order by 1"
 	}
 
 	//Run Query
