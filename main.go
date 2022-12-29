@@ -54,13 +54,14 @@ type Product struct {
 }
 
 type Page struct {
-	Title        string
-	Message      Message
-	Permission   Permissions
-	ProductList  []Product
-	Orders       []Order
-	SortRequests []SortRequest
-	Users        []User
+	Title         string
+	Message       Message
+	Permission    Permissions
+	ProductList   []Product
+	Orders        []Order
+	SortRequests  []SortRequest
+	SortRequests2 []SortRequest
+	Users         []User
 }
 
 type Permissions struct {
@@ -177,6 +178,7 @@ func Checkout(w http.ResponseWriter, r *http.Request) {
 	var page Page
 	page.Permission = auth(w, r)
 	page.Message, page.SortRequests = listsortrequests(page.Permission, "checkout")
+	page.Message, page.SortRequests2 = listsortrequests(page.Permission, "checkin")
 	t, _ := template.ParseFiles("checkout.html", "header.html", "login.js")
 	page.Title = "Check Out"
 	t.Execute(w, page)

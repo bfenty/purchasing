@@ -3,25 +3,26 @@
 {{template "header"}}
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+<!-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.0/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" /> -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.5.1/js/bootstrap-datepicker.js"></script>
 <script>
-  // Listen for click on toggle checkbox
-  function checkAll(ele) {
-   var checkboxes = document.getElementsByTagName('input');
-   if (ele.checked) {
-       for (var i = 0; i < checkboxes.length; i++) {
-           if (checkboxes[i].type == 'checkbox') {
-               checkboxes[i].checked = true;
-           }
-       }
-   } else {
-       for (var i = 0; i < checkboxes.length; i++) {
-           console.log(i)
-           if (checkboxes[i].type == 'checkbox') {
-               checkboxes[i].checked = false;
-           }
-       }
-   }
-}
+  $(document).ready(function() {
+  var date = new Date();
+  var today = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  var end = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+
+  $('.checkin').datepicker({
+    format: "mm/dd/yyyy",
+    todayHighlight: true,
+    startDate: today,
+    endDate: end,
+    autoclose: true
+      });
+
+      $('.checkin').datepicker('setDate', today);
+    });
 </script>
 </head>
 <body>
@@ -42,14 +43,14 @@
         <table class="table table-striped table-hover">
           <thead class="thead-dark" style="position: sticky; top: 0; z-index: 1;">
             <tr>
-                <th scope="col">Request ID</th>
-                <th scope="col">SKU</th>
-                <th scope="col">Description</th>
+                <th scope="col" width=70px>ID</th>
+                <th scope="col" width="90px">SKU</th>
+                <th scope="col" width=190px>Description</th>
                 <th scope="col">Instructions</th>
-                <th scope="col">Weight Out</th>
-                {{if eq $permission "admin"}}<th scope="col">Sorter</th>{{end}}
-                <th></th>
-                <th></th>
+                <th scope="col" width=60px>Weight Out</th>
+                {{if eq $permission "admin"}}<th scope="col" width=90px>Sorter</th>{{end}}
+                <th width=80px></th>
+                <th width=80px></th>
             </tr>
         </thead>
         <tbody>
@@ -70,6 +71,7 @@
                   <option value='vahale'>vahale</option>
                   <option value='juhale'>juhale</option>
                   <option value='msimpk'>msimpk</option>
+                  <option value='msimpk'>awrigh</option>
                 </select>
               </td>
             {{end}}
@@ -81,6 +83,62 @@
         </tbody>
         </table>
         <!-- End Checkout Table -->
+      </div>
+    </div>
+  </div>
+  <!-- Checkin -->
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      <h4 class="panel-title">
+        <a data-toggle="collapse" data-parent="#accordion" href="#checkinpanel">Check In</a>
+      </h4>
+    </div>
+    <div id="checkinpanel" class="panel-collapse collapse">
+      <div class="panel-body">
+        <!-- Checkin Table -->
+        <table class="table table-striped table-hover">
+          <thead class="thead-dark" style="position: sticky; top: 0; z-index: 1;">
+            <tr>
+                <th scope="col" width=70px>ID</th>
+                <th scope="col" width="90px">SKU</th>
+                <th scope="col" width=190px>Description</th>
+                <th scope="col">Instructions</th>
+                <th scope="col" width=60px>Weight Out</th>
+                <th scope="col" width=100px>Checkout</th>
+                {{if eq $permission "admin"}}<th scope="col" width=90px>Sorter</th>{{end}}
+                <th scope="col" width=60px>Weight In</th>
+                <th scope="col" width=60px>Hours</th>
+                <th scope="col" width=60px>Pieces</th>
+                <th scope="col" width=100px>Check In</th>
+                <th width=80px></th>
+                <th width=80px></th>
+            </tr>
+        </thead>
+        <tbody>
+          {{range $index, $value := .SortRequests2}}
+          <tr>
+            <form method="GET" action="/sortingupdate">
+            <td><input class="form-control" type="text" id="requestid" name="requestid" value="{{.ID}}" readonly></td>
+            <td><input class="form-control" type='text' id="sku" name="sku" value="{{.SKU}}"readonly></td>
+            <td><input class="form-control" type='text' id="description" name="description" value="{{.Description}}"readonly></td>
+            <td><input class="form-control" type='text' id="instructions" name="instructions" value="{{.Instructions}}" readonly></td>
+            <td><input class="form-control" type='text' id="weightout" value="{{.Weightout}}" readonly></td>
+            <td><input class="form-control" type='date' id="checkout" value="{{.Checkout}}" readonly></td>
+            {{if eq $permission "admin"}}
+            <td><input class="form-control" type='text' id="sorter" name="sorter" value="{{.Sorter}}" readonly></td>
+            {{end}}
+            <td><input class="form-control" type='text' id="weightin" name="weightin" value="{{.Weightin}}"></td>
+            <td><input class="form-control" type='text' id="hours" name="hours" value="{{.Hours}}"></td>
+            <td><input class="form-control" type='text' id="pieces" name="pieces" value="{{.Pieces}}"></td>
+            <td><input class="form-control checkin" type='text' class="checkin" id="checkin" name="checkin" value="{{.Checkin}}"></td>
+            {{if eq $permission "admin"}}<td><input type='submit' value='Update' class="btn btn-primary"></td>{{end}}
+            <td><input type='submit' value='Check In' class="btn btn-primary"></td>
+            </form>
+          </tr>
+          {{end}}
+        </tbody>
+        </table>
+        <!-- End Checkin Table -->
       </div>
     </div>
   </div>
