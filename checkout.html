@@ -22,6 +22,16 @@
       });
 
       $('.checkin').datepicker('setDate', today);
+
+  $('.checkout').datepicker({
+    format: "mm/dd/yyyy",
+    todayHighlight: true,
+    startDate: today,
+    endDate: end,
+    autoclose: true
+      });
+
+      $('.checkout').datepicker('setDate', today);
     });
 </script>
 </head>
@@ -48,6 +58,7 @@
                 <th scope="col" width=190px>Description</th>
                 <th scope="col">Instructions</th>
                 <th scope="col" width=60px>Weight Out</th>
+                <th scope="col" width=100px>Checkout</th>
                 {{if eq $permission "admin"}}<th scope="col" width=90px>Sorter</th>{{end}}
                 <th width=80px></th>
                 <th width=80px></th>
@@ -62,6 +73,7 @@
             <td><input class="form-control" type='text' id="description" name="description" value="{{.Description}}"readonly></td>
             <td><input class="form-control" type='text' id="instructions" name="instructions" value="{{.Instructions}}" readonly></td>
             <td><input class="form-control" type='text' id="weightout" value="{{.Weightout}}" readonly></td>
+            <td><input class="form-control checkout" type='text' class="checkout" id="checkout" name="checkout"></td>
             {{if eq $permission "admin"}}
               <td>
                 <select class="custom-select mr-sm-2" id="sorter" name="sorter">
