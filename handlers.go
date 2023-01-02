@@ -74,6 +74,7 @@ func Signin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	//redirect new user to the signup page
 	if permission == "newuser" {
 		log.Debug(message.Body)
 		http.Redirect(w, r, "/signup?messagetitle="+message.Title+"&messagebody="+message.Body, http.StatusSeeOther)
@@ -99,9 +100,44 @@ func Signin(w http.ResponseWriter, r *http.Request) {
 		Value:   sessionToken,
 		Expires: expiresAt,
 	})
-	// log.Debug(sessions)
+	log.Debug(sessions)
 
-	http.Redirect(w, r, "/productsinsert", http.StatusSeeOther)
+	//redirect based on role:
+	switch permission {
+	case "notfound":
+		log.Debug(message.Body)
+		http.Redirect(w, r, "/login?messagetitle="+message.Title+"&messagebody="+message.Body, http.StatusSeeOther)
+		return
+	case "newuser":
+		log.Debug(message.Body)
+		http.Redirect(w, r, "/signup?messagetitle="+message.Title+"&messagebody="+message.Body, http.StatusSeeOther)
+		return
+	case "sorting":
+		log.Debug(message.Body)
+		http.Redirect(w, r, "/checkout", http.StatusSeeOther)
+		return
+	case "receiving":
+		log.Debug(message.Body)
+		http.Redirect(w, r, "/products", http.StatusSeeOther)
+		return
+	default:
+		http.Redirect(w, r, "/productsinsert", http.StatusSeeOther)
+		return
+	}
+
+	// //redirect sorters to checkin page
+	// if permission == "sorting" {
+	// 	log.Debug(message.Body)
+	// 	http.Redirect(w, r, "/checkout", http.StatusSeeOther)
+	// 	return
+	// }
+	// //redirect receiving to products page
+	// if permission == "receiving" {
+	// 	log.Debug(message.Body)
+	// 	http.Redirect(w, r, "/products", http.StatusSeeOther)
+	// 	return
+	// }
+	// http.Redirect(w, r, "/productsinsert", http.StatusSeeOther)
 }
 
 func auth(w http.ResponseWriter, r *http.Request) (permission Permissions) {

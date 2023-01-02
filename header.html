@@ -188,37 +188,37 @@ border-radius: 15px;
 {{$permission := .Permission.Perms}}
 <div class="collapse navbar-collapse" id="navbarSupportedContent">
   <ul class="navbar-nav mr-auto">
-  {{if or (eq $permission "admin") (eq $permission "Purchasing")}}
+  {{if or (eq $permission "admin") (eq $permission "purchasing") (eq $permission "receiving")}}
     <li class="nav-item active">
       <a class="nav-link" href="/products">Products<span class="sr-only">(current)</span></a>
     </li>
     {{end}}
-  {{if or (eq $permission "admin") (eq $permission "Purchasing")}}
+  {{if or (eq $permission "admin") (eq $permission "purchasing")}}
     <li class="nav-item active">
       <a class="nav-link" href="/productsinsert">New Product<span class="sr-only">(current)</span></a>
     </li>
     {{end}}
-  {{if or (eq $permission "admin") (eq $permission "Purchasing")}}
+  {{if or (eq $permission "admin") (eq $permission "purchasing")}}
     <li class="nav-item active">
       <a class="nav-link" href="/reorder">Reorders<span class="sr-only">(current)</span></a>
     </li>
     {{end}}
-  {{if or (eq $permission "admin") (eq $permission "Receiving") (eq $permission "Purchasing")}}
+  {{if or (eq $permission "admin") (eq $permission "purchasing")}}
     <li class="nav-item active">
       <a class="nav-link" href="/orderlist">Orders<span class="sr-only">(current)</span></a>
     </li>
     {{end}}
-  {{if or (eq $permission "admin") (eq $permission "Receiving") (eq $permission "Purchasing") (eq $permission "Sorting")}}
+  {{if or (eq $permission "admin") (eq $permission "receiving") (eq $permission "purchasing")}}
     <li class="nav-item active">
       <a class="nav-link" href="/sorting">Sorting<span class="sr-only">(current)</span></a>
     </li>
     {{end}}
-  {{if or (eq $permission "admin") (eq $permission "Receiving") (eq $permission "Purchasing") (eq $permission "Sorting")}}
+  {{if or (eq $permission "admin") (eq $permission "receiving") (eq $permission "purchasing") (eq $permission "sorting")}}
     <li class="nav-item active">
       <a class="nav-link" href="/checkout">Checkout<span class="sr-only">(current)</span></a>
     </li>
     {{end}}
-      {{if or (eq $permission "admin") (eq $permission "Receiving") (eq $permission "Purchasing")}}
+      {{if or (eq $permission "admin") (eq $permission "receiving") (eq $permission "purchasing") (eq $permission "sorting")}}
       <li class="nav-item active">
         <a class="nav-link" href="/logout">Logout <span class="sr-only">(current)</span></a>
       </li>

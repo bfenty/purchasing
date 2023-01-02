@@ -6,6 +6,7 @@
   {{template "navigation" .}}
   <br>
   {{template "messagebox" .}}
+  {{$permission := .Permission.Perms}}
   <!--<div class="formentry" style="width:200px; margin-left: 10%;">
   <table>
     <tr>
@@ -25,13 +26,13 @@
                     <th scope="col">SKU</th>
                     <th scope="col">Manufacturer Part #</th>
                     <th scope="col">Product Option</th>
-                    <th scope="col">Manufacturer</th>
-                    <th scope="col">Processing Request</th>
+                    {{if eq $permission "admin"}}<th scope="col">Manufacturer</th>{{end}}
+                    {{if eq $permission "admin"}}<th scope="col">Processing Request</th>{{end}}
                     <th scope="col">Unit</th>
-                    <th scope="col">Unit Price</th>
-                    <th scope="col">Currency</th>
-                    <th scope="col">Order Qty</th>
-                    <th scope="col">Reorder</th>
+                    {{if eq $permission "admin"}}<th scope="col">Unit Price</th>{{end}}
+                    {{if eq $permission "admin"}}<th scope="col">Currency</th>{{end}}
+                    {{if eq $permission "admin"}}<th scope="col">Order Qty</th>{{end}}
+                    {{if eq $permission "admin"}}<th scope="col">Reorder</th>{{end}}
                     <th scope="col">Season</th>
                     <th scope="col">Inventory</th>
                     <th></th>
@@ -46,6 +47,7 @@
                         <td><input class="form-control" type='text' id="sku" name="sku"></td>
                         <td><input class="form-control" type='text' id="manufacturerpart" name="manufacturerpart"></td>
                         <td><input class="form-control" type='text' id="description" name="description"></td>
+                        {{if eq $permission "admin"}}
                         <td>
                           <select class="custom-select mr-sm-2" id="manufacturer" name="manufacturer">
                             <option disabled selected hidden value>Select an Option</option>
@@ -67,19 +69,20 @@
                             <option value='VK'>VK</option>
                           </select>
                         </td>
-                        <td><input class="form-control" type='text' id="processrequest" name="processrequest"></td>
+                        {{end}}
+                        {{if eq $permission "admin"}}<td><input class="form-control" type='text' id="processrequest" name="processrequest"></td>{{end}}
                         <td><input class="form-control" type='text' id="unit" name="unit"></td>
-                        <td><input class="form-control" type='text' id="unitprice" name="unitprice"></td>
-                        <td><select class="custom-select mr-sm-2" id="currency" name="currency">
+                        {{if eq $permission "admin"}}<td><input class="form-control" type='text' id="unitprice" name="unitprice"></td>{{end}}
+                        {{if eq $permission "admin"}}<td><select class="custom-select mr-sm-2" id="currency" name="currency">
                             <option disabled selected hidden value>Select an Option</option>
                             <option value="USD">USD</option>
                             <option value="CZK">CZK</option>
                             <option value="EUR">EUR</option>
                             <option value="GBP">GBP</option>
                           </select>
-                        </td>
-                        <td><input class="form-control" type='text' id="orderqty" name="orderqty"></td>
-                        <td><input class="form-control" type='checkbox' id='reorder' name='reorder' value='yes'></td> 
+                        </td>{{end}}
+                        {{if eq $permission "admin"}}<td><input class="form-control" type='text' id="orderqty" name="orderqty"></td>{{end}}
+                        {{if eq $permission "admin"}}<td><input class="form-control" type='checkbox' id='reorder' name='reorder' value='yes'></td>{{end}}
                         <td><select class="custom-select mr-sm-2" id="season" name="season">
                           <option disabled selected hidden value>Select an Option</option>
                           <option value="None">None</option>
@@ -146,9 +149,9 @@
                         <div class="form-group">
                         <td><a role="button" ><img class="img-rounded" data-bs-toggle="modal" data-bs-target="#ModalImage{{$index}}" src="{{.Image.URL_Thumb}}" height="45px"></a></td>
                         <td><input class="form-control" type='text' id="sku" name="sku" value="{{.SKU}}" readonly></td>
-                        <td><input class="form-control" type='text' id="manufacturerpart" name="manufacturerpart" value="{{.ManufacturerPart}}"></td>
-                        <td><input class="form-control" type='text' id="description" name="description" value="{{.Description}}"></td>
-                        <td>
+                        <td><input class="form-control" type='text' id="manufacturerpart" name="manufacturerpart" value="{{.ManufacturerPart}}"{{if ne $permission "admin"}} readonly{{end}}></td>
+                        <td><input class="form-control" type='text' id="description" name="description" value="{{.Description}}"{{if ne $permission "admin"}} readonly{{end}}></td>
+                        {{if eq $permission "admin"}}<td>
                           <select class="custom-select mr-sm-2" id="manufacturer" name="manufacturer">
                             <option value='PW' {{if eq .Manufacturer "PW"}}selected{{end}}>PW</option>
                             <option value='W' {{if eq .Manufacturer "W"}}selected{{end}}>W</option>
@@ -167,20 +170,20 @@
                             <option value='PG' {{if eq .Manufacturer "PG"}}selected{{end}}>PG</option>
                             <option value='VK' {{if eq .Manufacturer "VK"}}selected{{end}}>VK</option>
                           </select>
-                        </td>
-                        <td><input class="form-control" type='text' id="processrequest" name="processrequest" value="{{.ProcessRequest}}"></td>
-                        <td><input class="form-control" type='text' id="unit" name="unit" value="{{.Unit}}"></td>
-                        <td><input class="form-control" type='text' id="unitprice" name="unitprice" value="{{.UnitPrice}}"></td>
-                        <td><select class="custom-select mr-sm-2" id="currency" name="currency">
+                        </td>{{end}}
+                        {{if eq $permission "admin"}}<td><input class="form-control" type='text' id="processrequest" name="processrequest" value="{{.ProcessRequest}}"></td>{{end}}
+                        <td><input class="form-control" type='text' id="unit" name="unit" value="{{.Unit}}"{{if ne $permission "admin"}} readonly{{end}}></td>
+                        {{if eq $permission "admin"}}<td><input class="form-control" type='text' id="unitprice" name="unitprice" value="{{.UnitPrice}}"></td>{{end}}
+                        {{if eq $permission "admin"}}<td><select class="custom-select mr-sm-2" id="currency" name="currency">
                             <option value="USD"{{if eq .Currency "USD"}} selected{{end}}>USD</option>
                             <option value="CZK"{{if eq .Currency "CZK"}} selected{{end}}>CZK</option>
                             <option value="EUR"{{if eq .Currency "EUR"}} selected{{end}}>EUR</option>
                             <option value="GBP"{{if eq .Currency "GBP"}} selected{{end}}>GBP</option>
                           </select>
-                        </td>
-                        <td><input class="form-control" type='text' id="orderqty" name="orderqty" value="{{.Qty}}"></td>
-                        <td><input class="form-control" type='checkbox' id='reorder' name='reorder' value='yes' {{.Reorder}} {{with .Reorder}}checked{{end}}></td> 
-                        <td><select class="custom-select mr-sm-2" id="season" name="season">
+                        </td>{{end}}
+                        {{if eq $permission "admin"}}<td><input class="form-control" type='text' id="orderqty" name="orderqty" value="{{.Qty}}"></td>{{end}}
+                        {{if eq $permission "admin"}}<td><input class="form-control" type='checkbox' id='reorder' name='reorder' value='yes' {{.Reorder}} {{with .Reorder}}checked{{end}}></td>{{end}}
+                        {{if eq $permission "admin"}}<td><select class="custom-select mr-sm-2" id="season" name="season">
                           <option value="None" {{if eq .Season "None"}}selected{{end}}>None</option>
                           <option value="Spring" {{if eq .Season "Spring"}}selected{{end}}>Spring</option>
                           <option value="Summer" {{if eq .Season "Summer"}}selected{{end}}>Summer</option>
@@ -189,9 +192,14 @@
                           <option value="Christmas" {{if eq .Season "Christmas"}}selected{{end}}>Christmas</option>
                         </select>
                       </td>
+                      {{else}}
+                      <td>
+                        <input class="form-control" type='text' id="season" name="season" value="{{.Season}}" readonly>
+                      </td>
+                      {{end}}
                         <td><input class="form-control" type='text' id="inventoryqty" name="inventoryqty" value="{{.InventoryQTY}}" readonly></td>
-                        <td><input type='submit' value='Update' class="btn btn-primary"></td>
-                        <td><button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#ModalDelete{{$index}}">Delete</button></td>
+                        {{if eq $permission "admin"}}<td><input type='submit' value='Update' class="btn btn-primary"></td>{{end}}
+                        {{if eq $permission "admin"}}<td><button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#ModalDelete{{$index}}">Delete</button></td>{{end}}
                         </div>
                     </form>
                 </tr>
