@@ -4,6 +4,7 @@ import (
 	"database/sql"
 
 	// "log"
+	"fmt"
 	"net/http"
 	"os"
 	"strconv"
@@ -534,77 +535,39 @@ func ProductList(limit int, r *http.Request, permission Permissions) (message Me
 		return handleerror(pingErr), products
 	}
 
-	var sku string
+	queryParams := map[string]string{
+		"sku":              r.URL.Query().Get("sku"),
+		"manufacturer":     r.URL.Query().Get("manufacturer"),
+		"manufacturerpart": r.URL.Query().Get("manufacturerpart"),
+		"processrequest":   r.URL.Query().Get("processrequest"),
+		"sortingrequest":   r.URL.Query().Get("sortingrequest"),
+		"unit":             r.URL.Query().Get("unit"),
+		"unitprice":        r.URL.Query().Get("unitprice"),
+		"currency":         r.URL.Query().Get("currency"),
+		"orderqty":         r.URL.Query().Get("orderqty"),
+		"reorder":          r.URL.Query().Get("reorder"),
+		"season":           r.URL.Query().Get("season"),
+	}
+
 	var i []interface{}
 	var newquery string
 
-	sku = r.URL.Query().Get("sku")
-	manufacturer := r.URL.Query().Get("manufacturer")
-	manufacturerpart := r.URL.Query().Get("manufacturerpart")
-	processrequest := r.URL.Query().Get("processrequest")
-	sortingrequest := r.URL.Query().Get("sortingrequest")
-	unit := r.URL.Query().Get("unit")
-	unitprice := r.URL.Query().Get("unitprice")
-	currency := r.URL.Query().Get("currency")
-	orderqty := r.URL.Query().Get("orderqty")
-	reorder := r.URL.Query().Get("reorder")
-	season := r.URL.Query().Get("season")
-
-	//Build the Query
 	newquery = "SELECT `sku_internal`,`manufacturer_code`,`sku_manufacturer`,`product_option`,`processing_request`,`sorting_request`,`unit`,`unit_price`,`Currency`,`order_qty`,`modified`,`reorder`,`inventory_qty`,season,url_standard,url_thumb,url_tiny FROM `skus` WHERE 1"
-	if sku != "" {
-		sku += "%"
-		i = append(i, sku)
-		newquery += " AND sku_internal LIKE ?"
-	}
-	if manufacturer != "" {
-		i = append(i, manufacturer)
-		newquery += " AND manufacturer_code = ?"
-	}
-	if manufacturerpart != "" {
-		manufacturerpart += "%"
-		i = append(i, manufacturerpart)
-		newquery += " AND sku_manufacturer LIKE ?"
-	}
-	if processrequest != "" {
-		processrequest = "%" + processrequest + "%"
-		i = append(i, processrequest)
-		newquery += " AND processing_request LIKE ?"
-	}
-	if sortingrequest != "" {
-		sortingrequest = "%" + sortingrequest + "%"
-		i = append(i, sortingrequest)
-		newquery += " AND sorting_request LIKE ?"
-	}
-	if unit != "" {
-		unit = "%" + unit + "%"
-		i = append(i, unit)
-		newquery += " AND unit LIKE ?"
-	}
-	if unitprice != "" {
-		i = append(i, unitprice)
-		newquery += " AND unit_price = ?"
-	}
-	if currency != "" {
-		i = append(i, currency)
-		newquery += " AND currency = ?"
-	}
-	if orderqty != "" {
-		i = append(i, orderqty)
-		newquery += " AND order_qty = ?"
-	}
-	if reorder != "" {
-		i = append(i, reorder)
-		newquery += " AND reorder = ?"
-	}
-	if season != "" {
-		i = append(i, season)
-		newquery += " AND season = ?"
-	}
-	newquery += " order by 11 desc, 1 limit ?"
 
-	//Run Query
-	i = append(i, limit)                                                //always add the limit to the end
+	for param, value := range queryParams {
+		if value != "" {
+			if param == "sku" || param == "manufacturerpart" || param == "unit" {
+				value += "%"
+			} else if param == "processrequest" || param == "sortingrequest" {
+				value = "%" + value + "%"
+			}
+			i = append(i, value)
+			newquery += fmt.Sprintf(" AND %s = ?", param)
+		}
+	}
+
+	newquery += " order by 11 desc, 1 limit ?"
+	i = append(i, limit)
 	log.WithFields(log.Fields{"username": permission.User}).Debug(i...) //debug variables map
 	log.WithFields(log.Fields{"username": permission.User}).Debug("Running Product List")
 	log.WithFields(log.Fields{"username": permission.User}).Debug(newquery)
