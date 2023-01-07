@@ -113,12 +113,12 @@
             <td><input class="form-control" type='text' id="description" name="description" value="{{.Description}}"readonly></td>
             <td><input class="form-control" type='text' id="instructions" name="instructions" value="{{.Instructions}}" readonly></td>
             <td><input class="form-control" type='text' id="weightout" name="weightout" value="{{.Weightout}}" readonly></td>
-            <td><input class="form-control" type='date' id="checkout" value="{{.Checkout}}" readonly></td>
+            <td><input class="form-control" type='date' id="checkout" name="checkout" value="{{.Checkout}}" readonly></td>
             {{if eq $permission "admin"}}
             <td><input class="form-control" type='text' id="sorter" name="sorter" value="{{.Sorter}}" readonly></td>
             {{end}}
             <!-- <td><input class="form-control" type='text' id="weightin" name="weightin" value="{{.Weightin}}"></td> -->
-            <td><input class="form-control" type='text' id="hours" name="hours" value="{{.Hours}}"></td>
+            <td><input class="form-control" type="text" id="hours" name="hours"></td>
             <!-- <td><input class="form-control" type='text' id="pieces" name="pieces" value="{{.Pieces}}"></td> -->
             <td><input class="form-control checkin" type='date' id="checkin" name="checkin" value="{{$date}}"{{if ne $permission "admin"}} readonly{{end}}></td>
             {{if eq $permission "admin"}}<td><input type='submit' value='Update' class="btn btn-primary"></td>{{end}}

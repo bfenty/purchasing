@@ -370,7 +370,7 @@ func Sortinginsert(r *http.Request, permission Permissions) (message Message) {
 	weightin, _ := strconv.Atoi(r.URL.Query().Get("weightin"))
 	weightout, _ := strconv.Atoi(r.URL.Query().Get("weightout"))
 	pieces, _ := strconv.Atoi(r.URL.Query().Get("pieces"))
-	hours, _ := strconv.Atoi(r.URL.Query().Get("hours"))
+	hours := r.URL.Query().Get("hours")
 	checkout := r.URL.Query().Get("checkout")
 	checkin := r.URL.Query().Get("checkin")
 	sorter := r.URL.Query().Get("sorter")
