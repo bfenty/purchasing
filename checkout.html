@@ -7,39 +7,13 @@
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" /> -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.5.1/js/bootstrap-datepicker.js"></script>
-<script>
-  $(document).ready(function() {
-  var date = new Date();
-  var today = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-  var end = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-
-  $('.checkin').datepicker({
-    format: "mm/dd/yyyy",
-    todayHighlight: true,
-    startDate: today,
-    endDate: end,
-    autoclose: true
-      });
-
-      $('.checkin').datepicker('setDate', today);
-
-  $('.checkout').datepicker({
-    format: "mm/dd/yyyy",
-    todayHighlight: true,
-    startDate: today,
-    endDate: end,
-    autoclose: true
-      });
-
-      $('.checkout').datepicker('setDate', today);
-    });
-</script>
 </head>
 <body>
   {{template "navigation" .}}
   <br>
   {{template "messagebox" .}}
   {{$permission := .Permission.Perms}}
+  {{$date := .Date}}
   <div class="panel-group" id="accordion">
   <div class="panel panel-default">
     <div class="panel-heading">
@@ -73,7 +47,7 @@
             <td><input class="form-control" type='text' id="description" name="description" value="{{.Description}}"readonly></td>
             <td><input class="form-control" type='text' id="instructions" name="instructions" value="{{.Instructions}}" readonly></td>
             <td><input class="form-control" type='text' id="weightout" value="{{.Weightout}}" readonly></td>
-            <td><input class="form-control checkout" type='text' class="checkout" id="checkout" name="checkout" {{if ne $permission "admin"}}readonly{{end}}></td>
+            <td><input class="form-control" type='date' id="checkout" name="checkout" value="{{$date}}" {{if ne $permission "admin"}}readonly{{end}}></td>
             {{if eq $permission "admin"}}
               <td>
                 <select class="custom-select mr-sm-2" id="sorter" name="sorter">
@@ -142,7 +116,7 @@
             <td><input class="form-control" type='text' id="weightin" name="weightin" value="{{.Weightin}}"></td>
             <td><input class="form-control" type='text' id="hours" name="hours" value="{{.Hours}}"></td>
             <td><input class="form-control" type='text' id="pieces" name="pieces" value="{{.Pieces}}"></td>
-            <td><input class="form-control checkin" type='text' class="checkin" id="checkin" name="checkin" value="{{.Checkin}}"{{if ne $permission "admin"}} readonly{{end}}></td>
+            <td><input class="form-control checkin" type='date' id="checkin" name="checkin" value="{{$date}}"{{if ne $permission "admin"}} readonly{{end}}></td>
             {{if eq $permission "admin"}}<td><input type='submit' value='Update' class="btn btn-primary"></td>{{end}}
             <td><input type='submit' value='Check In' class="btn btn-primary"></td>
             </form>

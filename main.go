@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
@@ -55,6 +56,7 @@ type Product struct {
 
 type Page struct {
 	Title         string
+	Date          string
 	Message       Message
 	Permission    Permissions
 	ProductList   []Product
@@ -177,6 +179,8 @@ func Sorting(w http.ResponseWriter, r *http.Request) {
 func Checkout(w http.ResponseWriter, r *http.Request) {
 	var page Page
 	page.Permission = auth(w, r)
+	currentTime := time.Now()
+	page.Date = currentTime.Format("2006-01-02")
 	page.Message, page.SortRequests = listsortrequests(page.Permission, "checkout")
 	page.Message, page.SortRequests2 = listsortrequests(page.Permission, "checkin")
 	t, _ := template.ParseFiles("checkout.html", "header.html", "login.js")
