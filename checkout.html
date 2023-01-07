@@ -46,7 +46,7 @@
             <td><input class="form-control" type='text' id="sku" name="sku" value="{{.SKU}}"readonly></td>
             <td><input class="form-control" type='text' id="description" name="description" value="{{.Description}}"readonly></td>
             <td><input class="form-control" type='text' id="instructions" name="instructions" value="{{.Instructions}}" readonly></td>
-            <td><input class="form-control" type='text' id="weightout" value="{{.Weightout}}" readonly></td>
+            <td><input class="form-control" type='text' id="weightout" name="weightout" value="{{.Weightout}}" readonly></td>
             <td><input class="form-control" type='date' id="checkout" name="checkout" value="{{$date}}" {{if ne $permission "admin"}}readonly{{end}}></td>
             {{if eq $permission "admin"}}
               <td>
@@ -58,6 +58,10 @@
                   <option value='juhale'>juhale</option>
                   <option value='msimpk'>msimpk</option>
                   <option value='msimpk'>awrigh</option>
+                  <option value='msimpk'>rahale</option>
+                  <option value='msimpk'>lehope</option>
+                  <option value='msimpk'>rsteph</option>
+                  <option value='msimpk'>nberge</option>
                 </select>
               </td>
             {{end}}
@@ -108,7 +112,7 @@
             <td><input class="form-control" type='text' id="sku" name="sku" value="{{.SKU}}"readonly></td>
             <td><input class="form-control" type='text' id="description" name="description" value="{{.Description}}"readonly></td>
             <td><input class="form-control" type='text' id="instructions" name="instructions" value="{{.Instructions}}" readonly></td>
-            <td><input class="form-control" type='text' id="weightout" value="{{.Weightout}}" readonly></td>
+            <td><input class="form-control" type='text' id="weightout" name="weightout" value="{{.Weightout}}" readonly></td>
             <td><input class="form-control" type='date' id="checkout" value="{{.Checkout}}" readonly></td>
             {{if eq $permission "admin"}}
             <td><input class="form-control" type='text' id="sorter" name="sorter" value="{{.Sorter}}" readonly></td>
