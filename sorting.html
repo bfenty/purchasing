@@ -26,7 +26,7 @@
       </tr>
   </thead>
   <tbody>
-    <tr class="table-info">
+    {{if eq $permission "admin"}}<tr class="table-info">
       <form method="GET" action="/sortingupdate">
       <td></td>
       <td><input class="form-control" type='text' id="sku" name="sku"></td>
@@ -42,7 +42,7 @@
       <td><input type='submit' value='Insert' class="btn btn-primary"></td>
       <td></td>
       </form>
-    </tr>
+    </tr>{{end}}
     {{range $index, $value := .SortRequests}}
     <!-- Delete Modal -->
           <div class="modal fade" id="ModalDelete{{$index}}" tabindex="-1" role="dialog" aria-labelledby="ModalDeleteLabel" aria-hidden="true">
@@ -76,12 +76,12 @@
       <td><input class="form-control" type='text' id="weightout" name="weightout" value="{{.Weightout}}"></td>
       <td><input class="form-control" type='text' id="weightin" name="weightin" value="{{.Weightin}}"></td>
       <td><input class="form-control" type='text' id="pieces" name="pieces" value="{{.Pieces}}"></td>
-      <td><input class="form-control" type='text' id="hours" name="hours" value="{{.Hours}}"></td>
-      <td><input type="date" class="form-control" id="checkout" name="checkout" value="{{.Checkout}}"></td>
-      <td><input type="date" class="form-control" id="checkin" name="checkin" value="{{.Checkin}}"></td>
+      <td><input class="form-control" type='text' id="hours" name="hours" value="{{.Hours}}"{{if ne $permission "admin"}} readonly{{end}}></td>
+      <td><input type="date" class="form-control" id="checkout" name="checkout" value="{{.Checkout}}"{{if ne $permission "admin"}} readonly{{end}}></td>
+      <td><input type="date" class="form-control" id="checkin" name="checkin" value="{{.Checkin}}"{{if ne $permission "admin"}} readonly{{end}}></td>
       <td><input class="form-control" type='text' id="sorter" name="sorter" value="{{.Sorter}}"readonly></td>
       <td><input type='submit' value='Update' class="btn btn-primary"></td>
-      <td><button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#ModalDelete{{$index}}">Delete</button></td>
+      {{if eq $permission "admin"}}<td><button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#ModalDelete{{$index}}">Delete</button></td>{{else}}<td></td>{{end}}
       </form>
     </tr>
     {{end}}

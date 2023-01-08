@@ -141,6 +141,7 @@ func main() {
 	http.HandleFunc("/orderupdate", orderupdate)
 	http.HandleFunc("/sorting", Sorting)
 	http.HandleFunc("/checkout", Checkout)
+	http.HandleFunc("/receiving", Receiving)
 	http.HandleFunc("/sortingupdate", Sortingupdate)
 	http.HandleFunc("/sortrequestdelete", sortrequestdelete)
 	http.ListenAndServe(":8082", nil)
@@ -165,10 +166,25 @@ func orderlist(w http.ResponseWriter, r *http.Request) {
 }
 
 // Page of list of all Sort Requests
+func Receiving(w http.ResponseWriter, r *http.Request) {
+	var page Page
+	page.Permission = auth(w, r)
+	page.Message, page.SortRequests = listsortrequests(page.Permission, "receiving")
+	page.Message, page.Users = listusers("sorting", page.Permission)
+	t, _ := template.ParseFiles("sorting.html", "header.html", "login.js")
+	page.Title = "Receiving"
+	t.Execute(w, page)
+}
+
+// Page of list of all Sort Requests
 func Sorting(w http.ResponseWriter, r *http.Request) {
 	var page Page
 	page.Permission = auth(w, r)
-	page.Message, page.SortRequests = listsortrequests(page.Permission, "all")
+	if page.Permission.Perms == "receiving" {
+		page.Message, page.SortRequests = listsortrequests(page.Permission, "receiving")
+	} else if page.Permission.Perms == "admin" {
+		page.Message, page.SortRequests = listsortrequests(page.Permission, "all")
+	}
 	page.Message, page.Users = listusers("sorting", page.Permission)
 	t, _ := template.ParseFiles("sorting.html", "header.html", "login.js")
 	page.Title = "Sorting"
