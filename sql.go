@@ -385,9 +385,9 @@ func Sortinginsert(r *http.Request, permission Permissions) (message Message) {
 	// if pieces == "" {
 	// 	pieces = "0"
 	// }
-	// if hours == "" {
-	// 	hours = "0"
-	// }
+	if hours == "" {
+		hours = "0"
+	}
 
 	//Create the fields to insert
 	i = append(i, sku)
