@@ -209,19 +209,18 @@ border-radius: 15px;
     </li>
     {{end}}
   {{if or (eq $permission "admin") (eq $permission "receiving") (eq $permission "purchasing")}}
-    <li class="nav-item active">
-      <a class="nav-link" href="/sorting">Sorting<span class="sr-only">(current)</span></a>
-    </li>
-    {{end}}
-  {{if or (eq $permission "admin") (eq $permission "receiving") (eq $permission "purchasing") (eq $permission "sorting")}}
-    <li class="nav-item active">
-      <a class="nav-link" href="/checkout">Checkout<span class="sr-only">(current)</span></a>
-    </li>
-    {{end}}
-  {{if or (eq $permission "admin") (eq $permission "receiving") (eq $permission "purchasing") (eq $permission "sorting")}}
-    <li class="nav-item active">
-      <a class="nav-link" href="/receiving">Receiving<span class="sr-only">(current)</span></a>
-    </li>
+  <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            Sorting
+          </a>
+          <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+            <li><a class="dropdown-item" href="/sorting">Data Entry</a></li>
+            <li><a class="dropdown-item" href="/checkout">Checkout</a></li>
+            <li><a class="dropdown-item" href="/checkin">Checkin</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="/receiving">Receiving</a></li>
+          </ul>
+        </li>
     {{end}}
       {{if or (eq $permission "admin") (eq $permission "receiving") (eq $permission "purchasing") (eq $permission "sorting")}}
       <li class="nav-item active">

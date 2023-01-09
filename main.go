@@ -34,6 +34,7 @@ type SortRequest struct {
 	Checkout     *string
 	Checkin      *string
 	Sorter       *string
+	Status       string
 }
 
 type Product struct {
@@ -141,6 +142,7 @@ func main() {
 	http.HandleFunc("/orderupdate", orderupdate)
 	http.HandleFunc("/sorting", Sorting)
 	http.HandleFunc("/checkout", Checkout)
+	http.HandleFunc("/checkin", Checkin)
 	http.HandleFunc("/receiving", Receiving)
 	http.HandleFunc("/sortingupdate", Sortingupdate)
 	http.HandleFunc("/sortrequestdelete", sortrequestdelete)
@@ -169,7 +171,7 @@ func orderlist(w http.ResponseWriter, r *http.Request) {
 func Receiving(w http.ResponseWriter, r *http.Request) {
 	var page Page
 	page.Permission = auth(w, r)
-	page.Message, page.SortRequests = listsortrequests(page.Permission, "receiving")
+	page.Message, page.SortRequests = listsortrequests(page.Permission, "receiving", r)
 	page.Message, page.Users = listusers("sorting", page.Permission)
 	t, _ := template.ParseFiles("sorting.html", "header.html", "login.js")
 	page.Title = "Receiving"
@@ -181,9 +183,9 @@ func Sorting(w http.ResponseWriter, r *http.Request) {
 	var page Page
 	page.Permission = auth(w, r)
 	if page.Permission.Perms == "receiving" {
-		page.Message, page.SortRequests = listsortrequests(page.Permission, "receiving")
+		page.Message, page.SortRequests = listsortrequests(page.Permission, "receiving", r)
 	} else if page.Permission.Perms == "admin" {
-		page.Message, page.SortRequests = listsortrequests(page.Permission, "all")
+		page.Message, page.SortRequests = listsortrequests(page.Permission, "all", r)
 	}
 	page.Message, page.Users = listusers("sorting", page.Permission)
 	t, _ := template.ParseFiles("sorting.html", "header.html", "login.js")
@@ -197,10 +199,21 @@ func Checkout(w http.ResponseWriter, r *http.Request) {
 	page.Permission = auth(w, r)
 	currentTime := time.Now()
 	page.Date = currentTime.Format("2006-01-02")
-	page.Message, page.SortRequests = listsortrequests(page.Permission, "checkout")
-	page.Message, page.SortRequests2 = listsortrequests(page.Permission, "checkin")
+	page.Message, page.SortRequests = listsortrequests(page.Permission, "checkout", r)
 	t, _ := template.ParseFiles("checkout.html", "header.html", "login.js")
 	page.Title = "Check Out"
+	t.Execute(w, page)
+}
+
+// Page to Check Out sorting
+func Checkin(w http.ResponseWriter, r *http.Request) {
+	var page Page
+	page.Permission = auth(w, r)
+	currentTime := time.Now()
+	page.Date = currentTime.Format("2006-01-02")
+	page.Message, page.SortRequests2 = listsortrequests(page.Permission, "checkin", r)
+	t, _ := template.ParseFiles("checkin.html", "header.html", "login.js")
+	page.Title = "Check In"
 	t.Execute(w, page)
 }
 

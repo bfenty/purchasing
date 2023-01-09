@@ -13,6 +13,7 @@
           <th scope="col" width=70px>ID</th>
           <th scope="col" width="120px">SKU</th>
           <th scope="col" width=220px>Description</th>
+          <th scope="col" width=220px>Manufacturer Part #</th>
           <th scope="col">Instructions</th>
           <th scope="col" width=60px>Weight Out</th>
           <th scope="col" width=60px>Weight In</th>
@@ -21,16 +22,19 @@
           <th scope="col" width=60px>Checkout Date</th>
           <th scope="col" width=100px>Checkin Date</th>
           <th scope="col" width=90px>Sorter</th>
+          <th scope="col" width=90px>Status</th>
           <th width=80px></th>
           <th width=80px></th>
       </tr>
   </thead>
   <tbody>
-    {{if eq $permission "admin"}}<tr class="table-info">
+    {{if eq $permission "admin"}}
+    <tr class="table-info">
       <form method="GET" action="/sortingupdate">
       <td></td>
       <td><input class="form-control" type='text' id="sku" name="sku"></td>
       <td><input class="form-control" type='text' id="description" name="description"></td>
+      <td><input class="form-control" type='text' id="manufacturerpart" name="manufacturerpart"></td>
       <td><input class="form-control" type='text' id="instructions" name="instructions"></td>
       <td><input class="form-control" type='text' id="weightout" name="weightout"></td>
       <td><input class="form-control" type='text' id="weightin" name="weightin"></td>
@@ -39,10 +43,58 @@
       <td><input type="date" class="form-control" type='text' id="checkout" name="checkout"></td>
       <td><input type="date" class="form-control" type='text' id="checkin" name="checkin"></td>
       <td><input class="form-control" type='text' id="sorter" name="sorter"></td>
+      <td>
+        <select class="custom-select mr-sm-2" id="status" name="status">
+            <option value="New">New</option>
+            <option value="Checkout">Checkout</option>
+            <option value="Checkin">Checkin</option>
+        </select>
+      </td>
       <td><input type='submit' value='Insert' class="btn btn-primary"></td>
       <td></td>
       </form>
-    </tr>{{end}}
+    </tr>
+    <tr class="table-info">
+      <form method="GET" action="/sorting">
+      <td></td>
+      <td><input class="form-control" type='text' id="sku" name="sku"></td>
+      <td><input class="form-control" type='text' id="description" name="description"></td>
+      <td><input class="form-control" type='text' id="manufacturerpart" name="manufacturerpart"></td>
+      <td><input class="form-control" type='text' id="instructions" name="instructions"></td>
+      <td><input class="form-control" type='text' id="weightout" name="weightout"></td>
+      <td><input class="form-control" type='text' id="weightin" name="weightin"></td>
+      <td><input class="form-control" type='text' id="pieces" name="pieces"></td>
+      <td><input class="form-control" type='text' id="hours" name="hours"></td>
+      <td><input type="date" class="form-control" type='text' id="checkout" name="checkout"></td>
+      <td><input type="date" class="form-control" type='text' id="checkin" name="checkin"></td>
+      <td>
+        <select class="custom-select mr-sm-2" id="sorter" name="sorter">
+          <option selected disabled value> select</option>
+          <option value='jahale'>jahale</option>
+          <option value='johale'>johale</option>
+          <option value='vahale'>vahale</option>
+          <option value='juhale'>juhale</option>
+          <option value='msimpk'>msimpk</option>
+          <option value='awrigh'>awrigh</option>
+          <option value='rhale'>rhale</option>
+          <option value='lehope'>lehope</option>
+          <option value='rsteph'>rsteph</option>
+          <option value='nberge'>nberge</option>
+        </select>
+      </td>
+      <td>
+        <select class="custom-select mr-sm-2" id="status" name="status">
+            <option value="" selected></option>
+            <option value="New">New</option>
+            <option value="Checkout">Checkout</option>
+            <option value="Checkin">Checkin</option>
+        </select>
+      </td>
+      <td><input type='submit' value='Search' class="btn btn-primary"></td>
+      <td></td>
+      </form>
+    </tr>
+    {{end}}
     {{range $index, $value := .SortRequests}}
     <!-- Delete Modal -->
           <div class="modal fade" id="ModalDelete{{$index}}" tabindex="-1" role="dialog" aria-labelledby="ModalDeleteLabel" aria-hidden="true">
@@ -72,6 +124,7 @@
       <td><input class="form-control" type="text" id="requestid" name="requestid" value="{{.ID}}" readonly></td>
       <td><input class="form-control" type='text' id="sku" name="sku" value="{{.SKU}}"{{if ne $permission "admin"}} readonly{{end}}></td>
       <td><input class="form-control" type='text' id="description" name="description" value="{{.Description}}"{{if ne $permission "admin"}} readonly{{end}}></td>
+      <td><input class="form-control" type='text' id="manufacturerpart" name="manufacturerpart"></td>
       <td><input class="form-control" type='text' id="instructions" name="instructions" value="{{.Instructions}}"{{if ne $permission "admin"}} readonly{{end}}></td>
       <td><input class="form-control" type='text' id="weightout" name="weightout" value="{{.Weightout}}"></td>
       <td><input class="form-control" type='text' id="weightin" name="weightin" value="{{.Weightin}}"></td>
@@ -80,13 +133,24 @@
       <td><input type="date" class="form-control" id="checkout" name="checkout" value="{{.Checkout}}"{{if ne $permission "admin"}} readonly{{end}}></td>
       <td><input type="date" class="form-control" id="checkin" name="checkin" value="{{.Checkin}}"{{if ne $permission "admin"}} readonly{{end}}></td>
       <td><input class="form-control" type='text' id="sorter" name="sorter" value="{{.Sorter}}"readonly></td>
+      <td>
+        <select class="custom-select mr-sm-2" id="status" name="status">
+            <option value="New" {{if eq .Status "New"}}selected{{end}}>New</option>
+            <option value="Checkout" {{if eq .Status "Checkout"}}selected{{end}}>Checkout</option>
+            <option value="Checkin" {{if eq .Status "Checkin"}}selected{{end}}>Checkin</option>
+        </select>
+      </td>
       <td><input type='submit' value='Update' class="btn btn-primary"></td>
       {{if eq $permission "admin"}}<td><button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#ModalDelete{{$index}}">Delete</button></td>{{else}}<td></td>{{end}}
       </form>
     </tr>
     {{end}}
-    <tr></tr>
-    <tr></tr>
+    <tr>
+        <td></td>
+    </tr>
+    <tr>
+        <td></td>
+    </tr>
   </tbody>
   </table>
   {{template "footer" .}}
