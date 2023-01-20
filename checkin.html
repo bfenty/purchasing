@@ -22,13 +22,13 @@
                 <th scope="col" width="120px">SKU</th>
                 <th scope="col" width=220px>Description</th>
                 <th scope="col">Instructions</th>
-                <th scope="col" width=60px>Weight Out</th>
-                <th scope="col" width=100px>Checkout</th>
+                {{if eq $permission "admin"}}<th scope="col" width=60px>Weight Out</th>{{end}}
+                {{if eq $permission "admin"}}<th scope="col" width=100px>Checkout</th>{{end}}
                 {{if eq $permission "admin"}}<th scope="col" width=90px>Sorter</th>{{end}}
                 <!-- <th scope="col" width=60px>Weight In</th> -->
                 <th scope="col" width=60px>Hours</th>
                 <!-- <th scope="col" width=60px>Pieces</th> -->
-                <th scope="col" width=100px>Check In</th>
+                {{if eq $permission "admin"}}<th scope="col" width=100px>Check In</th>{{end}}
                 <th width=80px></th>
             </tr>
         </thead>
@@ -41,15 +41,21 @@
             <td><input class="form-control" type='text' id="sku" name="sku" value="{{.SKU}}"readonly></td>
             <td><input class="form-control" type='text' id="description" name="description" value="{{.Description}}"readonly></td>
             <td><input class="form-control" type='text' id="instructions" name="instructions" value="{{.Instructions}}" readonly></td>
+            {{if eq $permission "admin"}}
             <td><input class="form-control" type='text' id="weightout" name="weightout" value="{{.Weightout}}" readonly></td>
+            {{end}}
+            {{if eq $permission "admin"}}
             <td><input class="form-control" type='date' id="checkout" name="checkout" value="{{.Checkout}}" readonly></td>
+            {{end}}
             {{if eq $permission "admin"}}
             <td><input class="form-control" type='text' id="sorter" name="sorter" value="{{.Sorter}}" readonly></td>
             {{end}}
             <!-- <td><input class="form-control" type='text' id="weightin" name="weightin" value="{{.Weightin}}"></td> -->
             <td><input class="form-control" type="text" id="hours" name="hours"></td>
             <!-- <td><input class="form-control" type='text' id="pieces" name="pieces" value="{{.Pieces}}"></td> -->
-            <td><input class="form-control checkin" type='date' id="checkin" name="checkin" value="{{$date}}"{{if ne $permission "admin"}} readonly{{end}}></td>
+            {{if eq $permission "admin"}}<td>{{end}}
+              <input class="form-control checkin" {{if eq $permission "admin"}}type='date'{{else}}type='hidden'{{end}} id="checkin" name="checkin" value="{{$date}}"{{if ne $permission "admin"}} readonly{{end}}>
+            {{if eq $permission "admin"}}</td>{{end}}
             <td><input type='submit' value='Check In' class="btn btn-primary"></td>
             </form>
           </tr>

@@ -348,10 +348,18 @@ func listsortrequests(permission Permissions, action string, r *http.Request) (m
 		newquery += " order by 1 desc"
 	} else if action == "checkout" {
 		//retrieves only records that have not been checked out yet
-		newquery = "SELECT requestid, sku,description,instructions,weightin,weightout,pieces,hours,checkout,checkint,sorter,status from sortrequest WHERE status = 'new' order by 1"
+		newquery = "SELECT requestid, sku,description,instructions,weightin,weightout,pieces,hours,checkout,checkint,sorter,status from sortrequest WHERE status = 'new'"
+		// if permission.Perms == "sorting" {
+		// 	newquery += " AND sorter = '" + permission.User + "'"
+		// }
+		newquery += " order by 1"
 	} else if action == "checkin" {
 		//retrieves only records that have not been checked in yet
-		newquery = "SELECT requestid, sku,description,instructions,weightin,weightout,pieces,hours,checkout,checkint,sorter,status from sortrequest WHERE status = 'checkout' order by 1"
+		newquery = "SELECT requestid, sku,description,instructions,weightin,weightout,pieces,hours,checkout,checkint,sorter,status from sortrequest WHERE status = 'checkout'"
+		if permission.Perms == "sorting" {
+			newquery += " AND sorter = '" + permission.User + "'"
+		}
+		newquery += " order by 1 desc"
 	} else if action == "receiving" {
 		//retrieves only records that have been checked back in
 		newquery = "SELECT requestid, sku,description,instructions,weightin,weightout,pieces,hours,checkout,checkint,sorter,status from sortrequest WHERE status = 'checkin' order by 1 desc"
@@ -363,6 +371,7 @@ func listsortrequests(permission Permissions, action string, r *http.Request) (m
 	log.WithFields(log.Fields{"username": permission.User}).Debug(i...) //debug variables map
 	log.WithFields(log.Fields{"username": permission.User}).Debug("Running Product List")
 	log.WithFields(log.Fields{"username": permission.User}).Debug(newquery)
+	log.WithFields(log.Fields{"username": permission.User}).Debug(permission.Perms)
 	rows, err := db.Query(newquery, i...)
 	defer rows.Close()
 	if err != nil {

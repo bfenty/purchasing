@@ -13,6 +13,7 @@
   <br>
   {{template "messagebox" .}}
   {{$permission := .Permission.Perms}}
+  {{$user := .Permission.User}}
   {{$date := .Date}}
         <!-- Checkout Table -->
         <table class="table table-striped table-hover">
@@ -57,6 +58,8 @@
                   <option value='nberge'>nberge</option>
                 </select>
               </td>
+            {{else}}
+              <input type="hidden" id="sorter" name="sorter" value="{{$user}}">
             {{end}}
             <td><input type='submit' value='Checkout' class="btn btn-primary"></td>
             </form>
