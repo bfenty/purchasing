@@ -2,11 +2,11 @@
 <head>
 {{template "header"}}
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+<!-- <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css"> -->
 <!-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.0/jquery.min.js"></script>
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" /> -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.5.1/js/bootstrap-datepicker.js"></script>
+<!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.5.1/js/bootstrap-datepicker.js"></script> -->
 </head>
 <body>
   {{template "navigation" .}}
@@ -16,14 +16,14 @@
   {{$date := .Date}}
         <!-- Checkout Table -->
         <table class="table table-striped table-hover">
-          <thead class="thead-dark" style="position: sticky; top: 0; z-index: 1;">
+          <thead class="table-dark" style="position: sticky; top: 0; z-index: 1;">
             <tr>
                 <th scope="col" width=70px>ID</th>
                 <th scope="col" width="120px">SKU</th>
                 <th scope="col" width=220px>Description</th>
                 <th scope="col">Instructions</th>
-                <th scope="col" width=60px>Weight Out</th>
-                <th scope="col" width=100px>Checkout</th>
+                {{if eq $permission "admin"}}<th scope="col" width=60px>Weight Out</th>{{end}}
+                {{if eq $permission "admin"}}<th scope="col" width=100px>Checkout</th>{{end}}
                 {{if eq $permission "admin"}}<th scope="col" width=90px>Sorter</th>{{end}}
                 <th width=80px></th>
             </tr>
@@ -37,11 +37,13 @@
             <td><input class="form-control" type='text' id="sku" name="sku" value="{{.SKU}}"readonly></td>
             <td><input class="form-control" type='text' id="description" name="description" value="{{.Description}}"readonly></td>
             <td><input class="form-control" type='text' id="instructions" name="instructions" value="{{.Instructions}}" readonly></td>
-            <td><input class="form-control" type='text' id="weightout" name="weightout" value="{{.Weightout}}" readonly></td>
-            <td><input class="form-control" type='date' id="checkout" name="checkout" value="{{$date}}" {{if ne $permission "admin"}}readonly{{end}}></td>
+            {{if eq $permission "admin"}}<td><input class="form-control" type='text' id="weightout" name="weightout" value="{{.Weightout}}" readonly></td>{{end}}
+            {{if eq $permission "admin"}}<td>{{end}}
+              <input class="form-control" {{if eq $permission "admin"}}type='date'{{else}}type='hidden'{{end}} id="checkout" name="checkout" value="{{$date}}" {{if ne $permission "admin"}}readonly{{end}}>
+            {{if eq $permission "admin"}}</td>{{end}}
             {{if eq $permission "admin"}}
               <td>
-                <select class="custom-select mr-sm-2" id="sorter" name="sorter">
+                <select class="form-select" id="sorter" name="sorter">
                   <option selected disabled value> select</option>
                   <option value='jahale'>jahale</option>
                   <option value='johale'>johale</option>

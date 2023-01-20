@@ -7,8 +7,8 @@
   <br>
   {{template "messagebox" .}}
   {{$permission := .Permission.Perms}}
-  <table class="table table-striped table-hover">
-    <thead class="thead-dark" style="position: sticky; top: 0; z-index: 1;">
+  <table class="table table-striped table-hover .table-sm" style="max-width: none">
+    <thead class="table-dark" style="position: sticky; top: 0; z-index: 1;">
       <tr>
           <th scope="col" width=70px>ID</th>
           <th scope="col" width="120px">SKU</th>
@@ -42,33 +42,8 @@
       <td><input class="form-control" type='text' id="hours" name="hours"></td>
       <td><input type="date" class="form-control" type='text' id="checkout" name="checkout"></td>
       <td><input type="date" class="form-control" type='text' id="checkin" name="checkin"></td>
-      <td><input class="form-control" type='text' id="sorter" name="sorter"></td>
       <td>
-        <select class="custom-select mr-sm-2" id="status" name="status">
-            <option value="New">New</option>
-            <option value="Checkout">Checkout</option>
-            <option value="Checkin">Checkin</option>
-        </select>
-      </td>
-      <td><input type='submit' value='Insert' class="btn btn-primary"></td>
-      <td></td>
-      </form>
-    </tr>
-    <tr class="table-info">
-      <form method="GET" action="/sorting">
-      <td></td>
-      <td><input class="form-control" type='text' id="sku" name="sku"></td>
-      <td><input class="form-control" type='text' id="description" name="description"></td>
-      <td><input class="form-control" type='text' id="manufacturerpart" name="manufacturerpart"></td>
-      <td><input class="form-control" type='text' id="instructions" name="instructions"></td>
-      <td><input class="form-control" type='text' id="weightout" name="weightout"></td>
-      <td><input class="form-control" type='text' id="weightin" name="weightin"></td>
-      <td><input class="form-control" type='text' id="pieces" name="pieces"></td>
-      <td><input class="form-control" type='text' id="hours" name="hours"></td>
-      <td><input type="date" class="form-control" type='text' id="checkout" name="checkout"></td>
-      <td><input type="date" class="form-control" type='text' id="checkin" name="checkin"></td>
-      <td>
-        <select class="custom-select mr-sm-2" id="sorter" name="sorter">
+        <select class="form-select" id="sorter" name="sorter">
           <option selected disabled value> select</option>
           <option value='jahale'>jahale</option>
           <option value='johale'>johale</option>
@@ -83,7 +58,46 @@
         </select>
       </td>
       <td>
-        <select class="custom-select mr-sm-2" id="status" name="status">
+        <select class="form-select" id="status" name="status">
+            <option value="New">New</option>
+            <option value="Checkout">Checkout</option>
+            <option value="Checkin">Checkin</option>
+        </select>
+      </td>
+      <td><input type='submit' value='Insert' class="btn btn-primary"></td>
+      <td></td>
+      </form>
+    </tr>
+    <tr class="table-danger">
+      <form method="GET" action="/sorting">
+      <td></td>
+      <td><input class="form-control" type='text' id="sku" name="sku"></td>
+      <td><input class="form-control" type='text' id="description" name="description"></td>
+      <td><input class="form-control" type='text' id="manufacturerpart" name="manufacturerpart"></td>
+      <td><input class="form-control" type='text' id="instructions" name="instructions"></td>
+      <td><input class="form-control" type='text' id="weightout" name="weightout"></td>
+      <td><input class="form-control" type='text' id="weightin" name="weightin"></td>
+      <td><input class="form-control" type='text' id="pieces" name="pieces"></td>
+      <td><input class="form-control" type='text' id="hours" name="hours"></td>
+      <td><input type="date" class="form-control" type='text' id="checkout" name="checkout"></td>
+      <td><input type="date" class="form-control" type='text' id="checkin" name="checkin"></td>
+      <td>
+        <select class="form-select" id="sorter" name="sorter">
+          <option selected disabled value> select</option>
+          <option value='jahale'>jahale</option>
+          <option value='johale'>johale</option>
+          <option value='vahale'>vahale</option>
+          <option value='juhale'>juhale</option>
+          <option value='msimpk'>msimpk</option>
+          <option value='awrigh'>awrigh</option>
+          <option value='rhale'>rhale</option>
+          <option value='lehope'>lehope</option>
+          <option value='rsteph'>rsteph</option>
+          <option value='nberge'>nberge</option>
+        </select>
+      </td>
+      <td>
+        <select class="form-select" id="status" name="status">
             <option value="" selected></option>
             <option value="New">New</option>
             <option value="Checkout">Checkout</option>
@@ -99,24 +113,24 @@
     <!-- Delete Modal -->
           <div class="modal fade" id="ModalDelete{{$index}}" tabindex="-1" role="dialog" aria-labelledby="ModalDeleteLabel" aria-hidden="true">
             <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                <h5 class="modal-title" id="ModalDeleteLabel{{$index}}">Confirm Sorting Request Delete</h5>
-                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-                </div>
-                <div class="modal-body">
-                This will permanently delete Sorting Request ID#{{.ID}}, are you sure you want to proceed?
-                </div>
-                <div class="modal-footer">
-                    <form action="/sortrequestdelete" method="POST">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <input type="hidden" value="{{.ID}}" id="requestid" name="requestid">
-                        <button type="submit" class="btn btn-danger">Yes, Delete</button>
-                    </form>
-                </div>
-            </div>
+              <div class="modal-content">
+                  <div class="modal-header">
+                  <h5 class="modal-title" id="ModalDeleteLabel{{$index}}">Confirm Sorting Request Delete</h5>
+                      <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                      <span aria-hidden="true">&times;</span>
+                  </button>
+                  </div>
+                  <div class="modal-body">
+                    This will permanently delete Sorting Request ID#{{.ID}}, are you sure you want to proceed?
+                  </div>
+                  <div class="modal-footer">
+                      <form action="/sortrequestdelete" method="POST">
+                          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                          <input type="hidden" value="{{.ID}}" id="requestid" name="requestid">
+                          <button type="submit" class="btn btn-danger">Yes, Delete</button>
+                      </form>
+                  </div>
+              </div>
             </div>
         </div>
     <tr>
@@ -134,7 +148,7 @@
       <td><input type="date" class="form-control" id="checkin" name="checkin" value="{{.Checkin}}"{{if ne $permission "admin"}} readonly{{end}}></td>
       <td><input class="form-control" type='text' id="sorter" name="sorter" value="{{.Sorter}}"readonly></td>
       <td>
-        <select class="custom-select mr-sm-2" id="status" name="status">
+        <select class="form-select" id="status" name="status">
             <option value="New" {{if eq .Status "New"}}selected{{end}}>New</option>
             <option value="Checkout" {{if eq .Status "Checkout"}}selected{{end}}>Checkout</option>
             <option value="Checkin" {{if eq .Status "Checkin"}}selected{{end}}>Checkin</option>
