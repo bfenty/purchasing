@@ -8,7 +8,7 @@
   {{template "messagebox" .}}
   {{$permission := .Permission.Perms}}
   <table class="table table-striped table-hover .table-sm" style="max-width: none">
-    <thead class="thead-dark" style="position: sticky; top: 0; z-index: 1;">
+    <thead class="table-dark" style="position: sticky; top: 0; z-index: 1;">
       <tr>
           <th scope="col" width=70px>ID</th>
           <th scope="col" width="120px">SKU</th>
@@ -43,7 +43,7 @@
       <td><input type="date" class="form-control" type='text' id="checkout" name="checkout"></td>
       <td><input type="date" class="form-control" type='text' id="checkin" name="checkin"></td>
       <td>
-        <select class="custom-select mr-sm-2" id="sorter" name="sorter">
+        <select class="form-select" id="sorter" name="sorter">
           <option selected disabled value> select</option>
           <option value='jahale'>jahale</option>
           <option value='johale'>johale</option>
@@ -58,7 +58,7 @@
         </select>
       </td>
       <td>
-        <select class="custom-select mr-sm-2" id="status" name="status">
+        <select class="form-select" id="status" name="status">
             <option value="New">New</option>
             <option value="Checkout">Checkout</option>
             <option value="Checkin">Checkin</option>
@@ -82,7 +82,7 @@
       <td><input type="date" class="form-control" type='text' id="checkout" name="checkout"></td>
       <td><input type="date" class="form-control" type='text' id="checkin" name="checkin"></td>
       <td>
-        <select class="custom-select mr-sm-2" id="sorter" name="sorter">
+        <select class="form-select" id="sorter" name="sorter">
           <option selected disabled value> select</option>
           <option value='jahale'>jahale</option>
           <option value='johale'>johale</option>
@@ -97,7 +97,7 @@
         </select>
       </td>
       <td>
-        <select class="custom-select mr-sm-2" id="status" name="status">
+        <select class="form-select" id="status" name="status">
             <option value="" selected></option>
             <option value="New">New</option>
             <option value="Checkout">Checkout</option>
@@ -148,7 +148,7 @@
       <td><input type="date" class="form-control" id="checkin" name="checkin" value="{{.Checkin}}"{{if ne $permission "admin"}} readonly{{end}}></td>
       <td><input class="form-control" type='text' id="sorter" name="sorter" value="{{.Sorter}}"readonly></td>
       <td>
-        <select class="custom-select mr-sm-2" id="status" name="status">
+        <select class="form-select" id="status" name="status">
             <option value="New" {{if eq .Status "New"}}selected{{end}}>New</option>
             <option value="Checkout" {{if eq .Status "Checkout"}}selected{{end}}>Checkout</option>
             <option value="Checkin" {{if eq .Status "Checkin"}}selected{{end}}>Checkin</option>

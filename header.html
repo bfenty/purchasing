@@ -6,8 +6,8 @@
 <!-- <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script> -->
 <script> {{template "loginjs" .}} </script>
 
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-<!-- <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script> -->
+<!-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script> -->
 
 
 <!-- Latest Bootstrap -->
@@ -69,30 +69,30 @@ $('#myModal').on('shown.bs.modal', function () {
 {{define "navigation"}}
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
 <a class="navbar-brand" href="#">{{.Title}}</a>
-<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-  <span class="navbar-toggler-icon"></span>
-</button>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
 {{$permission := .Permission.Perms}}
 <div class="collapse navbar-collapse" id="navbarSupportedContent">
   <ul class="navbar-nav mr-auto">
   {{if or (eq $permission "admin") (eq $permission "purchasing") (eq $permission "receiving")}}
     <li class="nav-item active">
-      <a class="nav-link" href="/products">Products<span class="sr-only">(current)</span></a>
+      <a class="nav-link active" href="/products">Products<span class="sr-only">(current)</span></a>
     </li>
     {{end}}
   {{if or (eq $permission "admin") (eq $permission "purchasing")}}
     <li class="nav-item active">
-      <a class="nav-link" href="/productsinsert">New Product<span class="sr-only">(current)</span></a>
+      <a class="nav-link active" href="/productsinsert">New Product<span class="sr-only">(current)</span></a>
     </li>
     {{end}}
   {{if or (eq $permission "admin") (eq $permission "purchasing")}}
     <li class="nav-item active">
-      <a class="nav-link" href="/reorder">Reorders<span class="sr-only">(current)</span></a>
+      <a class="nav-link active" href="/reorder">Reorders<span class="sr-only">(current)</span></a>
     </li>
     {{end}}
   {{if or (eq $permission "admin") (eq $permission "purchasing")}}
     <li class="nav-item active">
-      <a class="nav-link" href="/orderlist">Orders<span class="sr-only">(current)</span></a>
+      <a class="nav-link active" href="/orderlist">Orders<span class="sr-only">(current)</span></a>
     </li>
     {{end}}
   {{if or (eq $permission "admin") (eq $permission "receiving") (eq $permission "purchasing")}}
@@ -109,9 +109,17 @@ $('#myModal').on('shown.bs.modal', function () {
           </ul>
         </li>
     {{end}}
+      {{if or (eq $permission "sorting")}}
+      <li class="nav-item active">
+        <a class="nav-link active" href="/checkout">Checkout <span class="sr-only">(current)</span></a>
+      </li>
+      <li class="nav-item active">
+        <a class="nav-link active" href="/checkin">Checkin <span class="sr-only">(current)</span></a>
+      </li>
+      {{end}}
       {{if or (eq $permission "admin") (eq $permission "receiving") (eq $permission "purchasing") (eq $permission "sorting")}}
       <li class="nav-item active">
-        <a class="nav-link" href="/logout">Logout <span class="sr-only">(current)</span></a>
+        <a class="nav-link active" href="/logout">Logout <span class="sr-only">(current)</span></a>
       </li>
       {{end}}
   </ul>
@@ -129,7 +137,7 @@ $('#myModal').on('shown.bs.modal', function () {
 {{end}}
 
 {{define "footer"}}
-<footer class="bg-dark text-center text-white fixed-bottom">
+<footer class="bg-dark text-center text-white footer fixed-bottom">
   <div class="text-center p-3">
     © 2022 Copyright:
     <a class="text-white" href="https://beadboxbargains.com/">BeadBoxBargains.com</a>
