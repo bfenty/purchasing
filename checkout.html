@@ -22,8 +22,8 @@
                 <th scope="col" width="120px">SKU</th>
                 <th scope="col" width=220px>Description</th>
                 <th scope="col">Instructions</th>
-                <th scope="col" width=60px>Weight Out</th>
-                <th scope="col" width=100px>Checkout</th>
+                {{if eq $permission "admin"}}<th scope="col" width=60px>Weight Out</th>{{end}}
+                {{if eq $permission "admin"}}<th scope="col" width=100px>Checkout</th>{{end}}
                 {{if eq $permission "admin"}}<th scope="col" width=90px>Sorter</th>{{end}}
                 <th width=80px></th>
             </tr>
@@ -37,8 +37,10 @@
             <td><input class="form-control" type='text' id="sku" name="sku" value="{{.SKU}}"readonly></td>
             <td><input class="form-control" type='text' id="description" name="description" value="{{.Description}}"readonly></td>
             <td><input class="form-control" type='text' id="instructions" name="instructions" value="{{.Instructions}}" readonly></td>
-            <td><input class="form-control" type='text' id="weightout" name="weightout" value="{{.Weightout}}" readonly></td>
-            <td><input class="form-control" type='date' id="checkout" name="checkout" value="{{$date}}" {{if ne $permission "admin"}}readonly{{end}}></td>
+            {{if eq $permission "admin"}}<td><input class="form-control" type='text' id="weightout" name="weightout" value="{{.Weightout}}" readonly></td>{{end}}
+            {{if eq $permission "admin"}}<td>{{end}}
+              <input class="form-control" {{if eq $permission "admin"}}type='date'{{else}}type='hidden'{{end}} id="checkout" name="checkout" value="{{$date}}" {{if ne $permission "admin"}}readonly{{end}}>
+            {{if eq $permission "admin"}}</td>{{end}}
             {{if eq $permission "admin"}}
               <td>
                 <select class="form-select" id="sorter" name="sorter">
