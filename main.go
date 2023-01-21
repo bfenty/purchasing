@@ -23,18 +23,19 @@ type Order struct {
 }
 
 type SortRequest struct {
-	ID           int
-	SKU          string
-	Description  *string
-	Instructions *string
-	Weightin     *float64
-	Weightout    *float64
-	Pieces       *int
-	Hours        *float64
-	Checkout     *string
-	Checkin      *string
-	Sorter       *string
-	Status       string
+	ID               int
+	SKU              string
+	Description      *string
+	Instructions     *string
+	Weightin         *float64
+	Weightout        *float64
+	Pieces           *int
+	Hours            *float64
+	Checkout         *string
+	Checkin          *string
+	Sorter           *string
+	Status           string
+	ManufacturerPart *string
 }
 
 type Product struct {

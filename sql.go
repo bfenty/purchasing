@@ -338,7 +338,7 @@ func listsortrequests(permission Permissions, action string, r *http.Request) (m
 	//Build the Query
 	if action == "all" {
 		//retrieves all records
-		newquery = "SELECT requestid, sku,description,instructions,weightin,weightout,pieces,hours,checkout,checkint,sorter,status from sortrequest WHERE 1 "
+		newquery = "SELECT requestid, sku,description,instructions,weightin,weightout,pieces,hours,checkout,checkint,sorter,status,sku_manufacturer from sortrequest WHERE 1 "
 		for param, value := range queryParams {
 			if value != "" {
 				i = append(i, value)
@@ -348,21 +348,21 @@ func listsortrequests(permission Permissions, action string, r *http.Request) (m
 		newquery += " order by 1 desc"
 	} else if action == "checkout" {
 		//retrieves only records that have not been checked out yet
-		newquery = "SELECT requestid, sku,description,instructions,weightin,weightout,pieces,hours,checkout,checkint,sorter,status from sortrequest WHERE status = 'new'"
+		newquery = "SELECT requestid, sku,description,instructions,weightin,weightout,pieces,hours,checkout,checkint,sorter,status,sku_manufacturer from sortrequest WHERE status = 'new'"
 		// if permission.Perms == "sorting" {
 		// 	newquery += " AND sorter = '" + permission.User + "'"
 		// }
 		newquery += " order by 1"
 	} else if action == "checkin" {
 		//retrieves only records that have not been checked in yet
-		newquery = "SELECT requestid, sku,description,instructions,weightin,weightout,pieces,hours,checkout,checkint,sorter,status from sortrequest WHERE status = 'checkout'"
+		newquery = "SELECT requestid, sku,description,instructions,weightin,weightout,pieces,hours,checkout,checkint,sorter,status,sku_manufacturer from sortrequest WHERE status = 'checkout'"
 		if permission.Perms == "sorting" {
 			newquery += " AND sorter = '" + permission.User + "'"
 		}
 		newquery += " order by 1 desc"
 	} else if action == "receiving" {
 		//retrieves only records that have been checked back in
-		newquery = "SELECT requestid, sku,description,instructions,weightin,weightout,pieces,hours,checkout,checkint,sorter,status from sortrequest WHERE status = 'checkin' order by 1 desc"
+		newquery = "SELECT requestid, sku,description,instructions,weightin,weightout,pieces,hours,checkout,checkint,sorter,status,sku_manufacturer from sortrequest WHERE status = 'checkin' order by 1 desc"
 	}
 
 	newquery += " limit 100"
@@ -381,7 +381,7 @@ func listsortrequests(permission Permissions, action string, r *http.Request) (m
 	//Pull Data
 	for rows.Next() {
 		var r SortRequest
-		err := rows.Scan(&r.ID, &r.SKU, &r.Description, &r.Instructions, &r.Weightin, &r.Weightout, &r.Pieces, &r.Hours, &r.Checkout, &r.Checkin, &r.Sorter, &r.Status)
+		err := rows.Scan(&r.ID, &r.SKU, &r.Description, &r.Instructions, &r.Weightin, &r.Weightout, &r.Pieces, &r.Hours, &r.Checkout, &r.Checkin, &r.Sorter, &r.Status, &r.ManufacturerPart)
 		if err != nil {
 			return handleerror(err), sortrequests
 		}

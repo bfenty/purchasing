@@ -138,7 +138,7 @@
       <td><input class="form-control" type="text" id="requestid" name="requestid" value="{{.ID}}" readonly></td>
       <td><input class="form-control" type='text' id="sku" name="sku" value="{{.SKU}}"{{if ne $permission "admin"}} readonly{{end}}></td>
       <td><input class="form-control" type='text' id="description" name="description" value="{{.Description}}"{{if ne $permission "admin"}} readonly{{end}}></td>
-      <td><input class="form-control" type='text' id="manufacturerpart" name="manufacturerpart"></td>
+      <td><input class="form-control" type='text' id="manufacturerpart" name="manufacturerpart" value="{{.ManufacturerPart}}"></td>
       <td><input class="form-control" type='text' id="instructions" name="instructions" value="{{.Instructions}}"{{if ne $permission "admin"}} readonly{{end}}></td>
       <td><input class="form-control" type='text' id="weightout" name="weightout" value="{{.Weightout}}"></td>
       <td><input class="form-control" type='text' id="weightin" name="weightin" value="{{.Weightin}}"></td>
