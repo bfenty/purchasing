@@ -36,6 +36,7 @@ type SortRequest struct {
 	Sorter           *string
 	Status           string
 	ManufacturerPart *string
+	Priority         int
 }
 
 type Product struct {

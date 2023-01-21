@@ -19,7 +19,8 @@
         <table class="table table-striped table-hover">
           <thead class="table-dark" style="position: sticky; top: 0; z-index: 1;">
             <tr>
-                <th scope="col" width=70px>ID</th>
+                {{if eq $permission "admin"}}<th scope="col" width=70px>ID</th>{{end}}
+                <th scope="col" width="100px">Priority</th>
                 <th scope="col" width="120px">SKU</th>
                 <th scope="col" width=220px>Description</th>
                 <th scope="col">Instructions</th>
@@ -34,7 +35,13 @@
           <tr>
             <form method="GET" action="/sortingupdate">
             <input type="hidden" name="status" id="status" value="Checkout">
-            <td><input class="form-control" type="text" id="requestid" name="requestid" value="{{.ID}}" readonly></td>
+            {{if eq $permission "admin"}}<td><input class="form-control" type="text" id="requestid" name="requestid" value="{{.ID}}" readonly></td>{{end}}
+            <td>
+              <select class="form-select" readonly>
+                <option value="0" {{if eq .Priority 0}}selected{{end}} disabled>Normal</option>
+                <option value="1" {{if eq .Priority 1}}selected{{end}} disabled>High</option>
+              </select>
+            </td>
             <td><input class="form-control" type='text' id="sku" name="sku" value="{{.SKU}}"readonly></td>
             <td><input class="form-control" type='text' id="description" name="description" value="{{.Description}}"readonly></td>
             <td><input class="form-control" type='text' id="instructions" name="instructions" value="{{.Instructions}}" readonly></td>

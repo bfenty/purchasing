@@ -23,6 +23,7 @@
           <th scope="col" width=100px>Checkin Date</th>
           <th scope="col" width=90px>Sorter</th>
           <th scope="col" width=90px>Status</th>
+          <th scope="col" width=90px>Priority</th>
           <th width=80px></th>
           <th width=80px></th>
       </tr>
@@ -64,6 +65,12 @@
             <option value="Checkin">Checkin</option>
         </select>
       </td>
+      <td>
+        <select class="form-select" id="priority" name="priority">
+          <option value="0">Normal</option>
+          <option value="1">High</option>
+        </select>
+      </td>
       <td><input type='submit' value='Insert' class="btn btn-primary"></td>
       <td></td>
       </form>
@@ -102,6 +109,12 @@
             <option value="New">New</option>
             <option value="Checkout">Checkout</option>
             <option value="Checkin">Checkin</option>
+        </select>
+      </td>
+      <td>
+        <select class="form-select" id="priority" name="priority">
+          <option value="0">Normal</option>
+          <option value="1">High</option>
         </select>
       </td>
       <td><input type='submit' value='Search' class="btn btn-primary"></td>
@@ -152,6 +165,12 @@
             <option value="New" {{if eq .Status "New"}}selected{{end}}>New</option>
             <option value="Checkout" {{if eq .Status "Checkout"}}selected{{end}}>Checkout</option>
             <option value="Checkin" {{if eq .Status "Checkin"}}selected{{end}}>Checkin</option>
+        </select>
+      </td>
+      <td>
+        <select class="form-select" id="priority" name="priority">
+          <option value="0" {{if eq .Priority 0}}selected{{end}}>Normal</option>
+          <option value="1" {{if eq .Priority 1}}selected{{end}}>High</option>
         </select>
       </td>
       <td><input type='submit' value='Update' class="btn btn-primary"></td>

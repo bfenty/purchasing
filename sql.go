@@ -330,6 +330,7 @@ func listsortrequests(permission Permissions, action string, r *http.Request) (m
 		"checkint":         r.URL.Query().Get("checkin"),
 		"sorter":           r.URL.Query().Get("sorter"),
 		"status":           r.URL.Query().Get("status"),
+		"priority":         r.URL.Query().Get("priority"),
 	}
 
 	var i []interface{}
@@ -338,7 +339,7 @@ func listsortrequests(permission Permissions, action string, r *http.Request) (m
 	//Build the Query
 	if action == "all" {
 		//retrieves all records
-		newquery = "SELECT requestid, sku,description,instructions,weightin,weightout,pieces,hours,checkout,checkint,sorter,status,sku_manufacturer from sortrequest WHERE 1 "
+		newquery = "SELECT requestid, sku,description,instructions,weightin,weightout,pieces,hours,checkout,checkint,sorter,status,sku_manufacturer,prty from sortrequest WHERE 1 "
 		for param, value := range queryParams {
 			if value != "" {
 				i = append(i, value)
@@ -348,21 +349,21 @@ func listsortrequests(permission Permissions, action string, r *http.Request) (m
 		newquery += " order by 1 desc"
 	} else if action == "checkout" {
 		//retrieves only records that have not been checked out yet
-		newquery = "SELECT requestid, sku,description,instructions,weightin,weightout,pieces,hours,checkout,checkint,sorter,status,sku_manufacturer from sortrequest WHERE status = 'new'"
+		newquery = "SELECT requestid, sku,description,instructions,weightin,weightout,pieces,hours,checkout,checkint,sorter,status,sku_manufacturer,prty from sortrequest WHERE status = 'new'"
 		// if permission.Perms == "sorting" {
 		// 	newquery += " AND sorter = '" + permission.User + "'"
 		// }
-		newquery += " order by 1"
+		newquery += " order by prty desc, 1"
 	} else if action == "checkin" {
 		//retrieves only records that have not been checked in yet
-		newquery = "SELECT requestid, sku,description,instructions,weightin,weightout,pieces,hours,checkout,checkint,sorter,status,sku_manufacturer from sortrequest WHERE status = 'checkout'"
+		newquery = "SELECT requestid, sku,description,instructions,weightin,weightout,pieces,hours,checkout,checkint,sorter,status,sku_manufacturer,prty from sortrequest WHERE status = 'checkout'"
 		if permission.Perms == "sorting" {
 			newquery += " AND sorter = '" + permission.User + "'"
 		}
 		newquery += " order by 1 desc"
 	} else if action == "receiving" {
 		//retrieves only records that have been checked back in
-		newquery = "SELECT requestid, sku,description,instructions,weightin,weightout,pieces,hours,checkout,checkint,sorter,status,sku_manufacturer from sortrequest WHERE status = 'checkin' order by 1 desc"
+		newquery = "SELECT requestid, sku,description,instructions,weightin,weightout,pieces,hours,checkout,checkint,sorter,status,sku_manufacturer,prty from sortrequest WHERE status = 'checkin' order by 1 desc"
 	}
 
 	newquery += " limit 100"
@@ -381,7 +382,7 @@ func listsortrequests(permission Permissions, action string, r *http.Request) (m
 	//Pull Data
 	for rows.Next() {
 		var r SortRequest
-		err := rows.Scan(&r.ID, &r.SKU, &r.Description, &r.Instructions, &r.Weightin, &r.Weightout, &r.Pieces, &r.Hours, &r.Checkout, &r.Checkin, &r.Sorter, &r.Status, &r.ManufacturerPart)
+		err := rows.Scan(&r.ID, &r.SKU, &r.Description, &r.Instructions, &r.Weightin, &r.Weightout, &r.Pieces, &r.Hours, &r.Checkout, &r.Checkin, &r.Sorter, &r.Status, &r.ManufacturerPart, &r.Priority)
 		if err != nil {
 			return handleerror(err), sortrequests
 		}
@@ -417,6 +418,7 @@ func Sortinginsert(r *http.Request, permission Permissions) (message Message) {
 	sorter := r.URL.Query().Get("sorter")
 	status := r.URL.Query().Get("status")
 	manufacturerpart := r.URL.Query().Get("manufacturerpart")
+	prty := r.URL.Query().Get("priority")
 
 	//ensure that there are no null numerical values
 	// if weightin == nil {
@@ -448,6 +450,7 @@ func Sortinginsert(r *http.Request, permission Permissions) (message Message) {
 	i = append(i, sorter)
 	i = append(i, status)
 	i = append(i, manufacturerpart)
+	i = append(i, prty)
 	log.WithFields(log.Fields{"username": permission.User}).Debug("Inserting Sorting Request: ", i)
 	log.WithFields(log.Fields{"username": permission.User}).Debug(i...) //debug variables map
 	log.WithFields(log.Fields{"username": permission.User}).Debug("Running Product List")
@@ -455,7 +458,7 @@ func Sortinginsert(r *http.Request, permission Permissions) (message Message) {
 	//Build the Query
 	if id != "" {
 		//Run the query if ID isn't null
-		newquery = "REPLACE INTO sortrequest (`sku`, `description`, `instructions`, `requestid`,`weightin`, `weightout`, `pieces`, `hours`, `checkout`, `checkint`, `sorter`,status,sku_manufacturer) VALUES (REPLACE(?,' ',''),?,?,?,?,?,?,?,?,?,?,?,?)"
+		newquery = "REPLACE INTO sortrequest (`sku`, `description`, `instructions`, `requestid`,`weightin`, `weightout`, `pieces`, `hours`, `checkout`, `checkint`, `sorter`,status,sku_manufacturer,prty) VALUES (REPLACE(?,' ',''),?,?,?,?,?,?,?,?,?,?,?,?,?)"
 		log.WithFields(log.Fields{"username": permission.User}).Debug("Query: ", newquery)
 		rows, err := db.Query(newquery, i...)
 		if err != nil {
@@ -464,7 +467,7 @@ func Sortinginsert(r *http.Request, permission Permissions) (message Message) {
 		defer rows.Close()
 	} else {
 		//Run the query to insert a new row
-		newquery = "INSERT INTO sortrequest (`sku`, `description`, `instructions`, `weightin`, `weightout`, `pieces`, `hours`, `checkout`, `checkint`, `sorter`,status,sku_manufacturer) VALUES (REPLACE(?,' ',''),?,?,?,?,?,?,?,?,?,?,?)"
+		newquery = "INSERT INTO sortrequest (`sku`, `description`, `instructions`, `weightin`, `weightout`, `pieces`, `hours`, `checkout`, `checkint`, `sorter`,status,sku_manufacturer,prty) VALUES (REPLACE(?,' ',''),?,?,?,?,?,?,?,?,?,?,?,?)"
 		log.WithFields(log.Fields{"username": permission.User}).Debug("Query: ", newquery)
 		rows, err := db.Query(newquery, i...)
 		if err != nil {
