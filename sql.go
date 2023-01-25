@@ -817,7 +817,7 @@ func Updatepass(user string, pass string, secret string) (message Message, succe
 
 	hashpass := hashAndSalt([]byte(pass))
 	log.Debug("Creating password hash of length ", len(hashpass), ": ", hashpass)
-	var newquery string = "update users set password = ? where username = ? and password = ''"
+	var newquery string = "update orders.users set password = ? where username = ? and password = ''"
 	rows, err := db.Query(newquery, hashpass, user)
 	if err != nil {
 		return handleerror(err), false
@@ -841,7 +841,7 @@ func userauth(user string, pass string) (permission string, message Message) {
 	}
 	//set Variables
 	//Query
-	var newquery string = "select password, permissions from users where username = ?"
+	var newquery string = "select password, permissions from orders.users where username = ?"
 	// log.WithFields(log.Fields{"username": permission.User}).Debug(newquery)
 	rows, err := db.Query(newquery, user)
 	if err != nil {
@@ -900,7 +900,7 @@ func userdata(user string) (permission Permissions) {
 	}
 	//set Variables
 	//Query
-	var newquery string = "select permissions from users where username = ?"
+	var newquery string = "select permissions from orders.users where username = ?"
 	// log.WithFields(log.Fields{"username": permission.User}).Debug(newquery)
 	rows, err := db.Query(newquery, user)
 	if err != nil {
