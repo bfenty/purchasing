@@ -400,84 +400,133 @@ func Sortinginsert(r *http.Request, permission Permissions) (message Message) {
 		return handleerror(pingErr)
 	}
 
-	//Define Variables
-	var i []interface{}
-	var newquery string
+	// //Define Variables
+	// var i []interface{}
 
-	//Retrieve variables from POST request
-	sku := r.URL.Query().Get("sku")
-	id := r.URL.Query().Get("requestid")
-	descript := r.URL.Query().Get("description")
-	instructions := r.URL.Query().Get("instructions")
-	weightin, _ := strconv.Atoi(r.URL.Query().Get("weightin"))
-	weightout, _ := strconv.Atoi(r.URL.Query().Get("weightout"))
-	pieces, _ := strconv.Atoi(r.URL.Query().Get("pieces"))
-	hours := r.URL.Query().Get("hours")
-	checkout := r.URL.Query().Get("checkout")
-	checkin := r.URL.Query().Get("checkin")
-	sorter := r.URL.Query().Get("sorter")
-	status := r.URL.Query().Get("status")
-	manufacturerpart := r.URL.Query().Get("manufacturerpart")
-	prty := r.URL.Query().Get("priority")
+	// //Retrieve variables from POST request
+	// sku := r.URL.Query().Get("sku")
+	// id := r.URL.Query().Get("requestid")
+	// descript := r.URL.Query().Get("description")
+	// instructions := r.URL.Query().Get("instructions")
+	// weightin, _ := strconv.Atoi(r.URL.Query().Get("weightin"))
+	// weightout, _ := strconv.Atoi(r.URL.Query().Get("weightout"))
+	// pieces, _ := strconv.Atoi(r.URL.Query().Get("pieces"))
+	// hours := r.URL.Query().Get("hours")
+	// checkout := r.URL.Query().Get("checkout")
+	// checkin := r.URL.Query().Get("checkin")
+	// sorter := r.URL.Query().Get("sorter")
+	// status := r.URL.Query().Get("status")
+	// manufacturerpart := r.URL.Query().Get("manufacturerpart")
+	// prty := r.URL.Query().Get("priority")
+	// if hours == "" {
+	// 	hours = "0"
+	// }
 
-	//ensure that there are no null numerical values
-	// if weightin == nil {
-	// 	weightin = "0"
+	// //Create the fields to insert
+	// if sku != "" {
+	// 	i = append(i, sku)
 	// }
-	// if weightout == "" {
-	// 	weightout = "0"
-	// }
-	// if pieces == "" {
-	// 	pieces = "0"
-	// }
-	if hours == "" {
-		hours = "0"
-	}
-
-	//Create the fields to insert
-	i = append(i, sku)
-	i = append(i, descript)
-	i = append(i, instructions)
-	if id != "" {
-		i = append(i, id)
-	} //ensure that the id isn't null before inserting
-	i = append(i, weightin)
-	i = append(i, weightout)
-	i = append(i, pieces)
-	i = append(i, hours)
-	i = append(i, checkout)
-	i = append(i, checkin)
-	i = append(i, sorter)
-	i = append(i, status)
-	i = append(i, manufacturerpart)
-	i = append(i, prty)
-	log.WithFields(log.Fields{"username": permission.User}).Debug("Inserting Sorting Request: ", i)
-	log.WithFields(log.Fields{"username": permission.User}).Debug(i...) //debug variables map
-	log.WithFields(log.Fields{"username": permission.User}).Debug("Running Product List")
+	// i = append(i, descript)
+	// i = append(i, instructions)
+	// if id != "" {
+	// 	i = append(i, id)
+	// } //ensure that the id isn't null before inserting
+	// i = append(i, weightin)
+	// i = append(i, weightout)
+	// i = append(i, pieces)
+	// i = append(i, hours)
+	// i = append(i, checkout)
+	// i = append(i, checkin)
+	// i = append(i, sorter)
+	// i = append(i, status)
+	// i = append(i, manufacturerpart)
+	// i = append(i, prty)
+	// log.WithFields(log.Fields{"username": permission.User}).Debug("Inserting Sorting Request: ", i)
+	// log.WithFields(log.Fields{"username": permission.User}).Debug(i...) //debug variables map
+	// log.WithFields(log.Fields{"username": permission.User}).Debug("Running Product List")
 
 	//Build the Query
-	if id != "" {
-		//Run the query if ID isn't null
-		newquery = "REPLACE INTO sortrequest (`sku`, `description`, `instructions`, `requestid`,`weightin`, `weightout`, `pieces`, `hours`, `checkout`, `checkint`, `sorter`,status,sku_manufacturer,prty) VALUES (REPLACE(?,' ',''),?,?,?,?,?,?,?,?,?,?,?,?,?)"
-		log.WithFields(log.Fields{"username": permission.User}).Debug("Query: ", newquery)
-		rows, err := db.Query(newquery, i...)
-		if err != nil {
-			return handleerror(err)
-		}
-		defer rows.Close()
-	} else {
-		//Run the query to insert a new row
-		newquery = "INSERT INTO sortrequest (`sku`, `description`, `instructions`, `weightin`, `weightout`, `pieces`, `hours`, `checkout`, `checkint`, `sorter`,status,sku_manufacturer,prty) VALUES (REPLACE(?,' ',''),?,?,?,?,?,?,?,?,?,?,?,?)"
-		log.WithFields(log.Fields{"username": permission.User}).Debug("Query: ", newquery)
-		rows, err := db.Query(newquery, i...)
-		if err != nil {
-			return handleerror(err)
-		}
-		defer rows.Close()
+	// if id != "" {
+	// 	//Run the query if ID isn't null
+	// 	newquery = "REPLACE INTO sortrequest (`sku`, `description`, `instructions`, `requestid`,`weightin`, `weightout`, `pieces`, `hours`, `checkout`, `checkint`, `sorter`,status,sku_manufacturer,prty) VALUES (REPLACE(?,' ',''),?,?,?,?,?,?,?,?,?,?,?,?,?)"
+	// 	log.WithFields(log.Fields{"username": permission.User}).Debug("Query: ", newquery)
+	// 	rows, err := db.Query(newquery, i...)
+	// 	if err != nil {
+	// 		return handleerror(err)
+	// 	}
+	// 	defer rows.Close()
+	// } else {
+	// 	//Run the query to insert a new row
+	// 	newquery = "INSERT INTO sortrequest (`sku`, `description`, `instructions`, `weightin`, `weightout`, `pieces`, `hours`, `checkout`, `checkint`, `sorter`,status,sku_manufacturer,prty) VALUES (REPLACE(?,' ',''),?,?,?,?,?,?,?,?,?,?,?,?)"
+	// 	log.WithFields(log.Fields{"username": permission.User}).Debug("Query: ", newquery)
+	// 	rows, err := db.Query(newquery, i...)
+	// 	if err != nil {
+	// 		return handleerror(err)
+	// 	}
+	// 	defer rows.Close()
+	// }
+
+	//define variables
+	var newquery string
+	var values []interface{}
+
+	data := map[string]string{
+		"sku":              r.URL.Query().Get("sku"),
+		"description":      r.URL.Query().Get("description"),
+		"instructions":     r.URL.Query().Get("instructions"),
+		"weightin":         r.URL.Query().Get("weightin"),
+		"weightout":        r.URL.Query().Get("weightout"),
+		"pieces":           r.URL.Query().Get("pieces"),
+		"hours":            r.URL.Query().Get("hours"),
+		"checkout":         r.URL.Query().Get("checkout"),
+		"checkint":         r.URL.Query().Get("checkin"),
+		"sorter":           r.URL.Query().Get("sorter"),
+		"status":           r.URL.Query().Get("status"),
+		"sku_manufacturer": r.URL.Query().Get("manufacturerpart"),
+		"prty":             r.URL.Query().Get("priority"),
+		"requestid":        r.URL.Query().Get("requestid"),
 	}
 
+	if data["requestid"] == "" { //if this is a new request
+		newquery = "REPLACE INTO sortrequest ("
+		for key, value := range data {
+			if value != "" {
+				newquery += "`" + key + "`,"
+				values = append(values, value)
+			}
+		}
+		newquery = newquery[:len(newquery)-1] + ") VALUES ("
+		for key, value := range data {
+			if value != "" {
+				log.WithFields(log.Fields{"username": permission.User}).Debug("key:", key, ", value:", value)
+				newquery += "?,"
+			}
+		}
+		newquery = newquery[:len(newquery)-1] + ")"
+	} else { //if updating an existing request
+		newquery = "UPDATE sortrequest SET "
+		for key, value := range data {
+			if value == "<nil>" {
+				value = "" //fix <nil> values being inserted
+			}
+			if value != "" {
+				newquery += "`" + key + "`=?,"
+				values = append(values, value)
+			}
+		}
+		newquery = newquery[:len(newquery)-1] //get rid of the last comma
+		newquery += " WHERE requestid=" + data["requestid"]
+	}
+
+	log.WithFields(log.Fields{"username": permission.User}).Debug("newquery: ", newquery)
+	rows, err := db.Query(newquery, values...)
+	if err != nil {
+		return handleerror(err)
+	}
+	defer rows.Close()
+
 	//Logging
-	log.WithFields(log.Fields{"username": permission.User}).Info("Inserted Product ", sku)
+	log.WithFields(log.Fields{"username": permission.User}).Info("Inserted Product ", data["sku"])
 	message.Title = "Success"
 	message.Body = "Successfully inserted row"
 	message.Success = true

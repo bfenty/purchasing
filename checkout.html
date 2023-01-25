@@ -35,11 +35,11 @@
           <tr>
             <form method="GET" action="/sortingupdate">
             <input type="hidden" name="status" id="status" value="Checkout">
-            {{if eq $permission "admin"}}<td><input class="form-control" type="text" id="requestid" name="requestid" value="{{.ID}}" readonly></td>{{end}}
+            {{if eq $permission "admin"}}<td><input class="form-control" type="text" id="requestid" name="requestid" value="{{.ID}}" readonly></td>{{else}}<input class="form-control" type="hidden" id="requestid" name="requestid" value="{{.ID}}" readonly>{{end}}
             <td>
-              <select class="form-select" readonly>
-                <option value="0" {{if eq .Priority 0}}selected{{end}} disabled>Normal</option>
-                <option value="1" {{if eq .Priority 1}}selected{{end}} disabled>High</option>
+              <select class="form-select" name="priority" id="priority" readonly>
+                <option value="0" {{if eq .Priority 0}}selected{{end}} >Normal</option>
+                <option value="1" {{if eq .Priority 1}}selected{{end}} >High</option>
               </select>
             </td>
             <td><input class="form-control" type='text' id="sku" name="sku" value="{{.SKU}}"readonly></td>
