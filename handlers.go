@@ -68,14 +68,14 @@ func Signin(w http.ResponseWriter, r *http.Request) {
 	// If a password exists for the given user
 	// AND, if it is the same as the password we received, the we can move ahead
 	// if NOT, then we return an "Unauthorized" status
-	if permission == "notfound" {
+	if permission.User == "notfound" {
 		log.Debug(message.Body)
 		http.Redirect(w, r, "/login?messagetitle="+message.Title+"&messagebody="+message.Body, http.StatusSeeOther)
 		return
 	}
 
 	//redirect new user to the signup page
-	if permission == "newuser" {
+	if permission.User == "newuser" {
 		log.Debug(message.Body)
 		http.Redirect(w, r, "/signup?messagetitle="+message.Title+"&messagebody="+message.Body, http.StatusSeeOther)
 		return
@@ -103,7 +103,7 @@ func Signin(w http.ResponseWriter, r *http.Request) {
 	log.Debug(sessions)
 
 	//redirect based on role:
-	switch permission {
+	switch permission.User {
 	case "notfound":
 		log.Debug(message.Body)
 		http.Redirect(w, r, "/login?messagetitle="+message.Title+"&messagebody="+message.Body, http.StatusSeeOther)
