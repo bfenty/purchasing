@@ -596,7 +596,7 @@ func Reorderlist(permission Permissions) (message Message, orders []Order) {
 			return handleerror(pingErr), orders
 		}
 		//Build the Query for the skus in the order
-		newquery := "SELECT a.sku_internal,`manufacturer_code`,`sku_manufacturer`,`product_option`,`processing_request`,`sorting_request`,`unit`,`unit_price`,`Currency`,`order_qty`,`modified`,`reorder`,`inventory_qty`,season FROM `skus` a LEFT JOIN (select sku_internal FROM orderskus a left join orders b on a.ordernum = b.ordernum where status != 'Closed') b on a.sku_internal = b.sku_internal WHERE inventory_qty = 0 and reorder = 1 and b.sku_internal is null and manufacturer_code = ?"
+		newquery := "SELECT a.sku_internal,`manufacturer_code`,`sku_manufacturer`,`product_option`,`processing_request`,`sorting_request`,`unit`,`unit_price`,`Currency`,`order_qty`,`modified`,`reorder`,`inventory_qty`,season,url_thumb,url_standard FROM `skus` a LEFT JOIN (select sku_internal FROM orderskus a left join orders b on a.ordernum = b.ordernum where status != 'Closed') b on a.sku_internal = b.sku_internal WHERE inventory_qty = 0 and reorder = 1 and b.sku_internal is null and manufacturer_code = ?"
 		skurows, err := db.Query(newquery, r.Manufacturer)
 		if err != nil {
 			return handleerror(pingErr), orders
@@ -605,7 +605,7 @@ func Reorderlist(permission Permissions) (message Message, orders []Order) {
 		defer skurows.Close()
 		for skurows.Next() {
 			var r Product
-			err := skurows.Scan(&r.SKU, &r.Manufacturer, &r.ManufacturerPart, &r.Description, &r.ProcessRequest, &r.SortingRequest, &r.Unit, &r.UnitPrice, &r.Currency, &r.Qty, &r.Modified, &r.Reorder, &r.InventoryQTY, &r.Season)
+			err := skurows.Scan(&r.SKU, &r.Manufacturer, &r.ManufacturerPart, &r.Description, &r.ProcessRequest, &r.SortingRequest, &r.Unit, &r.UnitPrice, &r.Currency, &r.Qty, &r.Modified, &r.Reorder, &r.InventoryQTY, &r.Season, &r.Image.URL_Thumb, &r.Image.URL_Standard)
 			if err != nil {
 				return handleerror(pingErr), orders
 			}
@@ -830,49 +830,58 @@ func Updatepass(user string, pass string, secret string) (message Message, succe
 }
 
 // Authenticate user from DB
-func userauth(user string, pass string) (permission string, message Message) {
+func userauth(user string, pass string) (permission Permissions, message Message) {
 	// Get a database handle.
 	var err error
 	var dbpass string
 	//Test Connection
 	pingErr := db.Ping()
 	if pingErr != nil {
-		return "notfound", handleerror(pingErr)
+		permission.User = "notfound"
+		return permission, handleerror(pingErr)
 	}
+
+	var r Permissions
+
 	//set Variables
 	//Query
-	var newquery string = "select password, permissions from orders.users where username = ?"
+	var newquery string = "select password, permissions, admin, management from orders.users where username = ?"
 	// log.WithFields(log.Fields{"username": permission.User}).Debug(newquery)
 	rows, err := db.Query(newquery, user)
 	if err != nil {
-		return "notfound", handleerror(err)
+		permission.User = "notfound"
+		return permission, handleerror(pingErr)
 	}
 	defer rows.Close()
 	//Pull Data
 	for rows.Next() {
-		err := rows.Scan(&dbpass, &permission)
+		err := rows.Scan(&dbpass, &r.Perms, &r.Admin, &r.Mgmt)
 		if err != nil {
-			return "notfound", handleerror(err)
+			permission.User = "notfound"
+			return permission, handleerror(pingErr)
 		}
 	}
 	err = rows.Err()
 	if err != nil {
-		return "notfound", handleerror(err)
+		permission.User = "notfound"
+		return permission, handleerror(pingErr)
 	}
 
-	log.Debug("Checking Permissions: ", permission)
+	//If Permissions do not exist for user
+	if r.Perms == "" {
+		message.Title = "Permission not found"
+		message.Body = "Permissions not set for user. Please contact your system administrator."
+		permission.User = "notfound"
+		return permission, message
+	}
+
+	log.Debug("Checking Permissions: ", r.Perms)
 	//If user has not set a password
 	if dbpass == "" {
 		message.Title = "Set Password"
 		message.Body = "Password not set, please create password"
-		return "newuser", message
-	}
-
-	//If Permissions do not exist for user
-	if permission == "" {
-		message.Title = "Permission not found"
-		message.Body = "Permissions not set for user. Please contact your system administrator."
-		return "notfound", message
+		permission.User = "newuser"
+		return permission, message
 	}
 
 	if comparePasswords(dbpass, []byte(pass)) {
@@ -880,11 +889,11 @@ func userauth(user string, pass string) (permission string, message Message) {
 		message.Body = "Successfully logged in"
 		message.Success = true
 		// permission = "notfound"
-		return permission, message
+		return r, message
 	}
 	message.Title = "Login Failed"
 	message.Body = "Login Failed"
-	permission = "notfound"
+	permission.User = "notfound"
 	return permission, message
 }
 

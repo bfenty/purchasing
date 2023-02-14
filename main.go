@@ -72,6 +72,8 @@ type Page struct {
 type Permissions struct {
 	User  string
 	Perms string
+	Admin int
+	Mgmt  int
 }
 
 type Message struct {
