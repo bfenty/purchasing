@@ -386,7 +386,11 @@ func listsortrequests(permission Permissions, action string, r *http.Request) (m
 		if err != nil {
 			return handleerror(err), sortrequests
 		}
-		r.Difference = r.Weightin - r.Weightout
+		var a float64
+		var b float64
+		a = *r.Weightin
+		b = *r.Weightout
+		r.Difference = a - b
 		sortrequests = append(sortrequests, r)
 	}
 	return message, sortrequests

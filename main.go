@@ -29,11 +29,12 @@ type SortRequest struct {
 	Instructions     *string
 	Weightin         *float64
 	Weightout        *float64
+	Difference       float64
 	Pieces           *int
 	Hours            *float64
 	Checkout         *string
 	Checkin          *string
-	Sorter           *string
+	Sorter           string
 	Status           string
 	ManufacturerPart *string
 	Priority         int

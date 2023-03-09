@@ -23,7 +23,7 @@
                 <th scope="col" width="120px">SKU</th>
                 <th scope="col" width=220px>Description</th>
                 <th scope="col">Instructions</th>
-                {{if eq $permission "admin"}}<th scope="col" width=60px>Weight Out</th>{{end}}
+                {{if eq $permission "receiving"}}<th scope="col" width=60px>Weight Out</th>{{end}}
                 {{if eq $permission "admin"}}<th scope="col" width=100px>Checkout</th>{{end}}
                 {{if eq $permission "admin"}}<th scope="col" width=90px>Sorter</th>{{end}}
                 <!-- <th scope="col" width=60px>Weight In</th> -->
@@ -43,7 +43,7 @@
             <td><input class="form-control" type='text' id="sku" name="sku" value="{{.SKU}}"readonly></td>
             <td><input class="form-control" type='text' id="description" name="description" value="{{.Description}}"readonly></td>
             <td><input class="form-control" type='text' id="instructions" name="instructions" value="{{.Instructions}}" readonly></td>
-            {{if eq $permission "admin"}}
+            {{if eq $permission "receiving"}}
               <td><input class="form-control" type='text' id="weightout" name="weightout" value="{{.Weightout}}" readonly></td>
             {{else}}
               <input type="hidden" id="weightout" name="weightout" value="{{.Weightout}}">

@@ -10,20 +10,21 @@
   <table class="table table-striped table-hover .table-sm" style="max-width: none">
     <thead class="table-dark" style="position: sticky; top: 0; z-index: 1;">
       <tr>
-          <th scope="col" width=70px>ID</th>
+        {{if eq $permission "admin"}}<th scope="col" width=70px>ID</th>{{end}}
           <th scope="col" width="120px">SKU</th>
           <th scope="col" width=220px>Description</th>
-          <th scope="col" width=220px>Manufacturer Part #</th>
-          <th scope="col">Instructions</th>
+          {{if eq $permission "admin"}}<th scope="col" width=220px>Manufacturer Part #</th>{{end}}
+          {{if eq $permission "admin"}}<th scope="col">Instructions</th>{{end}}
           <th scope="col" width=60px>Weight Out</th>
           <th scope="col" width=60px>Weight In</th>
+          {{if eq $permission "receiving"}}<th scope="col" width=60px>Difference</th>{{end}}
           <th scope="col" width=60px>Pieces</th>
           <th scope="col" width=60px>Hours</th>
-          <th scope="col" width=60px>Checkout Date</th>
-          <th scope="col" width=100px>Checkin Date</th>
-          <th scope="col" width=90px>Sorter</th>
+          {{if eq $permission "admin"}}<th scope="col" width=60px>Checkout Date</th>{{end}}
+          {{if eq $permission "admin"}}<th scope="col" width=100px>Checkin Date</th>{{end}}
+          {{if eq $permission "admin"}}<th scope="col" width=90px>Sorter</th>{{end}}
           <th scope="col" width=90px>Status</th>
-          <th scope="col" width=90px>Priority</th>
+          {{if eq $permission "admin"}}<th scope="col" width=90px>Priority</th>{{end}}
           <th width=80px></th>
           <th width=80px></th>
       </tr>
@@ -160,18 +161,39 @@
         </div>
     <tr>
       <form method="GET" action="/sortingupdate">
-      <td><input class="form-control" type="text" id="requestid" name="requestid" value="{{.ID}}" readonly></td>
+      {{if eq $permission "admin"}}<td><input class="form-control" type="text" id="requestid" name="requestid" value="{{.ID}}" readonly></td>{{end}}
       <td><input class="form-control" type='text' id="sku" name="sku" value="{{.SKU}}"{{if ne $permission "admin"}} readonly{{end}}></td>
       <td><input class="form-control" type='text' id="description" name="description" value="{{.Description}}"{{if ne $permission "admin"}} readonly{{end}}></td>
-      <td><input class="form-control" type='text' id="manufacturerpart" name="manufacturerpart" value="{{.ManufacturerPart}}"></td>
-      <td><input class="form-control" type='text' id="instructions" name="instructions" value="{{.Instructions}}"{{if ne $permission "admin"}} readonly{{end}}></td>
+      {{if eq $permission "admin"}}<td><input class="form-control" type='text' id="manufacturerpart" name="manufacturerpart" value="{{.ManufacturerPart}}"></td>{{end}}
+      {{if eq $permission "admin"}}<td><input class="form-control" type='text' id="instructions" name="instructions" value="{{.Instructions}}"{{if ne $permission "admin"}} readonly{{end}}></td>{{end}}
       <td><input class="form-control" type='text' id="weightout" name="weightout" value="{{.Weightout}}"></td>
       <td><input class="form-control" type='text' id="weightin" name="weightin" value="{{.Weightin}}"></td>
+      {{if eq $permission "receiving"}}<td><input class="form-control" type='text' value='{{.Difference}}' readonly></td>{{end}}
       <td><input class="form-control" type='text' id="pieces" name="pieces" value="{{.Pieces}}"></td>
       <td><input class="form-control" type='text' id="hours" name="hours" value="{{.Hours}}"{{if ne $permission "admin"}} readonly{{end}}></td>
-      <td><input type="date" class="form-control" id="checkout" name="checkout" value="{{.Checkout}}"{{if ne $permission "admin"}} readonly{{end}}></td>
-      <td><input type="date" class="form-control" id="checkin" name="checkin" value="{{.Checkin}}"{{if ne $permission "admin"}} readonly{{end}}></td>
-      <td><input class="form-control" type='text' id="sorter" name="sorter" value="{{.Sorter}}"readonly></td>
+      {{if eq $permission "admin"}}<td><input type="date" class="form-control" id="checkout" name="checkout" value="{{.Checkout}}"{{if ne $permission "admin"}} readonly{{end}}></td>{{end}}
+      {{if eq $permission "admin"}}<td><input type="date" class="form-control" id="checkin" name="checkin" value="{{.Checkin}}"{{if ne $permission "admin"}} readonly{{end}}></td>{{end}}
+      {{if eq $permission "admin"}}<td>
+        <select class="form-select" id="sorter" name="sorter">
+          <option selected disabled value> select</option>
+          <option value='jahale' {{if eq .Sorter "jahale"}}selected{{end}}>jahale</option>
+          <option value='johale' {{if eq .Sorter "johale"}}selected{{end}}>johale</option>
+          <option value='vahale' {{if eq .Sorter "vahale"}}selected{{end}}>vahale</option>
+          <option value='juhale' {{if eq .Sorter "juhale"}}selected{{end}}>juhale</option>
+          <option value='msimpk' {{if eq .Sorter "msimpk"}}selected{{end}}>msimpk</option>
+          <option value='awrigh' {{if eq .Sorter "awrigh"}}selected{{end}}>awrigh</option>
+          <option value='rhale' {{if eq .Sorter "rhale"}}selected{{end}}>rhale</option>
+          <option value='lehope' {{if eq .Sorter "lehope"}}selected{{end}}>lehope</option>
+          <option value='rsteph' {{if eq .Sorter "rsteph"}}selected{{end}}>rsteph</option>
+          <option value='nberge' {{if eq .Sorter "nberge"}}selected{{end}}>nberge</option>
+          <option value='amcgre' {{if eq .Sorter "amcgre"}}selected{{end}}>amcgre</option>
+          <option value='ithrel' {{if eq .Sorter "ithrel"}}selected{{end}}>ithrel</option>
+          <option value='kmurph' {{if eq .Sorter "kmurph"}}selected{{end}}>kmurph</option>
+          <option value='kmarqu' {{if eq .Sorter "kmarqu"}}selected{{end}}>kmarqu</option>
+          <option value='lmille' {{if eq .Sorter "lmille"}}selected{{end}}>lmille</option>
+          <option value='lsteph' {{if eq .Sorter "lsteph"}}selected{{end}}>lsteph</option>
+        </select>
+      </td>{{end}}
       <td>
         <select class="form-select" id="status" name="status">
             <option value="New" {{if eq .Status "New"}}selected{{end}}>New</option>
@@ -179,12 +201,12 @@
             <option value="Checkin" {{if eq .Status "Checkin"}}selected{{end}}>Checkin</option>
         </select>
       </td>
-      <td>
+      {{if eq $permission "admin"}}<td>
         <select class="form-select" id="priority" name="priority">
           <option value="0" {{if eq .Priority 0}}selected{{end}}>Normal</option>
           <option value="1" {{if eq .Priority 1}}selected{{end}}>High</option>
         </select>
-      </td>
+      </td>{{end}}
       <td><input type='submit' value='Update' class="btn btn-primary"></td>
       {{if eq $permission "admin"}}<td><button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#ModalDelete{{$index}}">Delete</button></td>{{else}}<td></td>{{end}}
       </form>
