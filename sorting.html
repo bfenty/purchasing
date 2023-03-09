@@ -170,7 +170,7 @@
       <td><input class="form-control" type='text' id="weightin" name="weightin" value="{{.Weightin}}"></td>
       {{if eq $permission "receiving"}}<td><input class="form-control" type='text' value='{{.Difference}}' readonly></td>{{end}}
       <td><input class="form-control" type='text' id="pieces" name="pieces" value="{{.Pieces}}"></td>
-      <td><input class="form-control" type='text' id="hours" name="hours" value="{{.Hours}}"{{if ne $permission "admin"}} readonly{{end}}></td>
+      <td><input class="form-control" type='text' id="hours" name="hours" value="{{.Hours}}"></td>
       {{if eq $permission "admin"}}<td><input type="date" class="form-control" id="checkout" name="checkout" value="{{.Checkout}}"{{if ne $permission "admin"}} readonly{{end}}></td>{{end}}
       {{if eq $permission "admin"}}<td><input type="date" class="form-control" id="checkin" name="checkin" value="{{.Checkin}}"{{if ne $permission "admin"}} readonly{{end}}></td>{{end}}
       {{if eq $permission "admin"}}<td>
@@ -195,11 +195,15 @@
         </select>
       </td>{{end}}
       <td>
+        {{if eq $permission "admin"}}
         <select class="form-select" id="status" name="status">
             <option value="New" {{if eq .Status "New"}}selected{{end}}>New</option>
             <option value="Checkout" {{if eq .Status "Checkout"}}selected{{end}}>Checkout</option>
             <option value="Checkin" {{if eq .Status "Checkin"}}selected{{end}}>Checkin</option>
         </select>
+        {{else}}
+          <input class="form-control" type="text" id="status" name="status" value="{{.Status}}" readonly>
+        {{end}}
       </td>
       {{if eq $permission "admin"}}<td>
         <select class="form-select" id="priority" name="priority">
