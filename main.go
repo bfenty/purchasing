@@ -151,6 +151,7 @@ func main() {
 	http.HandleFunc("/receiving", Receiving)
 	http.HandleFunc("/sortingupdate", Sortingupdate)
 	http.HandleFunc("/sortrequestdelete", sortrequestdelete)
+	http.HandleFunc("/users", Users)
 	http.ListenAndServe(":8082", nil)
 }
 
@@ -180,6 +181,17 @@ func Receiving(w http.ResponseWriter, r *http.Request) {
 	page.Message, page.Users = listusers("sorting", page.Permission)
 	t, _ := template.ParseFiles("sorting.html", "header.html", "login.js")
 	page.Title = "Receiving"
+	t.Execute(w, page)
+}
+
+// Page of list of all Sort Requests
+func Users(w http.ResponseWriter, r *http.Request) {
+	var page Page
+	page.Permission = auth(w, r)
+	page.Message, page.SortRequests = listsortrequests(page.Permission, "receiving", r)
+	page.Message, page.Users = listusers("sorting", page.Permission)
+	t, _ := template.ParseFiles("users.html", "header.html", "login.js")
+	page.Title = "Users"
 	t.Execute(w, page)
 }
 

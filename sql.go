@@ -251,7 +251,7 @@ func listusers(role string, permission Permissions) (message Message, users []Us
 		return handleerror(pingErr), users
 	}
 	//Build the Query
-	newquery := "SELECT username from users where permissions='sorting'"
+	newquery := "SELECT username,usercode,permissions from orders.users where sorting=1"
 
 	//Run Query
 	rows, err := db.Query(newquery)
@@ -263,7 +263,7 @@ func listusers(role string, permission Permissions) (message Message, users []Us
 	//Pull Data
 	for rows.Next() {
 		var r User
-		err := rows.Scan(&r.Username)
+		err := rows.Scan(&r.Username, &r.Usercode, &r.Role)
 		if err != nil {
 			return handleerror(err), users
 		}

@@ -1,0 +1,61 @@
+<html>
+<head>
+{{template "header"}}
+</head>
+<body>
+  {{template "navigation" .}}
+  <br>
+  {{template "messagebox" .}}
+  {{$permission := .Permission.Perms}}
+  <table class="table table-striped table-hover .table-sm" style="max-width: none">
+    <thead class="table-dark" style="position: sticky; top: 0; z-index: 1;">
+      <tr>
+      </tr>
+  </thead>
+  <tbody>    
+    {{range $index, $value := .Users}}
+    <!-- Delete Modal -->
+          <div class="modal fade" id="ModalDelete{{$index}}" tabindex="-1" role="dialog" aria-labelledby="ModalDeleteLabel" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+              <div class="modal-content">
+                  <div class="modal-header">
+                  <h5 class="modal-title" id="ModalDeleteLabel{{$index}}">Confirm User Delete</h5>
+                      <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                      <span aria-hidden="true">&times;</span>
+                  </button>
+                  </div>
+                  <div class="modal-body">
+                    This will permanently delete User {{.Username}}, are you sure you want to proceed?
+                  </div>
+                  <div class="modal-footer">
+                      <form action="/sortrequestdelete" method="POST">
+                          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                          <input type="hidden" value="{{.Usercode}}" id="requestid" name="requestid">
+                          <button type="submit" class="btn btn-danger">Yes, Delete</button>
+                      </form>
+                  </div>
+              </div>
+            </div>
+        </div>
+    <tr>
+      <form method="GET" action="/sortingupdate">
+      <td><input class="form-control" type="text" id="requestid" name="requestid" value="{{.Username}}" readonly></td>
+      <td><input class="form-control" type="text" id="requestid" name="requestid" value="{{.Usercode}}" readonly></td>
+      <td><input class="form-control" type="text" id="requestid" name="requestid" value="{{.Role}}" readonly></td>
+      <td><input type='submit' value='Update' class="btn btn-primary"></td>
+      {{if eq $permission "admin"}}<td><button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#ModalDelete{{$index}}">Delete</button></td>{{else}}<td></td>{{end}}
+    </form>
+    </tr>
+      
+    {{end}}
+    <tr>
+        <td></td>
+    </tr>
+    <tr>
+        <td></td>
+    </tr>
+  </tbody>
+  </table>
+  {{template "footer" .}}
+</body>
+</html>
