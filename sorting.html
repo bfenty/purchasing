@@ -46,24 +46,10 @@
       <td><input type="date" class="form-control" type='text' id="checkin" name="checkin"></td>
       <td>
         <select class="form-select" id="sorter" name="sorter">
-          <option selected disabled value> select</option>
-          <option value='jahale'>jahale</option>
-          <option value='johale'>johale</option>
-          <option value='vahale'>vahale</option>
-          <option value='juhale'>juhale</option>
-          <option value='msimpk'>msimpk</option>
-          <option value='awrigh'>awrigh</option>
-          <option value='rhale'>rhale</option>
-          <option value='lehope'>lehope</option>
-          <option value='rsteph'>rsteph</option>
-          <option value='nberge'>nberge</option>
-          <option value='amcgre'>amcgre</option>
-          <option value='ithrel'>ithrel</option>
-          <option value='kmurph'>kmurph</option>
-          <option value='kmarqu'>kmarqu</option>
-          <option value='lmille'>lmille</option>
-          <option value='lfenty'>lfenty</option>
-          <option value='cthomp'>cthomp</option>
+          <option selected disabled value> {{.Sorter}}</option>
+          {{range $.Users}}
+          <option value='{{.Username}}'>{{.Username}}</option>
+          {{end}}
         </select>
       </td>
       <td>
@@ -83,6 +69,7 @@
       <td></td>
       </form>
     </tr>
+    
     <tr class="table-danger">
       <form method="GET" action="/sorting">
       <td></td>
@@ -98,24 +85,10 @@
       <td><input type="date" class="form-control" type='text' id="checkin" name="checkin"></td>
       <td>
         <select class="form-select" id="sorter" name="sorter">
-          <option selected disabled value> select</option>
-          <option value='jahale'>jahale</option>
-          <option value='johale'>johale</option>
-          <option value='vahale'>vahale</option>
-          <option value='juhale'>juhale</option>
-          <option value='msimpk'>msimpk</option>
-          <option value='awrigh'>awrigh</option>
-          <option value='rhale'>rhale</option>
-          <option value='lehope'>lehope</option>
-          <option value='rsteph'>rsteph</option>
-          <option value='nberge'>nberge</option>
-          <option value='amcgre'>amcgre</option>
-          <option value='ithrel'>ithrel</option>
-          <option value='kmurph'>kmurph</option>
-          <option value='kmarqu'>kmarqu</option>
-          <option value='lmille'>lmille</option>
-          <option value='lfenty'>lfenty</option>
-          <option value='cthomp'>cthomp</option>
+          <option selected disabled value> {{.Sorter}}</option>
+          {{range $.Users}}
+          <option value='{{.Username}}'>{{.Username}}</option>
+          {{end}}
         </select>
       </td>
       <td>
@@ -130,6 +103,29 @@
         <select class="form-select" id="priority" name="priority">
           <option value="0">Normal</option>
           <option value="1">High</option>
+        </select>
+      </td>
+      <td><input type='submit' value='Search' class="btn btn-primary"></td>
+      <td></td>
+      </form>
+    </tr>
+    {{end}}
+    {{if eq $permission "receiving"}}
+    <tr class="table-danger">
+      <form method="GET" action="/sorting">
+      <td><input class="form-control" type='text' id="sku" name="sku"></td>
+      <td><input class="form-control" type='text' id="description" name="description"></td>
+      <td><input class="form-control" type='text' id="weightout" name="weightout"></td>
+      <td><input class="form-control" type='text' id="weightin" name="weightin"></td>
+      <td></td>
+      <td><input class="form-control" type='text' id="pieces" name="pieces"></td>
+      <td><input class="form-control" type='text' id="hours" name="hours"></td>
+      <td>
+        <select class="form-select" id="status" name="status">
+            <option value="" selected></option>
+            <option value="New">New</option>
+            <option value="Checkout">Checkout</option>
+            <option value="Checkin">Checkin</option>
         </select>
       </td>
       <td><input type='submit' value='Search' class="btn btn-primary"></td>
@@ -161,7 +157,7 @@
               </div>
             </div>
         </div>
-    <tr>
+    <tr{{if .Warn}} class="table-warning"{{end}}>
       <form method="GET" action="/sortingupdate">
       {{if eq $permission "admin"}}<td><input class="form-control" type="text" id="requestid" name="requestid" value="{{.ID}}" readonly></td>{{end}}
       <td><input class="form-control" type='text' id="sku" name="sku" value="{{.SKU}}"{{if ne $permission "admin"}} readonly{{end}}></td>
@@ -177,24 +173,10 @@
       {{if eq $permission "admin"}}<td><input type="date" class="form-control" id="checkin" name="checkin" value="{{.Checkin}}"{{if ne $permission "admin"}} readonly{{end}}></td>{{end}}
       {{if eq $permission "admin"}}<td>
         <select class="form-select" id="sorter" name="sorter">
-          <option selected disabled value> select</option>
-          <option value='jahale' {{if eq .Sorter "jahale"}}selected{{end}}>jahale</option>
-          <option value='johale' {{if eq .Sorter "johale"}}selected{{end}}>johale</option>
-          <option value='vahale' {{if eq .Sorter "vahale"}}selected{{end}}>vahale</option>
-          <option value='juhale' {{if eq .Sorter "juhale"}}selected{{end}}>juhale</option>
-          <option value='msimpk' {{if eq .Sorter "msimpk"}}selected{{end}}>msimpk</option>
-          <option value='awrigh' {{if eq .Sorter "awrigh"}}selected{{end}}>awrigh</option>
-          <option value='rhale' {{if eq .Sorter "rhale"}}selected{{end}}>rhale</option>
-          <option value='lehope' {{if eq .Sorter "lehope"}}selected{{end}}>lehope</option>
-          <option value='rsteph' {{if eq .Sorter "rsteph"}}selected{{end}}>rsteph</option>
-          <option value='nberge' {{if eq .Sorter "nberge"}}selected{{end}}>nberge</option>
-          <option value='amcgre' {{if eq .Sorter "amcgre"}}selected{{end}}>amcgre</option>
-          <option value='ithrel' {{if eq .Sorter "ithrel"}}selected{{end}}>ithrel</option>
-          <option value='kmurph' {{if eq .Sorter "kmurph"}}selected{{end}}>kmurph</option>
-          <option value='kmarqu' {{if eq .Sorter "kmarqu"}}selected{{end}}>kmarqu</option>
-          <option value='lmille' {{if eq .Sorter "lmille"}}selected{{end}}>lmille</option>
-          <option value='lfenty' {{if eq .Sorter "lfenty"}}selected{{end}}>lfenty</option>
-          <option value='cthomp' {{if eq .Sorter "cthomp"}}selected{{end}}>cthomp</option>
+          <option selected disabled value> {{.Sorter}}</option>
+          {{range $.Users}}
+          <option value='{{.Username}}'>{{.Username}}</option>
+          {{end}}
         </select>
       </td>{{end}}
       <td>

@@ -38,6 +38,7 @@ type SortRequest struct {
 	Status           string
 	ManufacturerPart *string
 	Priority         int
+	Warn             bool
 }
 
 type Product struct {
@@ -84,9 +85,12 @@ type Message struct {
 }
 
 type User struct {
-	Username string
-	Usercode int
-	Role     string
+	Username   string
+	Usercode   int
+	Role       string
+	Sorting    bool
+	Manager    string
+	Management bool
 }
 
 // initialize Logs
@@ -151,7 +155,10 @@ func main() {
 	http.HandleFunc("/receiving", Receiving)
 	http.HandleFunc("/sortingupdate", Sortingupdate)
 	http.HandleFunc("/sortrequestdelete", sortrequestdelete)
+	http.HandleFunc("/userupdate", userUpdateHandler)
 	http.HandleFunc("/users", Users)
+	http.HandleFunc("/userdelete", userDeleteHandler)
+
 	http.ListenAndServe(":8082", nil)
 }
 
@@ -189,7 +196,7 @@ func Users(w http.ResponseWriter, r *http.Request) {
 	var page Page
 	page.Permission = auth(w, r)
 	page.Message, page.SortRequests = listsortrequests(page.Permission, "receiving", r)
-	page.Message, page.Users = listusers("sorting", page.Permission)
+	page.Message, page.Users = listusers("all", page.Permission)
 	t, _ := template.ParseFiles("users.html", "header.html", "login.js")
 	page.Title = "Users"
 	t.Execute(w, page)
@@ -217,6 +224,7 @@ func Checkout(w http.ResponseWriter, r *http.Request) {
 	currentTime := time.Now()
 	page.Date = currentTime.Format("2006-01-02")
 	page.Message, page.SortRequests = listsortrequests(page.Permission, "checkout", r)
+	page.Message, page.Users = listusers("sorting", page.Permission)
 	t, _ := template.ParseFiles("checkout.html", "header.html", "login.js")
 	page.Title = "Check Out"
 	t.Execute(w, page)

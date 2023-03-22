@@ -52,24 +52,10 @@
             {{if eq $permission "admin"}}
               <td>
                 <select class="form-select" id="sorter" name="sorter">
-                  <option selected disabled value> select</option>
-                  <option value='jahale'>jahale</option>
-                  <option value='johale'>johale</option>
-                  <option value='vahale'>vahale</option>
-                  <option value='juhale'>juhale</option>
-                  <option value='msimpk'>msimpk</option>
-                  <option value='awrigh'>awrigh</option>
-                  <option value='rhale'>rhale</option>
-                  <option value='lehope'>lehope</option>
-                  <option value='rsteph'>rsteph</option>
-                  <option value='nberge'>nberge</option>
-                  <option value='amcgre'>amcgre</option>
-                  <option value='ithrel'>ithrel</option>
-                  <option value='kmurph'>kmurph</option>
-                  <option value='kmarqu'>kmarqu</option>
-                  <option value='lmille'>lmille</option>
-                  <option value='lfenty'>lfenty</option>
-                  <option value='cthomp'>cthomp</option>
+                  <option selected disabled value> {{.Sorter}}</option>
+                  {{range $.Users}}
+                  <option value='{{.Username}}'>{{.Username}}</option>
+                  {{end}}
                 </select>
               </td>
             {{else}}

@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"math"
 
 	// "log"
 	"fmt"
@@ -250,8 +251,16 @@ func listusers(role string, permission Permissions) (message Message, users []Us
 		db, message = opendb()
 		return handleerror(pingErr), users
 	}
+
+	var newquery string
 	//Build the Query
-	newquery := "SELECT username,usercode,permissions from orders.users where sorting=1"
+	if role == "sorting" {
+		newquery = "SELECT username,usercode,permissions,sorting,manager,management from orders.users where sorting=1 and active=1"
+	} else if role == "manager" {
+		newquery = "SELECT username,usercode,permissions,sorting,manager,management from orders.users where management=1 and active=1"
+	} else {
+		newquery = "SELECT username,usercode,permissions,sorting,manager,management from orders.users where active=1"
+	}
 
 	//Run Query
 	rows, err := db.Query(newquery)
@@ -263,13 +272,85 @@ func listusers(role string, permission Permissions) (message Message, users []Us
 	//Pull Data
 	for rows.Next() {
 		var r User
-		err := rows.Scan(&r.Username, &r.Usercode, &r.Role)
+		err := rows.Scan(&r.Username, &r.Usercode, &r.Role, &r.Sorting, &r.Manager, &r.Management)
 		if err != nil {
 			return handleerror(err), users
 		}
 		users = append(users, r)
 	}
 	return message, users
+}
+
+func userUpdateHandler(w http.ResponseWriter, r *http.Request) {
+
+	//Test Connection
+	pingErr := db.Ping()
+	if pingErr != nil {
+		db, _ = opendb()
+		// return handleerror(pingErr)
+	}
+
+	// Get the form values from the request
+	username := r.FormValue("username")
+	usercode := r.FormValue("usercode")
+	role := r.FormValue("role")
+	manager := r.FormValue("manager")
+	var sorting int
+	if r.FormValue("sorting") == "true" {
+		sorting = 1
+	} else {
+		sorting = 0
+	}
+	// sorting, _ := strconv.ParseBool(r.FormValue("sorting"))
+	println(username, usercode, role, sorting)
+
+	// If usercode is empty, find the current max value and increment it
+	if usercode == "" {
+		var maxUsercode int
+		err := db.QueryRow("SELECT MAX(usercode) FROM orders.users").Scan(&maxUsercode)
+		if err != nil {
+			// Handle error
+			handleerror(err)
+		}
+		usercode = strconv.Itoa(maxUsercode + 1)
+	}
+
+	// Prepare the SQL statement for inserting the data
+	//Logging
+	log.Info("Creating Query")
+	newquery := "REPLACE INTO orders.users (username, usercode, permissions, sorting,manager) VALUES (?, ?, ?, ?, ?)"
+
+	// Execute the SQL statement with the form values
+	log.Info("Executing Query")
+	rows, err := db.Query(newquery, username, usercode, role, sorting, manager)
+	defer rows.Close()
+
+	if err != nil {
+		// Handle error
+		println(err)
+	}
+
+	// Redirect the user to the users page
+	http.Redirect(w, r, "/users", http.StatusSeeOther)
+}
+
+func userDeleteHandler(w http.ResponseWriter, r *http.Request) {
+	// Get the usercode value from the form
+	usercode := r.FormValue("usercode")
+
+	// Prepare the SQL statement for deleting the user
+	stmt, err := db.Prepare("UPDATE orders.users SET active = 0 WHERE usercode = ?")
+	if err != nil {
+	}
+	defer stmt.Close()
+
+	// Execute the SQL statement with the usercode value
+	_, err = stmt.Exec(usercode)
+	if err != nil {
+	}
+
+	// Redirect the user to the users page
+	http.Redirect(w, r, "/users", http.StatusSeeOther)
 }
 
 func listorders(permission Permissions) (message Message, orders []Order) {
@@ -388,9 +469,22 @@ func listsortrequests(permission Permissions, action string, r *http.Request) (m
 		}
 		var a float64
 		var b float64
+		var c float64
 		a = *r.Weightin
 		b = *r.Weightout
-		r.Difference = a - b
+		if r.Pieces != nil {
+			c = float64(*r.Pieces)
+		} else {
+			// Handle the case where r.Pieces is nil
+			c = 0.0
+			fmt.Println("r.Pieces is nil")
+		}
+		r.Difference = a - b - (c * 0.4555)
+		r.Difference = math.Round(r.Difference*100) / 100 // Round to 2 decimal places
+		if r.Difference < (-0.1*a) && a != 0 {
+			r.Warn = true
+		}
+		log.Info(c)
 		sortrequests = append(sortrequests, r)
 	}
 	return message, sortrequests
