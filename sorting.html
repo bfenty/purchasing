@@ -25,6 +25,7 @@
           {{if eq $permission "admin"}}<th scope="col" width=90px>Sorter</th>{{end}}
           <th scope="col" width=90px>Status</th>
           {{if eq $permission "admin"}}<th scope="col" width=90px>Priority</th>{{end}}
+          <th colspan="2"></th>
           <th width=80px></th>
           <th width=80px></th>
       </tr>
@@ -46,7 +47,6 @@
       <td><input type="date" class="form-control" type='text' id="checkin" name="checkin"></td>
       <td>
         <select class="form-select" id="sorter" name="sorter">
-          <option selected disabled value> {{.Sorter}}</option>
           {{range $.Users}}
           <option value='{{.Username}}'>{{.Username}}</option>
           {{end}}
@@ -85,7 +85,6 @@
       <td><input type="date" class="form-control" type='text' id="checkin" name="checkin"></td>
       <td>
         <select class="form-select" id="sorter" name="sorter">
-          <option selected disabled value> {{.Sorter}}</option>
           {{range $.Users}}
           <option value='{{.Username}}'>{{.Username}}</option>
           {{end}}
