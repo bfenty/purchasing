@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"encoding/json"
 	"math"
 
 	// "log"
@@ -13,6 +14,11 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	log "github.com/sirupsen/logrus"
 )
+
+type Request struct {
+	Sorter      string `json:"sorter"`
+	Description string `json:"description"`
+}
 
 var db *sql.DB
 
@@ -51,6 +57,140 @@ func opendb() (db *sql.DB, messagebox Message) {
 	messagebox.Success = true
 	messagebox.Body = "Success"
 	return db, messagebox
+}
+
+func LookupRequestID(w http.ResponseWriter, r *http.Request) {
+	requestID := r.URL.Query().Get("requestid")
+
+	// Query the database for the sorter and description based on the requestid
+	var sorter, description string
+	err := db.QueryRow("SELECT sorter, description FROM purchasing.sortrequest WHERE requestid = ?", requestID).Scan(&sorter, &description)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Return the sorter and description as a JSON object
+	jsonObj := map[string]string{"sorter": sorter, "description": description}
+	jsonBytes, err := json.Marshal(jsonObj)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(jsonBytes)
+}
+
+func sortErrorUpdate(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("TEST")
+	log.Debug("Inserting Error")
+	// Parse the form data
+	err := r.ParseForm()
+	if err != nil {
+		log.WithError(err).Error("Error parsing form data")
+		http.Error(w, "Error parsing form data", http.StatusBadRequest)
+		return
+	}
+
+	// Get the form data
+	requestid := r.Form.Get("requestid")
+	sorter := r.Form.Get("sorter")
+	description := r.Form.Get("description")
+	errortype := r.Form.Get("errortype")
+	notes := r.Form.Get("notes")
+
+	// Insert the error into the database
+	result, err := db.Exec("REPLACE INTO purchasing.sorterror (requestid, errortype, notes) VALUES (?, ?, ?)", requestid, errortype, notes)
+	if err != nil {
+		log.WithError(err).Error("Error inserting error into database")
+		http.Error(w, "Error inserting error into database", http.StatusInternalServerError)
+		return
+	}
+
+	// Get the ID of the inserted error
+	errorID, err := result.LastInsertId()
+	if err != nil {
+		log.WithError(err).Error("Error getting last inserted ID")
+		http.Error(w, "Error getting last inserted ID", http.StatusInternalServerError)
+		return
+	}
+
+	// Create a JSON response
+	response := map[string]interface{}{
+		"errorid":     errorID,
+		"requestid":   requestid,
+		"sorter":      sorter,
+		"description": description,
+		"errortype":   errortype,
+		"notes":       notes,
+	}
+	jsonResponse, err := json.Marshal(response)
+	if err != nil {
+		log.WithError(err).Error("Error marshaling JSON response")
+		http.Error(w, "Error marshaling JSON response", http.StatusInternalServerError)
+		return
+	}
+
+	// Set the content type header and write the response
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(jsonResponse)
+
+	log.WithFields(log.Fields{
+		"errorid":     errorID,
+		"requestid":   requestid,
+		"sorter":      sorter,
+		"description": description,
+		"errortype":   errortype,
+		"notes":       notes,
+	}).Debug("Error reported successfully")
+}
+
+func checkExistingErrors(w http.ResponseWriter, r *http.Request) {
+	requestID := r.URL.Query().Get("requestid")
+
+	// Query the database for any errors with the given request ID
+	rows, err := db.Query("SELECT errorid, errortype, notes FROM sorterror WHERE requestid = ?", requestID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+
+	// Iterate through the rows and build a slice of error objects
+	var errors []map[string]interface{}
+	for rows.Next() {
+		var errorID int
+		var errortype, notes string
+		err = rows.Scan(&errorID, &errortype, &notes)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		// Build a map object for the error and append it to the errors slice
+		errorObj := map[string]interface{}{
+			"errorid":   errorID,
+			"errortype": errortype,
+			"notes":     notes,
+		}
+		errors = append(errors, errorObj)
+	}
+	err = rows.Err()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Encode the errors slice as a JSON object and return it in the response
+	jsonBytes, err := json.Marshal(errors)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(jsonBytes)
 }
 
 func ProductExistSQL(sku string) (exists string, message Message) {
@@ -441,7 +581,7 @@ func listsortrequests(permission Permissions, action string, r *http.Request) (m
 		if permission.Perms == "sorting" {
 			newquery += " AND sorter = '" + permission.User + "'"
 		}
-		newquery += " order by 1 desc"
+		newquery += " order by 1"
 	} else if action == "receiving" {
 		//retrieves only records that have been checked back in
 		newquery = "SELECT requestid, sku,description,instructions,weightin,weightout,pieces,hours,checkout,checkint,COALESCE(sorter,''),status,sku_manufacturer,prty from sortrequest WHERE status = 'checkin' order by 1 desc"

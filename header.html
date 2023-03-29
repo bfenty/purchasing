@@ -128,6 +128,11 @@ $('#myModal').on('shown.bs.modal', function () {
       <a class="nav-link active" href="/users">Users<span class="sr-only">(current)</span></a>
     </li>
     {{end}}
+    {{if or (eq $permission "admin") (eq $permission "purchasing")}}
+    <li class="nav-item active">
+      <a class="nav-link active" href="/sorterror">Sort Errors<span class="sr-only">(current)</span></a>
+    </li>
+    {{end}}
       {{if or (eq $permission "admin") (eq $permission "receiving") (eq $permission "purchasing") (eq $permission "sorting")}}
       <li class="nav-item active">
         <a class="nav-link active" href="/logout">Logout <span class="sr-only">(current)</span></a>

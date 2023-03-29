@@ -1,0 +1,216 @@
+<html>
+<head>
+    {{template "header"}}
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.6.0/css/bootstrap.min.css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.6.0/js/bootstrap.min.js"></script>
+<style>
+#existing-errors {
+  max-width: 500px;
+  margin: 0 auto;
+  background-color: #f8d7da;
+  border: 1px solid #f5c6cb;
+  color: #721c24;
+  padding: 1rem;
+}
+
+#existing-errors .card-header {
+  background-color: #f5c6cb;
+  color: #721c24;
+  font-weight: bold;
+  padding: 0.5rem 1rem;
+  margin-bottom: 1rem;
+}
+
+#existing-errors .list-group-item {
+  border: none;
+  padding: 0.5rem 0;
+}
+
+#existing-errors .list-group-item:nth-child(even) {
+  background-color: #f7f7f7;
+}
+
+#existing-errors .list-group-item strong {
+  font-weight: bold;
+}
+  </style>
+
+</head>
+<body>
+  {{template "navigation" .}}
+  <br>
+  {{template "messagebox" .}}
+  {{$permission := .Permission.Perms}}
+  {{$user := .Permission.User}}
+  {{$date := .Date}}
+  <div class="container">
+    <h2>Report Error</h2>
+    <script>
+        function submitErrorForm(event) {
+          event.preventDefault();
+        
+          var formData = $('#error-form').serialize();
+          var url = $('#error-form').attr('action');
+        
+          console.log('Submitting form data:', formData);
+          console.log('Sending AJAX request to:', url);
+        
+          $.ajax({
+            type: 'POST',
+            url: url,
+            data: formData,
+            success: function(data) {
+                console.log('AJAX request succeeded:', data);
+                $('#success-message').fadeIn(function() {
+                    $(this).delay(3000).fadeOut();
+                });
+
+                $('#error-form')[0].reset();
+                $('#existing-errors').empty().hide();
+                },
+            error: function(jqXHR, textStatus, errorThrown) {
+              console.error('AJAX request failed:', textStatus, errorThrown);
+              $('#error-message').fadeIn().delay(3000).fadeOut();
+            }
+          });
+        }
+        </script>
+  
+  <div id="success-message" style="display: none;">
+    <div class="alert alert-success" role="alert">
+      Error reported successfully!
+    </div>
+  </div>
+
+  <div id="error-message" style="display: none;">
+    <div class="alert alert-danger" role="alert">
+      Error reporting error: <span id="error-text"></span>
+    </div>
+  </div>
+    <form id="error-form" action="/sorterrorupdate" method="post">
+      <div class="form-group">
+        <label for="requestid">Request ID:</label>
+        <input type="text" class="form-control" id="requestid" name="requestid">
+      </div>
+      <div class="form-group">
+        <label for="sorter">Sorter:</label>
+        <input type="text" class="form-control" id="sorter" name="sorter">
+      </div>
+      <div class="form-group">
+        <label for="description">Description:</label>
+        <textarea class="form-control" id="description" name="description"></textarea>
+      </div>
+      <div class="form-group">
+        <label for="errortype">Error Type:</label>
+        <select class="form-control" id="errortype" name="errortype">
+          <option value="sorting">Sorting</option>
+          <option value="defect">Defect</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="notes">Notes:</label>
+        <textarea class="form-control" id="notes" name="notes"></textarea>
+      </div>
+      <button type="submit" class="btn btn-primary" onclick="submitErrorForm(event)">Submit</button>
+    </form>
+  
+    <div id="existing-errors" class="card mt-4" style="display: none;">
+        <div class="card-header">
+          Existing Errors for Request ID <span id="existing-errors-requestid"></span>
+        </div>
+        <ul class="list-group list-group-flush">
+          <li class="list-group-item">
+            <strong>Error Type:</strong> <span id="existing-errors-type"></span>
+          </li>
+          <li class="list-group-item">
+            <strong>Notes:</strong> <span id="existing-errors-notes"></span>
+          </li>
+        </ul>
+      </div>
+      
+
+  <script>
+    $(document).ready(function() {
+      var requestid = getParameterByName('requestid');
+      if (requestid) {
+        $('#requestid').val(requestid);
+      }
+    });
+    
+    function getParameterByName(name, url) {
+      if (!url) url = window.location.href;
+      name = name.replace(/[\[\]]/g, '\\$&');
+      var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),
+          results = regex.exec(url);
+      if (!results) return null;
+      if (!results[2]) return '';
+      return decodeURIComponent(results[2].replace(/\+/g, ' '));
+    }
+    </script>
+      
+  <script>
+    $(document).ready(function() {
+    
+      $('#requestid').on('input', function() {
+        var requestid = $(this).val();
+        if (requestid !== '') {
+          $.ajax({
+            type: 'GET',
+            url: '/lookuprequestid',
+            data: {'requestid': requestid},
+            success: function(data) {
+              $('#sorter').val(data.sorter);
+              $('#description').val(data.description);
+              checkExistingErrors(requestid);
+            }
+          });
+        }
+      });
+    });
+    
+    function checkExistingErrors(requestid) {
+  var prevRequestid = $('#existing-errors').data('requestid');
+  if (prevRequestid !== requestid) {
+    // Clear the existing errors box and hide it if the request ID has changed
+    $('#existing-errors').empty();
+    $('#existing-errors').hide();
+  }
+
+  $.ajax({
+    type: 'GET',
+    url: '/checkexistingerrors',
+    data: {'requestid': requestid},
+    success: function(data) {
+      if (data.length > 0) {
+        // Display the existing errors box
+        $('#existing-errors').show();
+        $('#existing-errors').data('requestid', requestid);
+
+        // Add a box for each error
+        for (var i = 0; i < data.length; i++) {
+          var error = data[i];
+          var html = '<div class="card"><div class="card-body">';
+          html += '<h5 class="card-title">Existing Error</h5>';
+          html += '<p class="card-text"><strong>Error Type:</strong> ' + error.errortype + '</p>';
+          html += '<p class="card-text"><strong>Notes:</strong> ' + error.notes + '</p>';
+          html += '</div></div>';
+          $('#existing-errors').append(html);
+        }
+      } else {
+        // Hide the existing errors box if there are no errors
+        $('#existing-errors').empty();
+        $('#existing-errors').hide();
+      }
+    }
+  });
+}
+
+</script>       
+       
+{{template "footer" .}}
+</body>
+</html>

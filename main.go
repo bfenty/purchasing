@@ -158,6 +158,10 @@ func main() {
 	http.HandleFunc("/userupdate", userUpdateHandler)
 	http.HandleFunc("/users", Users)
 	http.HandleFunc("/userdelete", userDeleteHandler)
+	http.HandleFunc("/lookuprequestid", LookupRequestID)
+	http.HandleFunc("/sorterror", SortError)
+	http.HandleFunc("/sorterrorupdate", sortErrorUpdate)
+	http.HandleFunc("/checkexistingerrors", checkExistingErrors)
 
 	http.ListenAndServe(":8082", nil)
 }
@@ -214,6 +218,16 @@ func Sorting(w http.ResponseWriter, r *http.Request) {
 	page.Message, page.Users = listusers("sorting", page.Permission)
 	t, _ := template.ParseFiles("sorting.html", "header.html", "login.js")
 	page.Title = "Sorting"
+	t.Execute(w, page)
+}
+
+// Page of list of all orders
+func SortError(w http.ResponseWriter, r *http.Request) {
+	var page Page
+	page.Permission = auth(w, r)
+	//page.Message, page.Orders = listorders(page.Permission)
+	t, _ := template.ParseFiles("sorterror.html", "header.html", "login.js")
+	page.Title = "Sorting Errors"
 	t.Execute(w, page)
 }
 
