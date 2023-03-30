@@ -181,33 +181,63 @@ func auth(w http.ResponseWriter, r *http.Request) (user User) {
 	return userdata(userSession.username)
 }
 
+// func Logout(w http.ResponseWriter, r *http.Request) {
+// 	c, err := r.Cookie("session_token")
+// 	if err != nil {
+// 		if err == http.ErrNoCookie {
+// 			// If the cookie is not set, return an unauthorized status
+// 			w.WriteHeader(http.StatusUnauthorized)
+// 			http.Redirect(w, r, "/login?messagetitle=User Unauthorized&messagebody=Please login to use this site", http.StatusSeeOther)
+// 			return
+// 		}
+// 		// For any other type of error, return a bad request status
+// 		w.WriteHeader(http.StatusBadRequest)
+// 		http.Redirect(w, r, "/login?messagetitle=User Unauthorized&messagebody=Please login to use this site", http.StatusSeeOther)
+// 		return
+// 	}
+// 	sessionToken := c.Value
+
+// 	// remove the users session from the session map
+// 	delete(sessions, sessionToken)
+
+// 	// We need to let the client know that the cookie is expired
+// 	// In the response, we set the session token to an empty
+// 	// value and set its expiry as the current time
+// 	http.SetCookie(w, &http.Cookie{
+// 		Name:    "session_token",
+// 		Value:   "",
+// 		Expires: time.Now(),
+// 	})
+// 	//Redirect Login
+// 	http.Redirect(w, r, "/login?messagetitle=Logout Successful&messagebody=You have successfully been logged out", http.StatusSeeOther)
+// }
+
 func Logout(w http.ResponseWriter, r *http.Request) {
-	c, err := r.Cookie("session_token")
+	// Get the session token from the user's cookies
+	sessionToken, err := r.Cookie("session_token")
 	if err != nil {
-		if err == http.ErrNoCookie {
-			// If the cookie is not set, return an unauthorized status
-			w.WriteHeader(http.StatusUnauthorized)
-			http.Redirect(w, r, "/login?messagetitle=User Unauthorized&messagebody=Please login to use this site", http.StatusSeeOther)
-			return
-		}
-		// For any other type of error, return a bad request status
-		w.WriteHeader(http.StatusBadRequest)
-		http.Redirect(w, r, "/login?messagetitle=User Unauthorized&messagebody=Please login to use this site", http.StatusSeeOther)
+		// If the user doesn't have a session token cookie, they're already logged out
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
 		return
 	}
-	sessionToken := c.Value
 
-	// remove the users session from the session map
-	delete(sessions, sessionToken)
+	// Remove the session token from the sessions map
+	delete(sessions, sessionToken.Value)
 
-	// We need to let the client know that the cookie is expired
-	// In the response, we set the session token to an empty
-	// value and set its expiry as the current time
+	// Set the session token cookie to expire immediately
 	http.SetCookie(w, &http.Cookie{
 		Name:    "session_token",
 		Value:   "",
-		Expires: time.Now(),
+		Expires: time.Unix(0, 0),
 	})
-	//Redirect Login
-	http.Redirect(w, r, "/login?messagetitle=Logout Successful&messagebody=You have successfully been logged out", http.StatusSeeOther)
+
+	// Set a cookie with the logout message
+	http.SetCookie(w, &http.Cookie{
+		Name:  "message",
+		Value: "You have been logged out",
+		Path:  "/login",
+	})
+
+	// Redirect the user to the login page
+	http.Redirect(w, r, "/login", http.StatusSeeOther)
 }

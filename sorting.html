@@ -6,7 +6,7 @@
   {{template "navigation" .}}
   <br>
   {{template "messagebox" .}}
-  {{$permission := .Permission.Perms}}
+  {{$permission := .Permission.Role}}
   <div class="table-responsive">
     <table class="table table-striped table-hover .table-sm" style="max-width: none">
       <thead class="table-dark" style="position: sticky; top: 0; z-index: 1;">

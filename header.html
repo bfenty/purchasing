@@ -75,7 +75,6 @@ $('#myModal').on('shown.bs.modal', function () {
 {{$permission := .Permission.Role}}
 {{$manage := .Permission.Permissions.Mgmt}}
 {{$admin  := .Permission.Permissions.Admin}}
-{{$admin}}
 <div class="collapse navbar-collapse" id="navbarSupportedContent">
   <ul class="navbar-nav mr-auto">
   {{if or (eq $permission "admin") (eq $permission "purchasing") (eq $permission "receiving")}}

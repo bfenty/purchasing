@@ -41,8 +41,8 @@
   {{template "navigation" .}}
   <br>
   {{template "messagebox" .}}
-  {{$permission := .Permission.Perms}}
-  {{$user := .Permission.User}}
+  {{$permission := .Permission.Role}}
+  {{$user := .Permission.Username}}
   {{$date := .Date}}
   <div class="container">
     <h2>Report Error</h2>
