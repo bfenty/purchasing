@@ -1,6 +1,7 @@
 <html>
 <head>
   {{template "header"}}
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
   {{template "navigation" .}}
@@ -12,7 +13,7 @@
         <div class="card">
           <div class="card-body">
             <h5 class="card-title">Login</h5>
-            <form action="/signin" method="POST">
+            <form id="login-form">
               <div class="form-group">
                 <label for="username">Username</label>
                 <input type="text" class="form-control" name="username" id="username">
@@ -23,12 +24,34 @@
               </div>
               <button type="submit" class="btn btn-primary">Login</button>
             </form>
+            <div id="login-error" style="display: none;" class="alert alert-danger" role="alert">
+              Invalid username or password
+            </div>
           </div>
         </div>
       </div>
     </div>
   </div>
   {{template "footer" .}}
+  <script>
+    // Intercept form submission and send AJAX request instead
+    $('#login-form').submit(function(e) {
+      e.preventDefault(); // Prevent form from submitting via HTTP POST request
+      $.ajax({
+        url: '/signin',
+        method: 'POST',
+        data: $('#login-form').serialize(),
+        success: function(response) {
+          // Redirect user to appropriate page based on response from server
+          window.location.href = response;
+        },
+        error: function(xhr, status, error) {
+          // Show login error message
+          var errorMessage = xhr.responseText; // Extract error message from server response
+          $('#login-error').text(errorMessage).show(); // Display error message to user
+        }
+      });
+    });
+  </script>
 </body>
 </html>
-

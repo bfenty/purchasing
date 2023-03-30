@@ -220,9 +220,9 @@ func ProductExistSQL(sku string) (exists string, message Message) {
 	return exists, message
 }
 
-func orderdeletesql(order int, permission Permissions) (message Message) {
+func orderdeletesql(order int, user User) (message Message) {
 	//Debug
-	log.WithFields(log.Fields{"username": permission.User}).Info("Deleting order ", order, "...")
+	log.WithFields(log.Fields{"username": user.Username}).Info("Deleting order ", order, "...")
 
 	//Test Connection
 	pingErr := db.Ping()
@@ -253,9 +253,9 @@ func orderdeletesql(order int, permission Permissions) (message Message) {
 	return message
 }
 
-func productdeletesql(sku string, permission Permissions) (message Message) {
+func productdeletesql(sku string, user User) (message Message) {
 	//Debug
-	log.WithFields(log.Fields{"username": permission.User}).Info("Deleting SKU ", sku, "...")
+	log.WithFields(log.Fields{"username": user.Username}).Info("Deleting SKU ", sku, "...")
 
 	//Test Connection
 	pingErr := db.Ping()
@@ -276,13 +276,13 @@ func productdeletesql(sku string, permission Permissions) (message Message) {
 	message.Title = "Success"
 	message.Body = "Successfully deleted sku " + sku
 	//Logging
-	log.WithFields(log.Fields{"username": permission.User}).Info("Deleted Product ", sku)
+	log.WithFields(log.Fields{"username": user.Username}).Info("Deleted Product ", sku)
 	return message
 }
 
-func orderskuadd(order int, sku string, permission Permissions) (message Message) {
+func orderskuadd(order int, sku string, user User) (message Message) {
 	//Debug
-	log.WithFields(log.Fields{"username": permission.User}).Info("Inserting SKU/Order: ", sku, "/", order)
+	log.WithFields(log.Fields{"username": user.Username}).Info("Inserting SKU/Order: ", sku, "/", order)
 
 	//Test Connection
 	pingErr := db.Ping()
@@ -304,9 +304,9 @@ func orderskuadd(order int, sku string, permission Permissions) (message Message
 	return message
 }
 
-func orderlookup(ordernum int, permission Permissions) (message Message, orders []Order) {
+func orderlookup(ordernum int, user User) (message Message, orders []Order) {
 	//Debug
-	log.WithFields(log.Fields{"username": permission.User}).Debug("Getting Order: ", strconv.Itoa(ordernum))
+	log.WithFields(log.Fields{"username": user.Username}).Debug("Getting Order: ", strconv.Itoa(ordernum))
 
 	//Test Connection
 	pingErr := db.Ping()
@@ -322,7 +322,7 @@ func orderlookup(ordernum int, permission Permissions) (message Message, orders 
 		return handleerror(pingErr), orders
 	}
 	defer orderrows.Close()
-	log.WithFields(log.Fields{"username": permission.User}).Debug("Orderrows: ", orderrows)
+	log.WithFields(log.Fields{"username": user.Username}).Debug("Orderrows: ", orderrows)
 	//Pull Data
 	for orderrows.Next() {
 		var r Order
@@ -336,7 +336,7 @@ func orderlookup(ordernum int, permission Permissions) (message Message, orders 
 		if err != nil {
 			return handleerror(pingErr), orders
 		}
-		log.WithFields(log.Fields{"username": permission.User}).Debug("SKUrows: ", skurows)
+		log.WithFields(log.Fields{"username": user.Username}).Debug("SKUrows: ", skurows)
 		var skus []Product
 		defer skurows.Close()
 		for skurows.Next() {
@@ -348,7 +348,7 @@ func orderlookup(ordernum int, permission Permissions) (message Message, orders 
 			skus = append(skus, r)
 		}
 		r.Products = skus
-		log.WithFields(log.Fields{"username": permission.User}).Debug("SKUS: ", skus)
+		log.WithFields(log.Fields{"username": user.Username}).Debug("SKUS: ", skus)
 		//Append to the orders
 		orders = append(orders, r)
 	}
@@ -356,7 +356,7 @@ func orderlookup(ordernum int, permission Permissions) (message Message, orders 
 	return message, orders
 }
 
-func orderupdatesql(order int, tracking string, comment string, status string, permission Permissions) (message Message) {
+func orderupdatesql(order int, tracking string, comment string, status string, user User) (message Message) {
 	//Test Connection
 	pingErr := db.Ping()
 	if pingErr != nil {
@@ -365,7 +365,7 @@ func orderupdatesql(order int, tracking string, comment string, status string, p
 	}
 
 	//Build the Query
-	log.WithFields(log.Fields{"username": permission.User}).Debug("Building Query...")
+	log.WithFields(log.Fields{"username": user.Username}).Debug("Building Query...")
 	newquery := "UPDATE `orders` SET `trackingnum`=?,`comments`=?,`status`=? WHERE ordernum = ?"
 
 	//Run Query
@@ -377,13 +377,13 @@ func orderupdatesql(order int, tracking string, comment string, status string, p
 	message.Body = "Successfully updated order " + strconv.Itoa(order)
 	message.Success = true
 	//Logging
-	log.WithFields(log.Fields{"username": permission.User}).Info("Updated Order ", strconv.Itoa(order))
+	log.WithFields(log.Fields{"username": user.Username}).Info("Updated Order ", strconv.Itoa(order))
 	return message
 }
 
-func listusers(role string, permission Permissions) (message Message, users []User) {
+func listusers(role string, user User) (message Message, users []User) {
 	//Debug
-	log.WithFields(log.Fields{"username": permission.User}).Debug("Getting users with role ", role, "...")
+	log.WithFields(log.Fields{"username": user.Username}).Debug("Getting users with role ", role, "...")
 
 	//Test Connection
 	pingErr := db.Ping()
@@ -493,9 +493,9 @@ func userDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/users", http.StatusSeeOther)
 }
 
-func listorders(permission Permissions) (message Message, orders []Order) {
+func listorders(user User) (message Message, orders []Order) {
 	//Debug
-	log.WithFields(log.Fields{"username": permission.User}).Debug("Getting Orders...")
+	log.WithFields(log.Fields{"username": user.Username}).Debug("Getting Orders...")
 
 	//Test Connection
 	pingErr := db.Ping()
@@ -526,9 +526,9 @@ func listorders(permission Permissions) (message Message, orders []Order) {
 }
 
 // List of all sorting requests
-func listsortrequests(permission Permissions, action string, r *http.Request) (message Message, sortrequests []SortRequest) {
+func listsortrequests(user User, action string, r *http.Request) (message Message, sortrequests []SortRequest) {
 	//Debug
-	log.WithFields(log.Fields{"username": permission.User}).Debug("Getting Sort Requests...")
+	log.WithFields(log.Fields{"username": user.Username}).Debug("Getting Sort Requests...")
 
 	//Test Connection
 	pingErr := db.Ping()
@@ -572,14 +572,14 @@ func listsortrequests(permission Permissions, action string, r *http.Request) (m
 		//retrieves only records that have not been checked out yet
 		newquery = "SELECT requestid, sku,description,instructions,weightin,weightout,pieces,hours,checkout,checkint,COALESCE(sorter,''),status,sku_manufacturer,prty from sortrequest WHERE status = 'new'"
 		// if permission.Perms == "sorting" {
-		// 	newquery += " AND sorter = '" + permission.User + "'"
+		// 	newquery += " AND sorter = '" + user.Username + "'"
 		// }
 		newquery += " order by prty desc, 1"
 	} else if action == "checkin" {
 		//retrieves only records that have not been checked in yet
 		newquery = "SELECT requestid, sku,description,instructions,weightin,weightout,pieces,hours,checkout,checkint,COALESCE(sorter,''),status,sku_manufacturer,prty from sortrequest WHERE status = 'checkout'"
-		if permission.Perms == "sorting" {
-			newquery += " AND sorter = '" + permission.User + "'"
+		if user.Role == "sorting" {
+			newquery += " AND sorter = '" + user.Username + "'"
 		}
 		newquery += " order by 1"
 	} else if action == "receiving" {
@@ -590,10 +590,10 @@ func listsortrequests(permission Permissions, action string, r *http.Request) (m
 	newquery += " limit 100"
 
 	//Run Query
-	log.WithFields(log.Fields{"username": permission.User}).Debug(i...) //debug variables map
-	log.WithFields(log.Fields{"username": permission.User}).Debug("Running Product List")
-	log.WithFields(log.Fields{"username": permission.User}).Debug(newquery)
-	log.WithFields(log.Fields{"username": permission.User}).Debug(permission.Perms)
+	log.WithFields(log.Fields{"username": user.Username}).Debug(i...) //debug variables map
+	log.WithFields(log.Fields{"username": user.Username}).Debug("Running Product List")
+	log.WithFields(log.Fields{"username": user.Username}).Debug(newquery)
+	log.WithFields(log.Fields{"username": user.Username}).Debug(user.Role)
 	rows, err := db.Query(newquery, i...)
 	defer rows.Close()
 	if err != nil {
@@ -631,7 +631,7 @@ func listsortrequests(permission Permissions, action string, r *http.Request) (m
 }
 
 // Sorting Insert
-func Sortinginsert(r *http.Request, permission Permissions) (message Message) {
+func Sortinginsert(r *http.Request, user User) (message Message) {
 	//Test DB Connection
 	pingErr := db.Ping()
 	if pingErr != nil {
@@ -680,15 +680,15 @@ func Sortinginsert(r *http.Request, permission Permissions) (message Message) {
 	// i = append(i, status)
 	// i = append(i, manufacturerpart)
 	// i = append(i, prty)
-	// log.WithFields(log.Fields{"username": permission.User}).Debug("Inserting Sorting Request: ", i)
-	// log.WithFields(log.Fields{"username": permission.User}).Debug(i...) //debug variables map
-	// log.WithFields(log.Fields{"username": permission.User}).Debug("Running Product List")
+	// log.WithFields(log.Fields{"username": user.Username}).Debug("Inserting Sorting Request: ", i)
+	// log.WithFields(log.Fields{"username": user.Username}).Debug(i...) //debug variables map
+	// log.WithFields(log.Fields{"username": user.Username}).Debug("Running Product List")
 
 	//Build the Query
 	// if id != "" {
 	// 	//Run the query if ID isn't null
 	// 	newquery = "REPLACE INTO sortrequest (`sku`, `description`, `instructions`, `requestid`,`weightin`, `weightout`, `pieces`, `hours`, `checkout`, `checkint`, `sorter`,status,sku_manufacturer,prty) VALUES (REPLACE(?,' ',''),?,?,?,?,?,?,?,?,?,?,?,?,?)"
-	// 	log.WithFields(log.Fields{"username": permission.User}).Debug("Query: ", newquery)
+	// 	log.WithFields(log.Fields{"username": user.Username}).Debug("Query: ", newquery)
 	// 	rows, err := db.Query(newquery, i...)
 	// 	if err != nil {
 	// 		return handleerror(err)
@@ -697,7 +697,7 @@ func Sortinginsert(r *http.Request, permission Permissions) (message Message) {
 	// } else {
 	// 	//Run the query to insert a new row
 	// 	newquery = "INSERT INTO sortrequest (`sku`, `description`, `instructions`, `weightin`, `weightout`, `pieces`, `hours`, `checkout`, `checkint`, `sorter`,status,sku_manufacturer,prty) VALUES (REPLACE(?,' ',''),?,?,?,?,?,?,?,?,?,?,?,?)"
-	// 	log.WithFields(log.Fields{"username": permission.User}).Debug("Query: ", newquery)
+	// 	log.WithFields(log.Fields{"username": user.Username}).Debug("Query: ", newquery)
 	// 	rows, err := db.Query(newquery, i...)
 	// 	if err != nil {
 	// 		return handleerror(err)
@@ -737,7 +737,7 @@ func Sortinginsert(r *http.Request, permission Permissions) (message Message) {
 		newquery = newquery[:len(newquery)-1] + ") VALUES ("
 		for key, value := range data {
 			if value != "" {
-				log.WithFields(log.Fields{"username": permission.User}).Debug("key:", key, ", value:", value)
+				log.WithFields(log.Fields{"username": user.Username}).Debug("key:", key, ", value:", value)
 				newquery += "?,"
 			}
 		}
@@ -757,7 +757,7 @@ func Sortinginsert(r *http.Request, permission Permissions) (message Message) {
 		newquery += " WHERE requestid=" + data["requestid"]
 	}
 
-	log.WithFields(log.Fields{"username": permission.User}).Debug("newquery: ", newquery)
+	log.WithFields(log.Fields{"username": user.Username}).Debug("newquery: ", newquery)
 	rows, err := db.Query(newquery, values...)
 	if err != nil {
 		return handleerror(err)
@@ -765,14 +765,14 @@ func Sortinginsert(r *http.Request, permission Permissions) (message Message) {
 	defer rows.Close()
 
 	//Logging
-	log.WithFields(log.Fields{"username": permission.User}).Info("Inserted Product ", data["sku"])
+	log.WithFields(log.Fields{"username": user.Username}).Info("Inserted Product ", data["sku"])
 	message.Title = "Success"
 	message.Body = "Successfully inserted row"
 	message.Success = true
 	return message
 }
 
-func nextorder(manufacturer string, permission Permissions) (message Message, order Order) {
+func nextorder(manufacturer string, user User) (message Message, order Order) {
 	// Get a database handle.
 	// var err error
 	var ordernum int
@@ -795,7 +795,7 @@ func nextorder(manufacturer string, permission Permissions) (message Message, or
 		rows.Scan(&ordernum)
 	}
 	ordernum += 1
-	log.WithFields(log.Fields{"username": permission.User}).Debug(manufacturer, "-", ordernum)
+	log.WithFields(log.Fields{"username": user.Username}).Debug(manufacturer, "-", ordernum)
 
 	//insert new order into database
 	newquery = "INSERT INTO orders (`ordernum`,`manufacturer`) VALUES (?,?)"
@@ -808,7 +808,7 @@ func nextorder(manufacturer string, permission Permissions) (message Message, or
 }
 
 // Reorders List
-func Reorderlist(permission Permissions) (message Message, orders []Order) {
+func Reorderlist(user User) (message Message, orders []Order) {
 	// Get a database handle.
 	var err error
 
@@ -860,7 +860,7 @@ func Reorderlist(permission Permissions) (message Message, orders []Order) {
 }
 
 // Product List
-func ProductList(limit int, r *http.Request, permission Permissions) (message Message, products []Product) {
+func ProductList(limit int, r *http.Request, user User) (message Message, products []Product) {
 	// Get a database handle.
 	var err error
 
@@ -904,9 +904,9 @@ func ProductList(limit int, r *http.Request, permission Permissions) (message Me
 
 	newquery += " order by 11 desc, 1 limit ?"
 	i = append(i, limit)
-	log.WithFields(log.Fields{"username": permission.User}).Debug(i...) //debug variables map
-	log.WithFields(log.Fields{"username": permission.User}).Debug("Running Product List")
-	log.WithFields(log.Fields{"username": permission.User}).Debug(newquery)
+	log.WithFields(log.Fields{"username": user.Username}).Debug(i...) //debug variables map
+	log.WithFields(log.Fields{"username": user.Username}).Debug("Running Product List")
+	log.WithFields(log.Fields{"username": user.Username}).Debug(newquery)
 	rows, err := db.Query(newquery, i...)
 	if err != nil {
 		return handleerror(err), products
@@ -926,9 +926,9 @@ func ProductList(limit int, r *http.Request, permission Permissions) (message Me
 	return message, products
 }
 
-func sortrequestdeletesql(requestid int, permission Permissions) (message Message) {
+func sortrequestdeletesql(requestid int, user User) (message Message) {
 	//Debug
-	log.WithFields(log.Fields{"username": permission.User}).Info("Deleting order ", order, "...")
+	log.WithFields(log.Fields{"username": user.Username}).Info("Deleting order ", order, "...")
 
 	//Test Connection
 	pingErr := db.Ping()
@@ -952,7 +952,7 @@ func sortrequestdeletesql(requestid int, permission Permissions) (message Messag
 }
 
 // Product Insert
-func ProductInsert(r *http.Request, permission Permissions) (message Message) {
+func ProductInsert(r *http.Request, user User) (message Message) {
 	// Get a database handle.
 	var err error
 
@@ -1005,15 +1005,15 @@ func ProductInsert(r *http.Request, permission Permissions) (message Message) {
 		i = append(i, 0)
 	}
 	i = append(i, season)
-	log.WithFields(log.Fields{"username": permission.User}).Debug("Reorder: ", reorder)
+	log.WithFields(log.Fields{"username": user.Username}).Debug("Reorder: ", reorder)
 
 	//Build the Query
 	newquery = "REPLACE INTO skus (`sku_internal`, `manufacturer_code`, `sku_manufacturer`, `processing_request`, `sorting_request`, `unit`, `unit_price`, `Currency`, `order_qty`,`product_option`,`reorder`,season) VALUES (REPLACE(?,' ',''),?,?,?,?,?,?,?,?,?,?,?)"
 
 	//Run Query
-	log.WithFields(log.Fields{"username": permission.User}).Debug(i...) //debug variables map
-	log.WithFields(log.Fields{"username": permission.User}).Debug("Running Product List")
-	log.WithFields(log.Fields{"username": permission.User}).Debug(newquery)
+	log.WithFields(log.Fields{"username": user.Username}).Debug(i...) //debug variables map
+	log.WithFields(log.Fields{"username": user.Username}).Debug("Running Product List")
+	log.WithFields(log.Fields{"username": user.Username}).Debug(newquery)
 	rows, err := db.Query(newquery, i...)
 	if err != nil {
 		return handleerror(err)
@@ -1033,7 +1033,7 @@ func ProductInsert(r *http.Request, permission Permissions) (message Message) {
 	qty(sku)
 
 	//Logging
-	log.WithFields(log.Fields{"username": permission.User}).Info("Inserted Product ", sku)
+	log.WithFields(log.Fields{"username": user.Username}).Info("Inserted Product ", sku)
 	message.Title = "Success"
 	message.Body = "Successfully inserted row"
 	message.Success = true
@@ -1069,58 +1069,59 @@ func Updatepass(user string, pass string, secret string) (message Message, succe
 }
 
 // Authenticate user from DB
-func userauth(user string, pass string) (permission Permissions, message Message) {
+func userauth(username string, pass string) (user User, message Message) {
 	// Get a database handle.
 	var err error
 	var dbpass string
 	//Test Connection
 	pingErr := db.Ping()
-	if pingErr != nil {
-		permission.User = "notfound"
-		return permission, handleerror(pingErr)
-	}
+	// if pingErr != nil {
+	// 	user.Role = "notfound"
+	// 	return user, handleerror(pingErr)
+	// }
 
-	var r Permissions
+	var r User
 
 	//set Variables
 	//Query
 	var newquery string = "select password, permissions, admin, management from orders.users where username = ?"
-	// log.WithFields(log.Fields{"username": permission.User}).Debug(newquery)
-	rows, err := db.Query(newquery, user)
+	// log.WithFields(log.Fields{"username": user.Role}).Debug(newquery)
+	rows, err := db.Query(newquery, username)
 	if err != nil {
-		permission.User = "notfound"
-		return permission, handleerror(pingErr)
+		user.Role = "notfound"
+		return user, handleerror(pingErr)
 	}
 	defer rows.Close()
 	//Pull Data
 	for rows.Next() {
-		err := rows.Scan(&dbpass, &r.Perms, &r.Admin, &r.Mgmt)
+		err := rows.Scan(&dbpass, &r.Role, &r.Permissions.Admin, &r.Permissions.Mgmt)
+		log.Debug("Role:", r.Role)
 		if err != nil {
-			permission.User = "notfound"
-			return permission, handleerror(pingErr)
+			user.Role = "notfound"
+			return user, handleerror(pingErr)
 		}
 	}
 	err = rows.Err()
 	if err != nil {
-		permission.User = "notfound"
-		return permission, handleerror(pingErr)
+		user.Role = "notfound"
+		return user, handleerror(pingErr)
 	}
 
 	//If Permissions do not exist for user
-	if r.Perms == "" {
+	if r.Role == "" {
 		message.Title = "Permission not found"
 		message.Body = "Permissions not set for user. Please contact your system administrator."
-		permission.User = "notfound"
-		return permission, message
+		user.Role = "notfound"
+		return user, message
 	}
 
-	log.Debug("Checking Permissions: ", r.Perms)
+	log.Debug("Checking Permissions: ", r.Role)
 	//If user has not set a password
 	if dbpass == "" {
 		message.Title = "Set Password"
 		message.Body = "Password not set, please create password"
-		permission.User = "newuser"
-		return permission, message
+		user.Role = "newuser"
+		return user, message
 	}
 
 	if comparePasswords(dbpass, []byte(pass)) {
@@ -1132,13 +1133,13 @@ func userauth(user string, pass string) (permission Permissions, message Message
 	}
 	message.Title = "Login Failed"
 	message.Body = "Login Failed"
-	permission.User = "notfound"
-	return permission, message
+	user.Role = "notfound"
+	return user, message
 }
 
 // Authenticate user from DB
-func userdata(user string) (permission Permissions) {
-	permission.User = user
+func userdata(username string) (user User) {
+	// user.Role = user
 	// Get a database handle.
 	var err error
 	//Test Connection
@@ -1149,15 +1150,15 @@ func userdata(user string) (permission Permissions) {
 	//set Variables
 	//Query
 	var newquery string = "select permissions from orders.users where username = ?"
-	// log.WithFields(log.Fields{"username": permission.User}).Debug(newquery)
-	rows, err := db.Query(newquery, user)
+	// log.WithFields(log.Fields{"username": user.Role}).Debug(newquery)
+	rows, err := db.Query(newquery, username)
 	if err != nil {
 		handleerror(err)
 	}
 	defer rows.Close()
 	//Pull Data
 	for rows.Next() {
-		err := rows.Scan(&permission.Perms)
+		err := rows.Scan(&user.Role)
 		if err != nil {
 			handleerror(err)
 		}
@@ -1166,12 +1167,12 @@ func userdata(user string) (permission Permissions) {
 	if err != nil {
 		handleerror(err)
 	}
-	if permission.Perms == "" {
-		permission.Perms = "notfound"
-		return permission
+	if user.Role == "" {
+		user.Role = "notfound"
+		return user
 	}
 
-	return permission
+	return user
 }
 
 // Update QTY and IMG for products

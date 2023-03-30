@@ -63,7 +63,7 @@ type Page struct {
 	Title         string
 	Date          string
 	Message       Message
-	Permission    Permissions
+	Permission    User
 	ProductList   []Product
 	Orders        []Order
 	SortRequests  []SortRequest
@@ -71,12 +71,12 @@ type Page struct {
 	Users         []User
 }
 
-type Permissions struct {
-	User  string
-	Perms string
-	Admin int
-	Mgmt  int
-}
+// type Permissions struct {
+// 	User  string
+// 	Perms string
+// 	Admin int
+// 	Mgmt  int
+// }
 
 type Message struct {
 	Success bool
@@ -85,12 +85,20 @@ type Message struct {
 }
 
 type User struct {
-	Username   string
-	Usercode   int
-	Role       string
-	Sorting    bool
-	Manager    string
-	Management bool
+	Username    string
+	Usercode    int
+	Role        string
+	Sorting     bool
+	Manager     string
+	Management  bool
+	Permissions Permissions
+}
+
+type Permissions struct {
+	Admin     bool
+	Mgmt      bool
+	Receiving bool
+	Sorting   bool
 }
 
 // initialize Logs
@@ -210,9 +218,9 @@ func Users(w http.ResponseWriter, r *http.Request) {
 func Sorting(w http.ResponseWriter, r *http.Request) {
 	var page Page
 	page.Permission = auth(w, r)
-	if page.Permission.Perms == "receiving" {
+	if page.Permission.Role == "receiving" {
 		page.Message, page.SortRequests = listsortrequests(page.Permission, "receiving", r)
-	} else if page.Permission.Perms == "admin" {
+	} else if page.Permission.Role == "admin" {
 		page.Message, page.SortRequests = listsortrequests(page.Permission, "all", r)
 	}
 	page.Message, page.Users = listusers("sorting", page.Permission)
