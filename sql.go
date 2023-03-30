@@ -389,6 +389,7 @@ func listusers(role string, user User) (message Message, users []User) {
 	pingErr := db.Ping()
 	if pingErr != nil {
 		db, message = opendb()
+		log.Debug(pingErr)
 		return handleerror(pingErr), users
 	}
 
@@ -406,6 +407,7 @@ func listusers(role string, user User) (message Message, users []User) {
 	rows, err := db.Query(newquery)
 	defer rows.Close()
 	if err != nil {
+		log.Debug(err)
 		return handleerror(err), users
 	}
 
@@ -414,11 +416,78 @@ func listusers(role string, user User) (message Message, users []User) {
 		var r User
 		err := rows.Scan(&r.Username, &r.Usercode, &r.Role, &r.Sorting, &r.Manager, &r.Management)
 		if err != nil {
+			log.Debug(err)
 			return handleerror(err), users
 		}
 		users = append(users, r)
 	}
 	return message, users
+}
+
+func UpdateUser(w http.ResponseWriter, r *http.Request) {
+
+	//Test Connection
+	pingErr := db.Ping()
+	if pingErr != nil {
+		db, _ = opendb()
+		// return handleerror(pingErr)
+	}
+
+	// Get the form values from the request
+	username := r.FormValue("username")
+	usercode := r.FormValue("usercode")
+	role := r.FormValue("role")
+	manager := r.FormValue("manager")
+	log.Debug("username:", username, " usercode:", usercode, " role:", role, " manager:", manager)
+	var sorting int
+	if r.FormValue("sorting") == "true" {
+		sorting = 1
+	} else {
+		sorting = 0
+	}
+	// sorting, _ := strconv.ParseBool(r.FormValue("sorting"))
+	println(username, usercode, role, sorting)
+
+	// If usercode is empty, find the current max value and increment it
+	if usercode == "" {
+		var maxUsercode int
+		err := db.QueryRow("SELECT MAX(usercode) FROM orders.users").Scan(&maxUsercode)
+		if err != nil {
+			// Handle error
+			handleerror(err)
+		}
+		usercode = strconv.Itoa(maxUsercode + 1)
+	}
+
+	// Prepare the SQL statement for inserting the data
+	//Logging
+	log.Info("Creating Query")
+	newquery := "REPLACE INTO orders.users (username, usercode, permissions, sorting,manager) VALUES (?, ?, ?, ?, ?)"
+
+	// Execute the SQL statement with the form values
+	log.Info("Executing Query")
+	rows, err := db.Query(newquery, username, usercode, role, sorting, manager)
+	defer rows.Close()
+
+	if err != nil {
+		// Handle error
+		println(err)
+		http.Error(w, "Failed to update user information.", http.StatusInternalServerError)
+		return
+	}
+
+	// Redirect the user to the users page
+	// http.Redirect(w, r, "/users", http.StatusSeeOther)
+
+	// Update user information in database
+	// _, err = db.Exec("UPDATE orders.users SET username=?, permissions=?, manager=?, sorting=? WHERE usercode=?", username, role, manager, sorting, usercode)
+	// if err != nil {
+	// 	http.Error(w, "Failed to update user information.", http.StatusInternalServerError)
+	// 	return
+	// }
+
+	// Return success message to client
+	w.Write([]byte("User information updated successfully."))
 }
 
 func userUpdateHandler(w http.ResponseWriter, r *http.Request) {
@@ -481,16 +550,24 @@ func userDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	// Prepare the SQL statement for deleting the user
 	stmt, err := db.Prepare("UPDATE orders.users SET active = 0 WHERE usercode = ?")
 	if err != nil {
+		// Handle error
+		println(err)
+		http.Error(w, "Failed to update user information.", http.StatusInternalServerError)
+		return
 	}
 	defer stmt.Close()
 
 	// Execute the SQL statement with the usercode value
 	_, err = stmt.Exec(usercode)
 	if err != nil {
+		// Handle error
+		println(err)
+		http.Error(w, "Failed to update user information.", http.StatusInternalServerError)
+		return
 	}
 
 	// Redirect the user to the users page
-	http.Redirect(w, r, "/users", http.StatusSeeOther)
+	w.Write([]byte("User information updated successfully."))
 }
 
 func listorders(user User) (message Message, orders []Order) {
@@ -1149,7 +1226,7 @@ func userdata(username string) (user User) {
 	}
 	//set Variables
 	//Query
-	var newquery string = "select permissions from orders.users where username = ?"
+	var newquery string = "select username,usercode,permissions,admin,management,manager,sorting from orders.users where username = ?"
 	// log.WithFields(log.Fields{"username": user.Role}).Debug(newquery)
 	rows, err := db.Query(newquery, username)
 	if err != nil {
@@ -1158,7 +1235,7 @@ func userdata(username string) (user User) {
 	defer rows.Close()
 	//Pull Data
 	for rows.Next() {
-		err := rows.Scan(&user.Role)
+		err := rows.Scan(&user.Username, &user.Usercode, &user.Role, &user.Permissions.Admin, &user.Permissions.Mgmt, &user.Manager, &user.Permissions.Sorting)
 		if err != nil {
 			handleerror(err)
 		}
