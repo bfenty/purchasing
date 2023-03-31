@@ -72,30 +72,61 @@
                 <th>Status</th>
                 <th>Priority</th>
                 <th></th>
+                <th></th>
+                <th></th>
               </tr>
             </thead>
             <tbody>
+              {{range $index, $value := .SortRequests}}
               <form>
               <tr>
-                <td><input type="text" class="form-control" name="requestid" value="1"></td>
-                <td><input type="text" class="form-control" name="sku" value="ABC123"></td>
-                <td><input type="text" class="form-control" name="description" value="Product 1"></td>
-                <td><input type="text" class="form-control" name="manufacturerpart" value="12345"></td>
-                <td><input type="text" class="form-control" name="instructions" value="Instructions for Product 1"></td>
-                <td><input type="text" class="form-control" name="weightout" value="10 lbs"></td>
-                <td><input type="text" class="form-control" name="weightin" value="12 lbs"></td>
-                <td><input type="text" class="form-control" name="difference" value="+2 lbs"></td>
-                <td><input type="text" class="form-control" name="pieces" value="5"></td>
-                <td><input type="date" class="form-control" name="checkout" value="Mar 1, 2023 10:00 AM"></td>
-                <td><input type="date" class="form-control" name="checkin" value="Mar 2, 2023 2:00 PM"></td>
-                <td><input type="text" class="form-control" name="sorter" value="Sorter A"></td>
-                <td><input type="text" class="form-control" name="status" value="Completed"></td>
-                <td><input type="text" class="form-control" name="priority" value="High"></td>
-                <td></td>
+                <td><input type="text" class="form-control" name="requestid" value="{{.ID}}"></td>
+                <td><input type="text" class="form-control" name="sku" value="{{.SKU}}"></td>
+                <td><input type="text" class="form-control" name="description" value="{{.Description}}"></td>
+                <td><input type="text" class="form-control" name="manufacturerpart" value="{{.ManufacturerPart}}"></td>
+                <td><input type="text" class="form-control" name="instructions" value="{{.Instructions}}"></td>
+                <td><input type="text" class="form-control" name="weightout" value="{{.Weightout}}"></td>
+                <td><input type="text" class="form-control" name="weightin" value="{{.Weightin}}"></td>
+                <td><input type="text" class="form-control" name="difference" value="{{.Difference}}"></td>
+                <td><input type="text" class="form-control" name="pieces" value="{{.Pieces}}"></td>
+                <td><input type="date" class="form-control" name="checkout" value="{{.Checkout}}"></td>
+                <td><input type="date" class="form-control" name="checkin" value="{{.Checkin}}"></td>
+                <td>
+                  <select class="form-select" id="sorter" name="sorter">
+                    <option selected disabled value> {{.Sorter}}</option>
+                    {{range $.Users}}
+                    <option value='{{.Username}}'>{{.Username}}</option>
+                    {{end}}
+                    <option></option>
+                  </select>
+                </td>
+                <td>
+                  {{if $admin}}
+                  <select class="form-select" id="status" name="status">
+                    <option value="New" {{if eq .Status "New"}}selected{{end}}>New</option>
+                    <option value="Checkout" {{if eq .Status "Checkout"}}selected{{end}}>Checkout</option>
+                    <option value="Checkin" {{if eq .Status "Checkin"}}selected{{end}}>Checkin</option>
+                  </select>
+                  {{else}}
+                    <input class="form-control" type="text" id="status" name="status" value="{{.Status}}" readonly>
+                  {{end}}
+                </td>
+                <td>
+                  <select class="form-select" id="priority" name="priority">
+                    <option value="0" {{if eq .Priority 0}}selected{{end}}>Normal</option>
+                    <option value="1" {{if eq .Priority 1}}selected{{end}}>High</option>
+                  </select>
+                </td>
+                <td><input type='submit' value='Update' class="btn btn-primary"></td>
+                <td><input type='submit' value='Update' class="btn btn-primary"></td>
+                <td><input type='submit' value='Update' class="btn btn-primary"></td>
               </tr>
             </form>
+            {{end}}
             </tbody>
           </table>
+          <br>
+          <br>
         </div>
       </div>
     </div>
