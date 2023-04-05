@@ -637,7 +637,7 @@ func listsortrequests(user User, action string, r *http.Request) (message Messag
 	//Build the Query
 	if action == "all" {
 		//retrieves all records
-		newquery = "SELECT requestid, sku,description,instructions,weightin,weightout,pieces,hours,checkout,checkint,COALESCE(sorter,''),status,sku_manufacturer,prty from sortrequest WHERE 1 "
+		newquery = "SELECT requestid, sku,description,instructions,weightin,weightout,pieces,hours,checkout,checkint,COALESCE(sorter,''),status,sku_manufacturer,prty from sortrequest WHERE active=1 "
 		for param, value := range queryParams {
 			if value != "" {
 				i = append(i, value)
@@ -647,21 +647,21 @@ func listsortrequests(user User, action string, r *http.Request) (message Messag
 		newquery += " order by 1 desc"
 	} else if action == "checkout" {
 		//retrieves only records that have not been checked out yet
-		newquery = "SELECT requestid, sku,description,instructions,weightin,weightout,pieces,hours,checkout,checkint,COALESCE(sorter,''),status,sku_manufacturer,prty from sortrequest WHERE status = 'new'"
+		newquery = "SELECT requestid, sku,description,instructions,weightin,weightout,pieces,hours,checkout,checkint,COALESCE(sorter,''),status,sku_manufacturer,prty from sortrequest WHERE active=1 AND status = 'new'"
 		// if permission.Perms == "sorting" {
 		// 	newquery += " AND sorter = '" + user.Username + "'"
 		// }
 		newquery += " order by prty desc, 1"
 	} else if action == "checkin" {
 		//retrieves only records that have not been checked in yet
-		newquery = "SELECT requestid, sku,description,instructions,weightin,weightout,pieces,hours,checkout,checkint,COALESCE(sorter,''),status,sku_manufacturer,prty from sortrequest WHERE status = 'checkout'"
+		newquery = "SELECT requestid, sku,description,instructions,weightin,weightout,pieces,hours,checkout,checkint,COALESCE(sorter,''),status,sku_manufacturer,prty from sortrequest WHERE active=1 AND status = 'checkout'"
 		if user.Role == "sorting" {
 			newquery += " AND sorter = '" + user.Username + "'"
 		}
 		newquery += " order by 1"
 	} else if action == "receiving" {
 		//retrieves only records that have been checked back in
-		newquery = "SELECT requestid, sku,description,instructions,weightin,weightout,pieces,hours,checkout,checkint,COALESCE(sorter,''),status,sku_manufacturer,prty from sortrequest WHERE status = 'checkin' order by 1 desc"
+		newquery = "SELECT requestid, sku,description,instructions,weightin,weightout,pieces,hours,checkout,checkint,COALESCE(sorter,''),status,sku_manufacturer,prty from sortrequest WHERE active=1 AND status = 'checkin' order by 1 desc"
 	}
 
 	newquery += " limit 100"
@@ -708,99 +708,44 @@ func listsortrequests(user User, action string, r *http.Request) (message Messag
 }
 
 // Sorting Insert
-func Sortinginsert(r *http.Request, user User) (message Message) {
+func Sortinginsert(w http.ResponseWriter, r *http.Request) {
 	//Test DB Connection
 	pingErr := db.Ping()
 	if pingErr != nil {
-		db, message = opendb()
-		return handleerror(pingErr)
+		db, _ = opendb()
+		handleerror2(pingErr, w) // send error message to AJAX request
+		return
 	}
 
-	// //Define Variables
-	// var i []interface{}
-
-	// //Retrieve variables from POST request
-	// sku := r.URL.Query().Get("sku")
-	// id := r.URL.Query().Get("requestid")
-	// descript := r.URL.Query().Get("description")
-	// instructions := r.URL.Query().Get("instructions")
-	// weightin, _ := strconv.Atoi(r.URL.Query().Get("weightin"))
-	// weightout, _ := strconv.Atoi(r.URL.Query().Get("weightout"))
-	// pieces, _ := strconv.Atoi(r.URL.Query().Get("pieces"))
-	// hours := r.URL.Query().Get("hours")
-	// checkout := r.URL.Query().Get("checkout")
-	// checkin := r.URL.Query().Get("checkin")
-	// sorter := r.URL.Query().Get("sorter")
-	// status := r.URL.Query().Get("status")
-	// manufacturerpart := r.URL.Query().Get("manufacturerpart")
-	// prty := r.URL.Query().Get("priority")
-	// if hours == "" {
-	// 	hours = "0"
-	// }
-
-	// //Create the fields to insert
-	// if sku != "" {
-	// 	i = append(i, sku)
-	// }
-	// i = append(i, descript)
-	// i = append(i, instructions)
-	// if id != "" {
-	// 	i = append(i, id)
-	// } //ensure that the id isn't null before inserting
-	// i = append(i, weightin)
-	// i = append(i, weightout)
-	// i = append(i, pieces)
-	// i = append(i, hours)
-	// i = append(i, checkout)
-	// i = append(i, checkin)
-	// i = append(i, sorter)
-	// i = append(i, status)
-	// i = append(i, manufacturerpart)
-	// i = append(i, prty)
-	// log.WithFields(log.Fields{"username": user.Username}).Debug("Inserting Sorting Request: ", i)
-	// log.WithFields(log.Fields{"username": user.Username}).Debug(i...) //debug variables map
-	// log.WithFields(log.Fields{"username": user.Username}).Debug("Running Product List")
-
-	//Build the Query
-	// if id != "" {
-	// 	//Run the query if ID isn't null
-	// 	newquery = "REPLACE INTO sortrequest (`sku`, `description`, `instructions`, `requestid`,`weightin`, `weightout`, `pieces`, `hours`, `checkout`, `checkint`, `sorter`,status,sku_manufacturer,prty) VALUES (REPLACE(?,' ',''),?,?,?,?,?,?,?,?,?,?,?,?,?)"
-	// 	log.WithFields(log.Fields{"username": user.Username}).Debug("Query: ", newquery)
-	// 	rows, err := db.Query(newquery, i...)
-	// 	if err != nil {
-	// 		return handleerror(err)
-	// 	}
-	// 	defer rows.Close()
-	// } else {
-	// 	//Run the query to insert a new row
-	// 	newquery = "INSERT INTO sortrequest (`sku`, `description`, `instructions`, `weightin`, `weightout`, `pieces`, `hours`, `checkout`, `checkint`, `sorter`,status,sku_manufacturer,prty) VALUES (REPLACE(?,' ',''),?,?,?,?,?,?,?,?,?,?,?,?)"
-	// 	log.WithFields(log.Fields{"username": user.Username}).Debug("Query: ", newquery)
-	// 	rows, err := db.Query(newquery, i...)
-	// 	if err != nil {
-	// 		return handleerror(err)
-	// 	}
-	// 	defer rows.Close()
-	// }
+	// Parse the POST data
+	err := r.ParseForm()
+	if err != nil {
+		handleerror2(err, w) // send error message to AJAX request
+		return
+	}
 
 	//define variables
 	var newquery string
 	var values []interface{}
+	var message Message
 
+	// Extract form data into a map
 	data := map[string]string{
-		"sku":              r.URL.Query().Get("sku"),
-		"description":      r.URL.Query().Get("description"),
-		"instructions":     r.URL.Query().Get("instructions"),
-		"weightin":         r.URL.Query().Get("weightin"),
-		"weightout":        r.URL.Query().Get("weightout"),
-		"pieces":           r.URL.Query().Get("pieces"),
-		"hours":            r.URL.Query().Get("hours"),
-		"checkout":         r.URL.Query().Get("checkout"),
-		"checkint":         r.URL.Query().Get("checkin"),
-		"sorter":           r.URL.Query().Get("sorter"),
-		"status":           r.URL.Query().Get("status"),
-		"sku_manufacturer": r.URL.Query().Get("manufacturerpart"),
-		"prty":             r.URL.Query().Get("priority"),
-		"requestid":        r.URL.Query().Get("requestid"),
+		"sku":              r.FormValue("sku"),
+		"description":      r.FormValue("description"),
+		"instructions":     r.FormValue("instructions"),
+		"weightin":         r.FormValue("weightin"),
+		"weightout":        r.FormValue("weightout"),
+		"pieces":           r.FormValue("pieces"),
+		"hours":            r.FormValue("hours"),
+		"checkout":         r.FormValue("checkout"),
+		"checkint":         r.FormValue("checkin"),
+		"sorter":           r.FormValue("sorter"),
+		"status":           r.FormValue("status"),
+		"sku_manufacturer": r.FormValue("manufacturerpart"),
+		"prty":             r.FormValue("prty"),
+		"requestid":        r.FormValue("requestid"),
+		"active":           r.FormValue("active"),
 	}
 
 	if data["requestid"] == "" { //if this is a new request
@@ -812,13 +757,12 @@ func Sortinginsert(r *http.Request, user User) (message Message) {
 			}
 		}
 		newquery = newquery[:len(newquery)-1] + ") VALUES ("
-		for key, value := range data {
-			if value != "" {
-				log.WithFields(log.Fields{"username": user.Username}).Debug("key:", key, ", value:", value)
-				newquery += "?,"
-			}
+		for range data {
+			newquery += "?,"
 		}
 		newquery = newquery[:len(newquery)-1] + ")"
+		// create success message and send it to AJAX request
+		message = Message{Title: "Success", Body: "Successfully inserted request", Success: true}
 	} else { //if updating an existing request
 		newquery = "UPDATE sortrequest SET "
 		for key, value := range data {
@@ -832,22 +776,114 @@ func Sortinginsert(r *http.Request, user User) (message Message) {
 		}
 		newquery = newquery[:len(newquery)-1] //get rid of the last comma
 		newquery += " WHERE requestid=" + data["requestid"]
+		// create success message and send it to AJAX request
+		message = Message{Title: "Success", Body: "Successfully updated request", Success: true}
 	}
 
-	log.WithFields(log.Fields{"username": user.Username}).Debug("newquery: ", newquery)
-	rows, err := db.Query(newquery, values...)
+	log.WithFields(log.Fields{"requestid": data["requestid"]}).Debug("newquery: ", newquery)
+	stmt, err := db.Prepare(newquery)
 	if err != nil {
-		return handleerror(err)
+		handleerror2(err, w) // send error message to AJAX request
+		return
 	}
-	defer rows.Close()
+	defer stmt.Close()
+
+	_, err = stmt.Exec(values...)
+	if err != nil {
+		handleerror2(err, w) // send error message to AJAX request
+		return
+	}
 
 	//Logging
-	log.WithFields(log.Fields{"username": user.Username}).Info("Inserted Product ", data["sku"])
-	message.Title = "Success"
-	message.Body = "Successfully inserted row"
-	message.Success = true
-	return message
+	log.WithFields(log.Fields{"requestid": data["requestid"]}).Info("Inserted Product ", data["sku"])
+
+	// encode message as JSON
+	response, err := json.Marshal(message)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// set content type to JSON and send response
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(response)
 }
+
+// // Sorting Insert
+// func Sortinginsert(r *http.Request, user User) (message Message) {
+// 	//Test DB Connection
+// 	pingErr := db.Ping()
+// 	if pingErr != nil {
+// 		db, message = opendb()
+// 		return handleerror(pingErr)
+// 	}
+
+// 	//define variables
+// 	var newquery string
+// 	var values []interface{}
+
+// 	data := map[string]string{
+// 		"sku":              r.URL.Query().Get("sku"),
+// 		"description":      r.URL.Query().Get("description"),
+// 		"instructions":     r.URL.Query().Get("instructions"),
+// 		"weightin":         r.URL.Query().Get("weightin"),
+// 		"weightout":        r.URL.Query().Get("weightout"),
+// 		"pieces":           r.URL.Query().Get("pieces"),
+// 		"hours":            r.URL.Query().Get("hours"),
+// 		"checkout":         r.URL.Query().Get("checkout"),
+// 		"checkint":         r.URL.Query().Get("checkin"),
+// 		"sorter":           r.URL.Query().Get("sorter"),
+// 		"status":           r.URL.Query().Get("status"),
+// 		"sku_manufacturer": r.URL.Query().Get("manufacturerpart"),
+// 		"prty":             r.URL.Query().Get("priority"),
+// 		"requestid":        r.URL.Query().Get("requestid"),
+// 	}
+
+// 	if data["requestid"] == "" { //if this is a new request
+// 		newquery = "REPLACE INTO sortrequest ("
+// 		for key, value := range data {
+// 			if value != "" {
+// 				newquery += "`" + key + "`,"
+// 				values = append(values, value)
+// 			}
+// 		}
+// 		newquery = newquery[:len(newquery)-1] + ") VALUES ("
+// 		for key, value := range data {
+// 			if value != "" {
+// 				log.WithFields(log.Fields{"username": user.Username}).Debug("key:", key, ", value:", value)
+// 				newquery += "?,"
+// 			}
+// 		}
+// 		newquery = newquery[:len(newquery)-1] + ")"
+// 	} else { //if updating an existing request
+// 		newquery = "UPDATE sortrequest SET "
+// 		for key, value := range data {
+// 			if value == "<nil>" {
+// 				value = "" //fix <nil> values being inserted
+// 			}
+// 			if value != "" {
+// 				newquery += "`" + key + "`=?,"
+// 				values = append(values, value)
+// 			}
+// 		}
+// 		newquery = newquery[:len(newquery)-1] //get rid of the last comma
+// 		newquery += " WHERE requestid=" + data["requestid"]
+// 	}
+
+// 	log.WithFields(log.Fields{"username": user.Username}).Debug("newquery: ", newquery)
+// 	rows, err := db.Query(newquery, values...)
+// 	if err != nil {
+// 		return handleerror(err)
+// 	}
+// 	defer rows.Close()
+
+// 	//Logging
+// 	log.WithFields(log.Fields{"username": user.Username}).Info("Inserted Product ", data["sku"])
+// 	message.Title = "Success"
+// 	message.Body = "Successfully inserted row"
+// 	message.Success = true
+// 	return message
+// }
 
 func nextorder(manufacturer string, user User) (message Message, order Order) {
 	// Get a database handle.

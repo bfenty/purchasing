@@ -78,50 +78,51 @@
             </thead>
             <tbody>
               {{range $index, $value := .SortRequests}}
-              <form>
-              <tr>
-                <td><input type="text" class="form-control" name="requestid" value="{{.ID}}"></td>
-                <td><input type="text" class="form-control" name="sku" value="{{.SKU}}"></td>
-                <td><input type="text" class="form-control" name="description" value="{{.Description}}"></td>
-                <td><input type="text" class="form-control" name="manufacturerpart" value="{{.ManufacturerPart}}"></td>
-                <td><input type="text" class="form-control" name="instructions" value="{{.Instructions}}"></td>
-                <td><input type="text" class="form-control" name="weightout" value="{{.Weightout}}"></td>
-                <td><input type="text" class="form-control" name="weightin" value="{{.Weightin}}"></td>
-                <td><input type="text" class="form-control" name="difference" value="{{.Difference}}"></td>
-                <td><input type="text" class="form-control" name="pieces" value="{{.Pieces}}"></td>
-                <td><input type="date" class="form-control" name="checkout" value="{{.Checkout}}"></td>
-                <td><input type="date" class="form-control" name="checkin" value="{{.Checkin}}"></td>
-                <td>
-                  <select class="form-select" id="sorter" name="sorter">
-                    <option selected disabled value> {{.Sorter}}</option>
-                    {{range $.Users}}
-                    <option value='{{.Username}}'>{{.Username}}</option>
+              <form id="row{{$index}}">
+                <tr>
+                  <td><input type="text" class="form-control requestid" id="requestid" name="requestid" value="{{.ID}}"></td>
+                  <td><input type="text" class="form-control sku" id="sku" name="sku" value="{{.SKU}}"></td>
+                  <td><input type="text" class="form-control description" id="description" name="description" value="{{.Description}}"></td>
+                  <td><input type="text" class="form-control manufacturerpart" id="manufacturerpart" name="manufacturerpart" value="{{.ManufacturerPart}}"></td>
+                  <td><input type="text" class="form-control instructions" id="instructions" name="instructions" value="{{.Instructions}}"></td>
+                  <td><div class="input-group"><input type="text" class="form-control weightout" id="weightout" name="weightout" value="{{.Weightout}}"><span class="input-group-text">g</span></div></td>
+                  <td><div class="input-group"><input type="text" class="form-control weightin" id="weightin" name="weightin" value="{{.Weightin}}"><span class="input-group-text">g</span></div></td>
+                  <td><div class="input-group"><input type="text" class="form-control difference" id="difference" name="difference" value="{{.Difference}}" readonly><span class="input-group-text">g</span></div></td>
+                  <td><div class="input-group"><input type="text" class="form-control pieces" id="pieces" name="pieces" value="{{.Pieces}}"><span class="input-group-text">pcs</span></div></td>
+                  <td><input type="date" class="form-control checkout" id="checkout" name="checkout" value="{{.Checkout}}"></td>
+                  <td><input type="date" class="form-control checkin" id="checkin" name="checkin" value="{{.Checkin}}"></td>
+                  <td>
+                    <select class="form-select" id="sorter" name="sorter">
+                      <option selected disabled value> {{.Sorter}}</option>
+                      {{range $.Users}}
+                      <option value='{{.Username}}'>{{.Username}}</option>
+                      {{end}}
+                      <option></option>
+                    </select>
+                  </td>
+                  <td>
+                    {{if $admin}}
+                    <select class="form-select" id="status" name="status">
+                      <option value="New" {{if eq .Status "New"}}selected{{end}}>New</option>
+                      <option value="Checkout" {{if eq .Status "Checkout"}}selected{{end}}>Checkout</option>
+                      <option value="Checkin" {{if eq .Status "Checkin"}}selected{{end}}>Checkin</option>
+                    </select>
+                    {{else}}
+                      <input class="form-control" type="text" id="status" name="status" value="{{.Status}}" readonly>
                     {{end}}
-                    <option></option>
-                  </select>
-                </td>
-                <td>
-                  {{if $admin}}
-                  <select class="form-select" id="status" name="status">
-                    <option value="New" {{if eq .Status "New"}}selected{{end}}>New</option>
-                    <option value="Checkout" {{if eq .Status "Checkout"}}selected{{end}}>Checkout</option>
-                    <option value="Checkin" {{if eq .Status "Checkin"}}selected{{end}}>Checkin</option>
-                  </select>
-                  {{else}}
-                    <input class="form-control" type="text" id="status" name="status" value="{{.Status}}" readonly>
-                  {{end}}
-                </td>
-                <td>
-                  <select class="form-select" id="priority" name="priority">
-                    <option value="0" {{if eq .Priority 0}}selected{{end}}>Normal</option>
-                    <option value="1" {{if eq .Priority 1}}selected{{end}}>High</option>
-                  </select>
-                </td>
-                <td><input type='submit' value='Update' class="btn btn-primary"></td>
-                <td><input type='submit' value='Update' class="btn btn-primary"></td>
-                <td><input type='submit' value='Update' class="btn btn-primary"></td>
-              </tr>
-            </form>
+                  </td>
+                  <td>
+                    <select class="form-select" id="prty" name="prty">
+                      <option value="0" {{if eq .Priority 0}}selected{{end}}>Normal</option>
+                      <option value="1" {{if eq .Priority 1}}selected{{end}}>High</option>
+                    </select>
+                  </td>
+                  <td><input type='hidden' id='active' name='active' value='1'><input type='submit' value='Update' class="btn btn-primary update-request"></td>
+                  <td><button type="button" class="btn btn-danger archive-request" id="archiveRequest" name="archiveRequest" data-requestid="{{.ID}}">Archive</button></td>
+                  <td></td>
+                </tr>
+                
+              </form>
             {{end}}
             </tbody>
           </table>
@@ -132,6 +133,84 @@
     </div>
   </div>
   {{template "footer" .}}
+  <script>
+    document.querySelectorAll('form').forEach(form => {
+      form.addEventListener('submit', e => {
+        e.preventDefault();
+
+        let formId = e.target.id;
+        let form = document.getElementById(formId);
+        let data = new FormData(form);
+        
+        console.log('Form data:', data);
+        
+        fetch('/sortingupdate', {
+          method: 'POST',
+          body: data
+        })
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Network response was not ok');
+          }
+          return response.json();
+        })
+        .then(data => {
+          console.log('Server response:', data);
+          // Handle the response from the server
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          // Handle the error
+        });
+      });
+    });
+
+  </script>
+  <script>
+    $(document).ready(function() {
+      // Handle click event for Archive button
+      $('.archive-request').on('click', function() {
+        // Get the user code from the data attribute
+        var requestid = $(this).data('requestid');
+  
+        // Store a reference to the clicked button for later use
+        var $clickedButton = $(this);
+  
+        // Show the modal dialogue
+        $('#archiveRequestModal').modal('show');
+  
+        // Handle confirmation
+        $('#confirmArchiveRequest').on('click', function() {
+          // Make AJAX call to API endpoint
+          $.ajax({
+            url: '/sortingupdate',
+            method: 'POST',
+            data: {  
+              requestid: requestid,
+              active: 0
+            },
+            success: function(response) {
+              // Display success message
+              $clickedButton.closest('tr').find('.alert').addClass('alert-success').text('Request archived successfully.');
+  
+              // Hide the modal dialogue
+              $('#archiveRequestModal').modal('hide');
+  
+              // Reload the page
+              location.reload();
+            },
+            error: function(xhr, status, error) {
+              // Display error message
+              $clickedButton.closest('tr').find('.alert').addClass('alert-danger').text(xhr.responseText);
+  
+              // Hide the modal dialogue
+              $('#archiveRequestModal').modal('hide');
+            }
+          });
+        });
+      });
+    });
+  </script>
   <script>
     $(document).ready(function() {   
       // inspired by http://jsfiddle.net/arunpjohny/564Lxosz/1/
@@ -181,5 +260,25 @@
       // document ready  
       });
   </script>
+    <!-- Modal Dialogue -->
+      <div class="modal fade" id="archiveRequestModal" tabindex="-1" role="dialog" aria-labelledby="archiveRequestModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="archiveRequestModalLabel">Confirm Archive Request</h5>
+              <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body">
+              <p>Are you sure you want to archive this request?</p>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+              <button type="button" class="btn btn-danger" id="confirmArchiveRequest">Archive Request</button>
+            </div>
+          </div>
+        </div>
+      </div>
 </body>
 </html>

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"html/template"
 	"net/http"
@@ -113,6 +114,20 @@ func message(r *http.Request) (messagebox Message) {
 	return messagebox
 }
 
+// Handle Errors
+func handleerror2(err error, w http.ResponseWriter) Message {
+	log.Error(err)
+	message := Message{Title: "Error", Body: err.Error(), Success: false}
+	json.NewEncoder(w).Encode(message)
+	// encode message as JSON
+	response, _ := json.Marshal(message)
+
+	// set content type to JSON and send response
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(response)
+	return message
+}
+
 // Handle Error Messages
 func handleerror(err error) (message Message) {
 	if err != nil {
@@ -161,7 +176,7 @@ func main() {
 	http.HandleFunc("/checkout", Checkout)
 	http.HandleFunc("/checkin", Checkin)
 	http.HandleFunc("/receiving", Receiving)
-	http.HandleFunc("/sortingupdate", Sortingupdate)
+	http.HandleFunc("/sortingupdate", Sortinginsert)
 	http.HandleFunc("/sortrequestdelete", sortrequestdelete)
 	http.HandleFunc("/userupdate", userUpdateHandler)
 	http.HandleFunc("/users", Users)
@@ -386,14 +401,14 @@ func productdelete(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, r.Header.Get("Referer"), 302)
 }
 
-// Handle update/insert of product POST request
-func Sortingupdate(w http.ResponseWriter, r *http.Request) {
-	var page Page
-	page.Permission = auth(w, r)
-	log.Debug("Updating sort request...")
-	page.Message = Sortinginsert(r, page.Permission)
-	http.Redirect(w, r, r.Header.Get("Referer"), 302)
-}
+// // Handle update/insert of product POST request
+// func Sortingupdate(w http.ResponseWriter, r *http.Request) {
+// 	var page Page
+// 	page.Permission = auth(w, r)
+// 	log.Debug("Updating sort request...")
+// 	page.Message = Sortinginsert(r, page.Permission)
+// 	http.Redirect(w, r, r.Header.Get("Referer"), 302)
+// }
 
 // Handle update/insert of product POST request
 func ProductUpdate(w http.ResponseWriter, r *http.Request) {
