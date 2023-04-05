@@ -135,35 +135,38 @@
   {{template "footer" .}}
   <script>
     document.querySelectorAll('form').forEach(form => {
-      form.addEventListener('submit', e => {
-        e.preventDefault();
+  form.addEventListener('submit', e => {
+    e.preventDefault();
 
-        let formId = e.target.id;
-        let form = document.getElementById(formId);
-        let data = new FormData(form);
-        
-        console.log('Form data:', data);
-        
-        fetch('/sortingupdate', {
-          method: 'POST',
-          body: data
-        })
-        .then(response => {
-          if (!response.ok) {
-            throw new Error('Network response was not ok');
-          }
-          return response.json();
-        })
-        .then(data => {
-          console.log('Server response:', data);
-          // Handle the response from the server
-        })
-        .catch(error => {
-          console.error('Error:', error);
-          // Handle the error
-        });
-      });
+    let formId = e.target.id;
+    let form = document.getElementById(formId);
+    let data = new FormData(form);
+
+    console.log('Form data:', data);
+
+    fetch('/sortingupdate', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(Object.fromEntries(data))
+    })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      return response.json();
+    })
+    .then(data => {
+      console.log('Server response:', data);
+      // Handle the response from the server
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      // Handle the error
     });
+  });
+});
 
   </script>
   <script>

@@ -748,6 +748,8 @@ func Sortinginsert(w http.ResponseWriter, r *http.Request) {
 		"active":           r.FormValue("active"),
 	}
 
+	fmt.Println(data)
+
 	if data["requestid"] == "" { //if this is a new request
 		newquery = "REPLACE INTO sortrequest ("
 		for key, value := range data {
