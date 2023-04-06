@@ -191,13 +191,14 @@ func main() {
 	http.HandleFunc("/sorterrorupdate", sortErrorUpdate)
 	http.HandleFunc("/checkexistingerrors", checkExistingErrors)
 	http.HandleFunc("/update-user", UpdateUser)
-	http.HandleFunc("/dashbaord", Dashboard)
+	http.HandleFunc("/dashboard", Dashboard)
 
 	http.ListenAndServe(":8082", nil)
 }
 
 // Dashboard
 func Dashboard(w http.ResponseWriter, r *http.Request) {
+	log.Debug("loading dashboard")
 	var page Page
 	page.Permission = auth(w, r)
 	// page.Message, page.SortRequests = listsortrequests(page.Permission, "receiving", r)
