@@ -114,17 +114,22 @@ func message(r *http.Request) (messagebox Message) {
 	return messagebox
 }
 
-// Handle Errors
 func handleerror2(err error, w http.ResponseWriter) Message {
 	log.Error(err)
 	message := Message{Title: "Error", Body: err.Error(), Success: false}
-	json.NewEncoder(w).Encode(message)
+
 	// encode message as JSON
 	response, _ := json.Marshal(message)
 
 	// set content type to JSON and send response
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(response)
+
+	// Log the response JSON for debugging
+	// log.WithFields(log.Fields{
+	// 	"responseJSON": string(response),
+	// }).Debug("Error response sent to client")
+
 	return message
 }
 

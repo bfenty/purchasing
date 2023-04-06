@@ -709,7 +709,7 @@ func listsortrequests(user User, action string, r *http.Request) (message Messag
 
 // Sorting Insert
 func Sortinginsert(w http.ResponseWriter, r *http.Request) {
-	//Test DB Connection
+	// Test DB Connection
 	pingErr := db.Ping()
 	if pingErr != nil {
 		db, _ = opendb()
@@ -717,43 +717,42 @@ func Sortinginsert(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Parse the POST data
-	err := r.ParseForm()
+	// Read the request data as JSON
+	var data map[string]interface{}
+	err := json.NewDecoder(r.Body).Decode(&data)
 	if err != nil {
 		handleerror2(err, w) // send error message to AJAX request
 		return
 	}
 
-	//define variables
+	// Rename "sku_manufacturer" key to match the database column name
+	if val, ok := data["manufacturerpart"]; ok {
+		delete(data, "manufacturerpart")
+		data["sku_manufacturer"] = val
+	}
+
+	// Rename "sku_manufacturer" key to match the database column name
+	if val, ok := data["checkint"]; ok {
+		delete(data, "checkint")
+		data["checkin"] = val
+	}
+
+	// Remove the "difference" field, which is not in the database
+	delete(data, "difference")
+
+	// Define variables
 	var newquery string
 	var values []interface{}
 	var message Message
 
-	// Extract form data into a map
-	data := map[string]string{
-		"sku":              r.FormValue("sku"),
-		"description":      r.FormValue("description"),
-		"instructions":     r.FormValue("instructions"),
-		"weightin":         r.FormValue("weightin"),
-		"weightout":        r.FormValue("weightout"),
-		"pieces":           r.FormValue("pieces"),
-		"hours":            r.FormValue("hours"),
-		"checkout":         r.FormValue("checkout"),
-		"checkint":         r.FormValue("checkin"),
-		"sorter":           r.FormValue("sorter"),
-		"status":           r.FormValue("status"),
-		"sku_manufacturer": r.FormValue("manufacturerpart"),
-		"prty":             r.FormValue("prty"),
-		"requestid":        r.FormValue("requestid"),
-		"active":           r.FormValue("active"),
-	}
-
-	fmt.Println(data)
-
-	if data["requestid"] == "" { //if this is a new request
+	// Construct SQL query based on request data
+	if data["requestid"] == nil || data["requestid"] == "" { //if this is a new request
 		newquery = "REPLACE INTO sortrequest ("
 		for key, value := range data {
-			if value != "" {
+			if value == "<nil>" {
+				value = "" // fix nil values being inserted
+			}
+			if value != nil && value != "" {
 				newquery += "`" + key + "`,"
 				values = append(values, value)
 			}
@@ -768,8 +767,11 @@ func Sortinginsert(w http.ResponseWriter, r *http.Request) {
 	} else { //if updating an existing request
 		newquery = "UPDATE sortrequest SET "
 		for key, value := range data {
+			if value == nil {
+				value = "" // fix nil values being inserted
+			}
 			if value == "<nil>" {
-				value = "" //fix <nil> values being inserted
+				value = "" // fix nil values being inserted
 			}
 			if value != "" {
 				newquery += "`" + key + "`=?,"
@@ -777,12 +779,18 @@ func Sortinginsert(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 		newquery = newquery[:len(newquery)-1] //get rid of the last comma
-		newquery += " WHERE requestid=" + data["requestid"]
+		newquery += " WHERE requestid=?"
+		values = append(values, data["requestid"])
 		// create success message and send it to AJAX request
 		message = Message{Title: "Success", Body: "Successfully updated request", Success: true}
 	}
 
-	log.WithFields(log.Fields{"requestid": data["requestid"]}).Debug("newquery: ", newquery)
+	log.WithFields(log.Fields{
+		"requestid": data["requestid"],
+		"query":     newquery,
+		"values":    values,
+	}).Debug("Sortinginsert: received data")
+
 	stmt, err := db.Prepare(newquery)
 	if err != nil {
 		handleerror2(err, w) // send error message to AJAX request
@@ -796,8 +804,10 @@ func Sortinginsert(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//Logging
-	log.WithFields(log.Fields{"requestid": data["requestid"]}).Info("Inserted Product ", data["sku"])
+	// Logging
+	log.WithFields(log.Fields{
+		"requestid": data["requestid"],
+	}).Info("Sortinginsert: request processed")
 
 	// encode message as JSON
 	response, err := json.Marshal(message)

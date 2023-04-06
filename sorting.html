@@ -2,6 +2,13 @@
 <head>
   {{template "header"}}
   <style>
+
+    #message {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      z-index: 999;
+    }
     .table-responsive-stack tr {
       display: -webkit-box;
       display: -ms-flexbox;
@@ -160,6 +167,22 @@
     .then(data => {
       console.log('Server response:', data);
       // Handle the response from the server
+      let messageDiv = document.getElementById('message');
+      if (data.Success) {
+        messageDiv.style.display = 'block';
+        messageDiv.classList.remove('alert-danger');
+        messageDiv.classList.add('alert-success');
+        messageDiv.innerText = data.Body;
+      } else {
+        messageDiv.style.display = 'block';
+        messageDiv.classList.remove('alert-success');
+        messageDiv.classList.add('alert-danger');
+        messageDiv.innerText = data.Body;
+      }
+      // Remove the message after 5 seconds
+      setTimeout(() => {
+        messageDiv.style.display = 'none';
+      }, 5000);
     })
     .catch(error => {
       console.error('Error:', error);
@@ -167,7 +190,6 @@
     });
   });
 });
-
   </script>
   <script>
     $(document).ready(function() {
