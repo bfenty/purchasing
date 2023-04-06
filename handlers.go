@@ -2,6 +2,7 @@ package main
 
 import (
 	// "encoding/json"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -62,22 +63,25 @@ func Signin(w http.ResponseWriter, r *http.Request) {
 	// logic part of log in
 	creds.Username = r.FormValue("username")
 	creds.Password = r.FormValue("password")
-	permission, message := userauth(creds.Username, creds.Password)
+	user, message := userauth(creds.Username, creds.Password)
 	log.Debug(message.Body)
 
 	// If a password exists for the given user
 	// AND, if it is the same as the password we received, the we can move ahead
 	// if NOT, then we return an "Unauthorized" status
-	if permission.User == "notfound" {
+	if user.Role == "notfound" {
 		log.Debug(message.Body)
-		http.Redirect(w, r, "/login?messagetitle="+message.Title+"&messagebody="+message.Body, http.StatusSeeOther)
+		w.WriteHeader(http.StatusUnauthorized)
+		// fmt.Fprintf(w, "Invalid username or password")
+		fmt.Fprintf(w, message.Body)
 		return
 	}
 
 	//redirect new user to the signup page
-	if permission.User == "newuser" {
+	if user.Role == "newuser" {
 		log.Debug(message.Body)
-		http.Redirect(w, r, "/signup?messagetitle="+message.Title+"&messagebody="+message.Body, http.StatusSeeOther)
+		w.WriteHeader(http.StatusCreated)
+		fmt.Fprintf(w, "New user created")
 		return
 	}
 
@@ -102,53 +106,34 @@ func Signin(w http.ResponseWriter, r *http.Request) {
 	})
 	log.Debug(sessions)
 
-	//redirect based on role:
-	switch permission.User {
-	case "notfound":
-		log.Debug(message.Body)
-		http.Redirect(w, r, "/login?messagetitle="+message.Title+"&messagebody="+message.Body, http.StatusSeeOther)
-		return
-	case "newuser":
-		log.Debug(message.Body)
-		http.Redirect(w, r, "/signup?messagetitle="+message.Title+"&messagebody="+message.Body, http.StatusSeeOther)
-		return
+	// Return success response with appropriate redirect URL based on user's role
+	switch user.Role {
 	case "sorting":
 		log.Debug(message.Body)
-		http.Redirect(w, r, "/checkout", http.StatusSeeOther)
+		w.WriteHeader(http.StatusOK)
+		fmt.Fprintf(w, "/checkout")
 		return
 	case "receiving":
 		log.Debug(message.Body)
-		http.Redirect(w, r, "/products", http.StatusSeeOther)
+		w.WriteHeader(http.StatusOK)
+		fmt.Fprintf(w, "/products")
 		return
 	default:
-		http.Redirect(w, r, "/productsinsert", http.StatusSeeOther)
+		w.WriteHeader(http.StatusOK)
+		fmt.Fprintf(w, "/productsinsert")
 		return
 	}
-
-	// //redirect sorters to checkin page
-	// if permission == "sorting" {
-	// 	log.Debug(message.Body)
-	// 	http.Redirect(w, r, "/checkout", http.StatusSeeOther)
-	// 	return
-	// }
-	// //redirect receiving to products page
-	// if permission == "receiving" {
-	// 	log.Debug(message.Body)
-	// 	http.Redirect(w, r, "/products", http.StatusSeeOther)
-	// 	return
-	// }
-	// http.Redirect(w, r, "/productsinsert", http.StatusSeeOther)
 }
 
-func auth(w http.ResponseWriter, r *http.Request) (permission Permissions) {
+func auth(w http.ResponseWriter, r *http.Request) (user User) {
 	c, err := r.Cookie("session_token")
 	if err != nil {
 		if err == http.ErrNoCookie {
 			//Redirect Login
 			http.Redirect(w, r, "/login?messagetitle=User Unauthorized&messagebody=Please login to use this site", http.StatusSeeOther)
 			// If the cookie is not set, return an unauthorized status
-			permission.Perms = "Unauthorized"
-			return permission
+			user.Role = "Unauthorized"
+			return user
 		}
 	}
 	sessionToken := c.Value
@@ -160,8 +145,8 @@ func auth(w http.ResponseWriter, r *http.Request) (permission Permissions) {
 		// w.WriteHeader(http.StatusUnauthorized)
 		log.Debug("Unauthorized")
 		http.Redirect(w, r, "/login?messagetitle=User Unauthorized&messagebody=Please login to use this site", http.StatusSeeOther)
-		permission.Perms = "Unauthorized"
-		return permission
+		user.Role = "Unauthorized"
+		return user
 	}
 	if userSession.isExpired() {
 		delete(sessions, sessionToken)
@@ -169,8 +154,8 @@ func auth(w http.ResponseWriter, r *http.Request) (permission Permissions) {
 		log.Debug("Unauthorized")
 		http.Redirect(w, r, "/login?messagetitle=User Unauthorized&messagebody=Please login to use this site", http.StatusSeeOther)
 
-		permission.Perms = "Unauthorized"
-		return permission
+		user.Role = "Unauthorized"
+		return user
 	}
 	// Finally, return the welcome message to the user
 	log.Debug("Authorized")
@@ -196,33 +181,63 @@ func auth(w http.ResponseWriter, r *http.Request) (permission Permissions) {
 	return userdata(userSession.username)
 }
 
+// func Logout(w http.ResponseWriter, r *http.Request) {
+// 	c, err := r.Cookie("session_token")
+// 	if err != nil {
+// 		if err == http.ErrNoCookie {
+// 			// If the cookie is not set, return an unauthorized status
+// 			w.WriteHeader(http.StatusUnauthorized)
+// 			http.Redirect(w, r, "/login?messagetitle=User Unauthorized&messagebody=Please login to use this site", http.StatusSeeOther)
+// 			return
+// 		}
+// 		// For any other type of error, return a bad request status
+// 		w.WriteHeader(http.StatusBadRequest)
+// 		http.Redirect(w, r, "/login?messagetitle=User Unauthorized&messagebody=Please login to use this site", http.StatusSeeOther)
+// 		return
+// 	}
+// 	sessionToken := c.Value
+
+// 	// remove the users session from the session map
+// 	delete(sessions, sessionToken)
+
+// 	// We need to let the client know that the cookie is expired
+// 	// In the response, we set the session token to an empty
+// 	// value and set its expiry as the current time
+// 	http.SetCookie(w, &http.Cookie{
+// 		Name:    "session_token",
+// 		Value:   "",
+// 		Expires: time.Now(),
+// 	})
+// 	//Redirect Login
+// 	http.Redirect(w, r, "/login?messagetitle=Logout Successful&messagebody=You have successfully been logged out", http.StatusSeeOther)
+// }
+
 func Logout(w http.ResponseWriter, r *http.Request) {
-	c, err := r.Cookie("session_token")
+	// Get the session token from the user's cookies
+	sessionToken, err := r.Cookie("session_token")
 	if err != nil {
-		if err == http.ErrNoCookie {
-			// If the cookie is not set, return an unauthorized status
-			w.WriteHeader(http.StatusUnauthorized)
-			http.Redirect(w, r, "/login?messagetitle=User Unauthorized&messagebody=Please login to use this site", http.StatusSeeOther)
-			return
-		}
-		// For any other type of error, return a bad request status
-		w.WriteHeader(http.StatusBadRequest)
-		http.Redirect(w, r, "/login?messagetitle=User Unauthorized&messagebody=Please login to use this site", http.StatusSeeOther)
+		// If the user doesn't have a session token cookie, they're already logged out
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
 		return
 	}
-	sessionToken := c.Value
 
-	// remove the users session from the session map
-	delete(sessions, sessionToken)
+	// Remove the session token from the sessions map
+	delete(sessions, sessionToken.Value)
 
-	// We need to let the client know that the cookie is expired
-	// In the response, we set the session token to an empty
-	// value and set its expiry as the current time
+	// Set the session token cookie to expire immediately
 	http.SetCookie(w, &http.Cookie{
 		Name:    "session_token",
 		Value:   "",
-		Expires: time.Now(),
+		Expires: time.Unix(0, 0),
 	})
-	//Redirect Login
-	http.Redirect(w, r, "/login?messagetitle=Logout Successful&messagebody=You have successfully been logged out", http.StatusSeeOther)
+
+	// Set a cookie with the logout message
+	http.SetCookie(w, &http.Cookie{
+		Name:  "message",
+		Value: "You have been logged out",
+		Path:  "/login",
+	})
+
+	// Redirect the user to the login page
+	http.Redirect(w, r, "/login", http.StatusSeeOther)
 }

@@ -220,9 +220,9 @@ func ProductExistSQL(sku string) (exists string, message Message) {
 	return exists, message
 }
 
-func orderdeletesql(order int, permission Permissions) (message Message) {
+func orderdeletesql(order int, user User) (message Message) {
 	//Debug
-	log.WithFields(log.Fields{"username": permission.User}).Info("Deleting order ", order, "...")
+	log.WithFields(log.Fields{"username": user.Username}).Info("Deleting order ", order, "...")
 
 	//Test Connection
 	pingErr := db.Ping()
@@ -253,9 +253,9 @@ func orderdeletesql(order int, permission Permissions) (message Message) {
 	return message
 }
 
-func productdeletesql(sku string, permission Permissions) (message Message) {
+func productdeletesql(sku string, user User) (message Message) {
 	//Debug
-	log.WithFields(log.Fields{"username": permission.User}).Info("Deleting SKU ", sku, "...")
+	log.WithFields(log.Fields{"username": user.Username}).Info("Deleting SKU ", sku, "...")
 
 	//Test Connection
 	pingErr := db.Ping()
@@ -276,13 +276,13 @@ func productdeletesql(sku string, permission Permissions) (message Message) {
 	message.Title = "Success"
 	message.Body = "Successfully deleted sku " + sku
 	//Logging
-	log.WithFields(log.Fields{"username": permission.User}).Info("Deleted Product ", sku)
+	log.WithFields(log.Fields{"username": user.Username}).Info("Deleted Product ", sku)
 	return message
 }
 
-func orderskuadd(order int, sku string, permission Permissions) (message Message) {
+func orderskuadd(order int, sku string, user User) (message Message) {
 	//Debug
-	log.WithFields(log.Fields{"username": permission.User}).Info("Inserting SKU/Order: ", sku, "/", order)
+	log.WithFields(log.Fields{"username": user.Username}).Info("Inserting SKU/Order: ", sku, "/", order)
 
 	//Test Connection
 	pingErr := db.Ping()
@@ -304,9 +304,9 @@ func orderskuadd(order int, sku string, permission Permissions) (message Message
 	return message
 }
 
-func orderlookup(ordernum int, permission Permissions) (message Message, orders []Order) {
+func orderlookup(ordernum int, user User) (message Message, orders []Order) {
 	//Debug
-	log.WithFields(log.Fields{"username": permission.User}).Debug("Getting Order: ", strconv.Itoa(ordernum))
+	log.WithFields(log.Fields{"username": user.Username}).Debug("Getting Order: ", strconv.Itoa(ordernum))
 
 	//Test Connection
 	pingErr := db.Ping()
@@ -322,7 +322,7 @@ func orderlookup(ordernum int, permission Permissions) (message Message, orders 
 		return handleerror(pingErr), orders
 	}
 	defer orderrows.Close()
-	log.WithFields(log.Fields{"username": permission.User}).Debug("Orderrows: ", orderrows)
+	log.WithFields(log.Fields{"username": user.Username}).Debug("Orderrows: ", orderrows)
 	//Pull Data
 	for orderrows.Next() {
 		var r Order
@@ -336,7 +336,7 @@ func orderlookup(ordernum int, permission Permissions) (message Message, orders 
 		if err != nil {
 			return handleerror(pingErr), orders
 		}
-		log.WithFields(log.Fields{"username": permission.User}).Debug("SKUrows: ", skurows)
+		log.WithFields(log.Fields{"username": user.Username}).Debug("SKUrows: ", skurows)
 		var skus []Product
 		defer skurows.Close()
 		for skurows.Next() {
@@ -348,7 +348,7 @@ func orderlookup(ordernum int, permission Permissions) (message Message, orders 
 			skus = append(skus, r)
 		}
 		r.Products = skus
-		log.WithFields(log.Fields{"username": permission.User}).Debug("SKUS: ", skus)
+		log.WithFields(log.Fields{"username": user.Username}).Debug("SKUS: ", skus)
 		//Append to the orders
 		orders = append(orders, r)
 	}
@@ -356,7 +356,7 @@ func orderlookup(ordernum int, permission Permissions) (message Message, orders 
 	return message, orders
 }
 
-func orderupdatesql(order int, tracking string, comment string, status string, permission Permissions) (message Message) {
+func orderupdatesql(order int, tracking string, comment string, status string, user User) (message Message) {
 	//Test Connection
 	pingErr := db.Ping()
 	if pingErr != nil {
@@ -365,7 +365,7 @@ func orderupdatesql(order int, tracking string, comment string, status string, p
 	}
 
 	//Build the Query
-	log.WithFields(log.Fields{"username": permission.User}).Debug("Building Query...")
+	log.WithFields(log.Fields{"username": user.Username}).Debug("Building Query...")
 	newquery := "UPDATE `orders` SET `trackingnum`=?,`comments`=?,`status`=? WHERE ordernum = ?"
 
 	//Run Query
@@ -377,18 +377,19 @@ func orderupdatesql(order int, tracking string, comment string, status string, p
 	message.Body = "Successfully updated order " + strconv.Itoa(order)
 	message.Success = true
 	//Logging
-	log.WithFields(log.Fields{"username": permission.User}).Info("Updated Order ", strconv.Itoa(order))
+	log.WithFields(log.Fields{"username": user.Username}).Info("Updated Order ", strconv.Itoa(order))
 	return message
 }
 
-func listusers(role string, permission Permissions) (message Message, users []User) {
+func listusers(role string, user User) (message Message, users []User) {
 	//Debug
-	log.WithFields(log.Fields{"username": permission.User}).Debug("Getting users with role ", role, "...")
+	log.WithFields(log.Fields{"username": user.Username}).Debug("Getting users with role ", role, "...")
 
 	//Test Connection
 	pingErr := db.Ping()
 	if pingErr != nil {
 		db, message = opendb()
+		log.Debug(pingErr)
 		return handleerror(pingErr), users
 	}
 
@@ -406,6 +407,7 @@ func listusers(role string, permission Permissions) (message Message, users []Us
 	rows, err := db.Query(newquery)
 	defer rows.Close()
 	if err != nil {
+		log.Debug(err)
 		return handleerror(err), users
 	}
 
@@ -414,11 +416,78 @@ func listusers(role string, permission Permissions) (message Message, users []Us
 		var r User
 		err := rows.Scan(&r.Username, &r.Usercode, &r.Role, &r.Sorting, &r.Manager, &r.Management)
 		if err != nil {
+			log.Debug(err)
 			return handleerror(err), users
 		}
 		users = append(users, r)
 	}
 	return message, users
+}
+
+func UpdateUser(w http.ResponseWriter, r *http.Request) {
+
+	//Test Connection
+	pingErr := db.Ping()
+	if pingErr != nil {
+		db, _ = opendb()
+		// return handleerror(pingErr)
+	}
+
+	// Get the form values from the request
+	username := r.FormValue("username")
+	usercode := r.FormValue("usercode")
+	role := r.FormValue("role")
+	manager := r.FormValue("manager")
+	log.Debug("username:", username, " usercode:", usercode, " role:", role, " manager:", manager)
+	var sorting int
+	if r.FormValue("sorting") == "true" {
+		sorting = 1
+	} else {
+		sorting = 0
+	}
+	// sorting, _ := strconv.ParseBool(r.FormValue("sorting"))
+	println(username, usercode, role, sorting)
+
+	// If usercode is empty, find the current max value and increment it
+	if usercode == "" {
+		var maxUsercode int
+		err := db.QueryRow("SELECT MAX(usercode) FROM orders.users").Scan(&maxUsercode)
+		if err != nil {
+			// Handle error
+			handleerror(err)
+		}
+		usercode = strconv.Itoa(maxUsercode + 1)
+	}
+
+	// Prepare the SQL statement for inserting the data
+	//Logging
+	log.Info("Creating Query")
+	newquery := "REPLACE INTO orders.users (username, usercode, permissions, sorting,manager) VALUES (?, ?, ?, ?, ?)"
+
+	// Execute the SQL statement with the form values
+	log.Info("Executing Query")
+	rows, err := db.Query(newquery, username, usercode, role, sorting, manager)
+	defer rows.Close()
+
+	if err != nil {
+		// Handle error
+		println(err)
+		http.Error(w, "Failed to update user information.", http.StatusInternalServerError)
+		return
+	}
+
+	// Redirect the user to the users page
+	// http.Redirect(w, r, "/users", http.StatusSeeOther)
+
+	// Update user information in database
+	// _, err = db.Exec("UPDATE orders.users SET username=?, permissions=?, manager=?, sorting=? WHERE usercode=?", username, role, manager, sorting, usercode)
+	// if err != nil {
+	// 	http.Error(w, "Failed to update user information.", http.StatusInternalServerError)
+	// 	return
+	// }
+
+	// Return success message to client
+	w.Write([]byte("User information updated successfully."))
 }
 
 func userUpdateHandler(w http.ResponseWriter, r *http.Request) {
@@ -481,21 +550,29 @@ func userDeleteHandler(w http.ResponseWriter, r *http.Request) {
 	// Prepare the SQL statement for deleting the user
 	stmt, err := db.Prepare("UPDATE orders.users SET active = 0 WHERE usercode = ?")
 	if err != nil {
+		// Handle error
+		println(err)
+		http.Error(w, "Failed to update user information.", http.StatusInternalServerError)
+		return
 	}
 	defer stmt.Close()
 
 	// Execute the SQL statement with the usercode value
 	_, err = stmt.Exec(usercode)
 	if err != nil {
+		// Handle error
+		println(err)
+		http.Error(w, "Failed to update user information.", http.StatusInternalServerError)
+		return
 	}
 
 	// Redirect the user to the users page
-	http.Redirect(w, r, "/users", http.StatusSeeOther)
+	w.Write([]byte("User information updated successfully."))
 }
 
-func listorders(permission Permissions) (message Message, orders []Order) {
+func listorders(user User) (message Message, orders []Order) {
 	//Debug
-	log.WithFields(log.Fields{"username": permission.User}).Debug("Getting Orders...")
+	log.WithFields(log.Fields{"username": user.Username}).Debug("Getting Orders...")
 
 	//Test Connection
 	pingErr := db.Ping()
@@ -526,9 +603,9 @@ func listorders(permission Permissions) (message Message, orders []Order) {
 }
 
 // List of all sorting requests
-func listsortrequests(permission Permissions, action string, r *http.Request) (message Message, sortrequests []SortRequest) {
+func listsortrequests(user User, action string, r *http.Request) (message Message, sortrequests []SortRequest) {
 	//Debug
-	log.WithFields(log.Fields{"username": permission.User}).Debug("Getting Sort Requests...")
+	log.WithFields(log.Fields{"username": user.Username}).Debug("Getting Sort Requests...")
 
 	//Test Connection
 	pingErr := db.Ping()
@@ -539,19 +616,19 @@ func listsortrequests(permission Permissions, action string, r *http.Request) (m
 
 	//Gather Search Parameters
 	queryParams := map[string]string{
-		"sku":              r.URL.Query().Get("sku"),
-		"description":      r.URL.Query().Get("description"),
-		"sku_manufacturer": r.URL.Query().Get("manufacturerpart"),
-		"instructions":     r.URL.Query().Get("instructions"),
-		"weightout":        r.URL.Query().Get("weightout"),
-		"weightin":         r.URL.Query().Get("weightin"),
-		"pieces":           r.URL.Query().Get("pieces"),
-		"hours":            r.URL.Query().Get("hours"),
-		"checkout":         r.URL.Query().Get("checkout"),
-		"checkint":         r.URL.Query().Get("checkin"),
-		"sorter":           r.URL.Query().Get("sorter"),
-		"status":           r.URL.Query().Get("status"),
-		"priority":         r.URL.Query().Get("priority"),
+		"sku":              r.URL.Query().Get("search-sku"),
+		"description":      r.URL.Query().Get("search-description"),
+		"sku_manufacturer": r.URL.Query().Get("search-manufacturerpart"),
+		"instructions":     r.URL.Query().Get("search-instructions"),
+		"weightout":        r.URL.Query().Get("search-weightout"),
+		"weightin":         r.URL.Query().Get("search-weightin"),
+		"pieces":           r.URL.Query().Get("search-pieces"),
+		"hours":            r.URL.Query().Get("search-hours"),
+		"checkout":         r.URL.Query().Get("search-checkout"),
+		"checkint":         r.URL.Query().Get("search-checkin"),
+		"sorter":           r.URL.Query().Get("search-sorter"),
+		"status":           r.URL.Query().Get("search-status"),
+		"prty":             r.URL.Query().Get("search-priority"),
 	}
 
 	var i []interface{}
@@ -560,40 +637,41 @@ func listsortrequests(permission Permissions, action string, r *http.Request) (m
 	//Build the Query
 	if action == "all" {
 		//retrieves all records
-		newquery = "SELECT requestid, sku,description,instructions,weightin,weightout,pieces,hours,checkout,checkint,COALESCE(sorter,''),status,sku_manufacturer,prty from sortrequest WHERE 1 "
+		newquery = "SELECT requestid, sku,description,instructions,weightin,weightout,pieces,hours,checkout,checkint,COALESCE(sorter,''),status,sku_manufacturer,prty from sortrequest WHERE active=1 "
 		for param, value := range queryParams {
 			if value != "" {
+				value = value + "%"
 				i = append(i, value)
-				newquery += fmt.Sprintf(" AND %s = ?", param)
+				newquery += fmt.Sprintf(" AND %s LIKE ?", param)
 			}
 		}
 		newquery += " order by 1 desc"
 	} else if action == "checkout" {
 		//retrieves only records that have not been checked out yet
-		newquery = "SELECT requestid, sku,description,instructions,weightin,weightout,pieces,hours,checkout,checkint,COALESCE(sorter,''),status,sku_manufacturer,prty from sortrequest WHERE status = 'new'"
+		newquery = "SELECT requestid, sku,description,instructions,weightin,weightout,pieces,hours,checkout,checkint,COALESCE(sorter,''),status,sku_manufacturer,prty from sortrequest WHERE active=1 AND status = 'new'"
 		// if permission.Perms == "sorting" {
-		// 	newquery += " AND sorter = '" + permission.User + "'"
+		// 	newquery += " AND sorter = '" + user.Username + "'"
 		// }
 		newquery += " order by prty desc, 1"
 	} else if action == "checkin" {
 		//retrieves only records that have not been checked in yet
-		newquery = "SELECT requestid, sku,description,instructions,weightin,weightout,pieces,hours,checkout,checkint,COALESCE(sorter,''),status,sku_manufacturer,prty from sortrequest WHERE status = 'checkout'"
-		if permission.Perms == "sorting" {
-			newquery += " AND sorter = '" + permission.User + "'"
+		newquery = "SELECT requestid, sku,description,instructions,weightin,weightout,pieces,hours,checkout,checkint,COALESCE(sorter,''),status,sku_manufacturer,prty from sortrequest WHERE active=1 AND status = 'checkout'"
+		if user.Role == "sorting" {
+			newquery += " AND sorter = '" + user.Username + "'"
 		}
 		newquery += " order by 1"
 	} else if action == "receiving" {
 		//retrieves only records that have been checked back in
-		newquery = "SELECT requestid, sku,description,instructions,weightin,weightout,pieces,hours,checkout,checkint,COALESCE(sorter,''),status,sku_manufacturer,prty from sortrequest WHERE status = 'checkin' order by 1 desc"
+		newquery = "SELECT requestid, sku,description,instructions,weightin,weightout,pieces,hours,checkout,checkint,COALESCE(sorter,''),status,sku_manufacturer,prty from sortrequest WHERE active=1 AND status = 'checkin' order by 1 desc"
 	}
 
 	newquery += " limit 100"
 
 	//Run Query
-	log.WithFields(log.Fields{"username": permission.User}).Debug(i...) //debug variables map
-	log.WithFields(log.Fields{"username": permission.User}).Debug("Running Product List")
-	log.WithFields(log.Fields{"username": permission.User}).Debug(newquery)
-	log.WithFields(log.Fields{"username": permission.User}).Debug(permission.Perms)
+	log.WithFields(log.Fields{"username": user.Username}).Debug(i...) //debug variables map
+	log.WithFields(log.Fields{"username": user.Username}).Debug("Running Product List")
+	log.WithFields(log.Fields{"username": user.Username}).Debug(newquery)
+	log.WithFields(log.Fields{"username": user.Username}).Debug(user.Role)
 	rows, err := db.Query(newquery, i...)
 	defer rows.Close()
 	if err != nil {
@@ -617,136 +695,89 @@ func listsortrequests(permission Permissions, action string, r *http.Request) (m
 		} else {
 			// Handle the case where r.Pieces is nil
 			c = 0.0
-			fmt.Println("r.Pieces is nil")
+			// fmt.Println("r.Pieces is nil")
 		}
 		r.Difference = a - b - (c * 0.4555)
 		r.Difference = math.Round(r.Difference*100) / 100 // Round to 2 decimal places
 		if r.Difference < (-0.1*a) && a != 0 {
 			r.Warn = true
 		}
-		log.Info(c)
+		r.Difference = -r.Difference
+		// log.Info(c)
 		sortrequests = append(sortrequests, r)
 	}
 	return message, sortrequests
 }
 
 // Sorting Insert
-func Sortinginsert(r *http.Request, permission Permissions) (message Message) {
-	//Test DB Connection
+func Sortinginsert(w http.ResponseWriter, r *http.Request) {
+	// Test DB Connection
 	pingErr := db.Ping()
 	if pingErr != nil {
-		db, message = opendb()
-		return handleerror(pingErr)
+		db, _ = opendb()
+		handleerror2(pingErr, w) // send error message to AJAX request
+		return
 	}
 
-	// //Define Variables
-	// var i []interface{}
+	// Read the request data as JSON
+	log.Debug("Decoding JSON")
+	var data map[string]interface{}
+	err := json.NewDecoder(r.Body).Decode(&data)
+	if err != nil {
+		handleerror2(err, w) // send error message to AJAX request
+		return
+	}
 
-	// //Retrieve variables from POST request
-	// sku := r.URL.Query().Get("sku")
-	// id := r.URL.Query().Get("requestid")
-	// descript := r.URL.Query().Get("description")
-	// instructions := r.URL.Query().Get("instructions")
-	// weightin, _ := strconv.Atoi(r.URL.Query().Get("weightin"))
-	// weightout, _ := strconv.Atoi(r.URL.Query().Get("weightout"))
-	// pieces, _ := strconv.Atoi(r.URL.Query().Get("pieces"))
-	// hours := r.URL.Query().Get("hours")
-	// checkout := r.URL.Query().Get("checkout")
-	// checkin := r.URL.Query().Get("checkin")
-	// sorter := r.URL.Query().Get("sorter")
-	// status := r.URL.Query().Get("status")
-	// manufacturerpart := r.URL.Query().Get("manufacturerpart")
-	// prty := r.URL.Query().Get("priority")
-	// if hours == "" {
-	// 	hours = "0"
-	// }
+	log.Debug("fixing values")
+	// Rename "sku_manufacturer" key to match the database column name
+	if val, ok := data["manufacturerpart"]; ok {
+		delete(data, "manufacturerpart")
+		data["sku_manufacturer"] = val
+	}
 
-	// //Create the fields to insert
-	// if sku != "" {
-	// 	i = append(i, sku)
-	// }
-	// i = append(i, descript)
-	// i = append(i, instructions)
-	// if id != "" {
-	// 	i = append(i, id)
-	// } //ensure that the id isn't null before inserting
-	// i = append(i, weightin)
-	// i = append(i, weightout)
-	// i = append(i, pieces)
-	// i = append(i, hours)
-	// i = append(i, checkout)
-	// i = append(i, checkin)
-	// i = append(i, sorter)
-	// i = append(i, status)
-	// i = append(i, manufacturerpart)
-	// i = append(i, prty)
-	// log.WithFields(log.Fields{"username": permission.User}).Debug("Inserting Sorting Request: ", i)
-	// log.WithFields(log.Fields{"username": permission.User}).Debug(i...) //debug variables map
-	// log.WithFields(log.Fields{"username": permission.User}).Debug("Running Product List")
+	// Rename "sku_manufacturer" key to match the database column name
+	if val, ok := data["checkin"]; ok {
+		delete(data, "checkin")
+		data["checkint"] = val
+	}
 
-	//Build the Query
-	// if id != "" {
-	// 	//Run the query if ID isn't null
-	// 	newquery = "REPLACE INTO sortrequest (`sku`, `description`, `instructions`, `requestid`,`weightin`, `weightout`, `pieces`, `hours`, `checkout`, `checkint`, `sorter`,status,sku_manufacturer,prty) VALUES (REPLACE(?,' ',''),?,?,?,?,?,?,?,?,?,?,?,?,?)"
-	// 	log.WithFields(log.Fields{"username": permission.User}).Debug("Query: ", newquery)
-	// 	rows, err := db.Query(newquery, i...)
-	// 	if err != nil {
-	// 		return handleerror(err)
-	// 	}
-	// 	defer rows.Close()
-	// } else {
-	// 	//Run the query to insert a new row
-	// 	newquery = "INSERT INTO sortrequest (`sku`, `description`, `instructions`, `weightin`, `weightout`, `pieces`, `hours`, `checkout`, `checkint`, `sorter`,status,sku_manufacturer,prty) VALUES (REPLACE(?,' ',''),?,?,?,?,?,?,?,?,?,?,?,?)"
-	// 	log.WithFields(log.Fields{"username": permission.User}).Debug("Query: ", newquery)
-	// 	rows, err := db.Query(newquery, i...)
-	// 	if err != nil {
-	// 		return handleerror(err)
-	// 	}
-	// 	defer rows.Close()
-	// }
+	// Remove the "difference" field, which is not in the database
+	delete(data, "difference")
+	log.Debug(data)
 
-	//define variables
+	// Define variables
 	var newquery string
 	var values []interface{}
+	var message Message
 
-	data := map[string]string{
-		"sku":              r.URL.Query().Get("sku"),
-		"description":      r.URL.Query().Get("description"),
-		"instructions":     r.URL.Query().Get("instructions"),
-		"weightin":         r.URL.Query().Get("weightin"),
-		"weightout":        r.URL.Query().Get("weightout"),
-		"pieces":           r.URL.Query().Get("pieces"),
-		"hours":            r.URL.Query().Get("hours"),
-		"checkout":         r.URL.Query().Get("checkout"),
-		"checkint":         r.URL.Query().Get("checkin"),
-		"sorter":           r.URL.Query().Get("sorter"),
-		"status":           r.URL.Query().Get("status"),
-		"sku_manufacturer": r.URL.Query().Get("manufacturerpart"),
-		"prty":             r.URL.Query().Get("priority"),
-		"requestid":        r.URL.Query().Get("requestid"),
-	}
-
-	if data["requestid"] == "" { //if this is a new request
+	// Construct SQL query based on request data
+	log.Debug("Constructing SQL")
+	if data["requestid"] == nil || data["requestid"] == "" || data["requestid"] == "<nil>" { //if this is a new request
 		newquery = "REPLACE INTO sortrequest ("
 		for key, value := range data {
-			if value != "" {
+			if value == "<nil>" {
+				value = "" // fix nil values being inserted
+			}
+			if value != nil && value != "" {
 				newquery += "`" + key + "`,"
 				values = append(values, value)
 			}
 		}
 		newquery = newquery[:len(newquery)-1] + ") VALUES ("
-		for key, value := range data {
-			if value != "" {
-				log.WithFields(log.Fields{"username": permission.User}).Debug("key:", key, ", value:", value)
-				newquery += "?,"
-			}
+		for range values {
+			newquery += "?,"
 		}
 		newquery = newquery[:len(newquery)-1] + ")"
+		// create success message and send it to AJAX request
+		message = Message{Title: "Success", Body: "Successfully inserted request", Success: true}
 	} else { //if updating an existing request
 		newquery = "UPDATE sortrequest SET "
 		for key, value := range data {
+			if value == nil {
+				value = "" // fix nil values being inserted
+			}
 			if value == "<nil>" {
-				value = "" //fix <nil> values being inserted
+				value = "" // fix nil values being inserted
 			}
 			if value != "" {
 				newquery += "`" + key + "`=?,"
@@ -754,25 +785,125 @@ func Sortinginsert(r *http.Request, permission Permissions) (message Message) {
 			}
 		}
 		newquery = newquery[:len(newquery)-1] //get rid of the last comma
-		newquery += " WHERE requestid=" + data["requestid"]
+		newquery += " WHERE requestid=?"
+		values = append(values, data["requestid"])
+		// create success message and send it to AJAX request
+		message = Message{Title: "Success", Body: "Successfully updated request", Success: true}
 	}
 
-	log.WithFields(log.Fields{"username": permission.User}).Debug("newquery: ", newquery)
-	rows, err := db.Query(newquery, values...)
+	log.WithFields(log.Fields{
+		"requestid": data["requestid"],
+		"query":     newquery,
+		"values":    values,
+	}).Debug("Sortinginsert: received data")
+
+	stmt, err := db.Prepare(newquery)
 	if err != nil {
-		return handleerror(err)
+		handleerror2(err, w) // send error message to AJAX request
+		return
 	}
-	defer rows.Close()
+	defer stmt.Close()
 
-	//Logging
-	log.WithFields(log.Fields{"username": permission.User}).Info("Inserted Product ", data["sku"])
-	message.Title = "Success"
-	message.Body = "Successfully inserted row"
-	message.Success = true
-	return message
+	_, err = stmt.Exec(values...)
+	if err != nil {
+		handleerror2(err, w) // send error message to AJAX request
+		return
+	}
+
+	// Logging
+	log.WithFields(log.Fields{
+		"requestid": data["requestid"],
+	}).Info("Sortinginsert: request processed")
+
+	// encode message as JSON
+	response, err := json.Marshal(message)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// set content type to JSON and send response
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(response)
 }
 
-func nextorder(manufacturer string, permission Permissions) (message Message, order Order) {
+// // Sorting Insert
+// func Sortinginsert(r *http.Request, user User) (message Message) {
+// 	//Test DB Connection
+// 	pingErr := db.Ping()
+// 	if pingErr != nil {
+// 		db, message = opendb()
+// 		return handleerror(pingErr)
+// 	}
+
+// 	//define variables
+// 	var newquery string
+// 	var values []interface{}
+
+// 	data := map[string]string{
+// 		"sku":              r.URL.Query().Get("sku"),
+// 		"description":      r.URL.Query().Get("description"),
+// 		"instructions":     r.URL.Query().Get("instructions"),
+// 		"weightin":         r.URL.Query().Get("weightin"),
+// 		"weightout":        r.URL.Query().Get("weightout"),
+// 		"pieces":           r.URL.Query().Get("pieces"),
+// 		"hours":            r.URL.Query().Get("hours"),
+// 		"checkout":         r.URL.Query().Get("checkout"),
+// 		"checkint":         r.URL.Query().Get("checkin"),
+// 		"sorter":           r.URL.Query().Get("sorter"),
+// 		"status":           r.URL.Query().Get("status"),
+// 		"sku_manufacturer": r.URL.Query().Get("manufacturerpart"),
+// 		"prty":             r.URL.Query().Get("priority"),
+// 		"requestid":        r.URL.Query().Get("requestid"),
+// 	}
+
+// 	if data["requestid"] == "" { //if this is a new request
+// 		newquery = "REPLACE INTO sortrequest ("
+// 		for key, value := range data {
+// 			if value != "" {
+// 				newquery += "`" + key + "`,"
+// 				values = append(values, value)
+// 			}
+// 		}
+// 		newquery = newquery[:len(newquery)-1] + ") VALUES ("
+// 		for key, value := range data {
+// 			if value != "" {
+// 				log.WithFields(log.Fields{"username": user.Username}).Debug("key:", key, ", value:", value)
+// 				newquery += "?,"
+// 			}
+// 		}
+// 		newquery = newquery[:len(newquery)-1] + ")"
+// 	} else { //if updating an existing request
+// 		newquery = "UPDATE sortrequest SET "
+// 		for key, value := range data {
+// 			if value == "<nil>" {
+// 				value = "" //fix <nil> values being inserted
+// 			}
+// 			if value != "" {
+// 				newquery += "`" + key + "`=?,"
+// 				values = append(values, value)
+// 			}
+// 		}
+// 		newquery = newquery[:len(newquery)-1] //get rid of the last comma
+// 		newquery += " WHERE requestid=" + data["requestid"]
+// 	}
+
+// 	log.WithFields(log.Fields{"username": user.Username}).Debug("newquery: ", newquery)
+// 	rows, err := db.Query(newquery, values...)
+// 	if err != nil {
+// 		return handleerror(err)
+// 	}
+// 	defer rows.Close()
+
+// 	//Logging
+// 	log.WithFields(log.Fields{"username": user.Username}).Info("Inserted Product ", data["sku"])
+// 	message.Title = "Success"
+// 	message.Body = "Successfully inserted row"
+// 	message.Success = true
+// 	return message
+// }
+
+func nextorder(manufacturer string, user User) (message Message, order Order) {
 	// Get a database handle.
 	// var err error
 	var ordernum int
@@ -795,7 +926,7 @@ func nextorder(manufacturer string, permission Permissions) (message Message, or
 		rows.Scan(&ordernum)
 	}
 	ordernum += 1
-	log.WithFields(log.Fields{"username": permission.User}).Debug(manufacturer, "-", ordernum)
+	log.WithFields(log.Fields{"username": user.Username}).Debug(manufacturer, "-", ordernum)
 
 	//insert new order into database
 	newquery = "INSERT INTO orders (`ordernum`,`manufacturer`) VALUES (?,?)"
@@ -808,7 +939,7 @@ func nextorder(manufacturer string, permission Permissions) (message Message, or
 }
 
 // Reorders List
-func Reorderlist(permission Permissions) (message Message, orders []Order) {
+func Reorderlist(user User) (message Message, orders []Order) {
 	// Get a database handle.
 	var err error
 
@@ -860,7 +991,7 @@ func Reorderlist(permission Permissions) (message Message, orders []Order) {
 }
 
 // Product List
-func ProductList(limit int, r *http.Request, permission Permissions) (message Message, products []Product) {
+func ProductList(limit int, r *http.Request, user User) (message Message, products []Product) {
 	// Get a database handle.
 	var err error
 
@@ -904,9 +1035,9 @@ func ProductList(limit int, r *http.Request, permission Permissions) (message Me
 
 	newquery += " order by 11 desc, 1 limit ?"
 	i = append(i, limit)
-	log.WithFields(log.Fields{"username": permission.User}).Debug(i...) //debug variables map
-	log.WithFields(log.Fields{"username": permission.User}).Debug("Running Product List")
-	log.WithFields(log.Fields{"username": permission.User}).Debug(newquery)
+	log.WithFields(log.Fields{"username": user.Username}).Debug(i...) //debug variables map
+	log.WithFields(log.Fields{"username": user.Username}).Debug("Running Product List")
+	log.WithFields(log.Fields{"username": user.Username}).Debug(newquery)
 	rows, err := db.Query(newquery, i...)
 	if err != nil {
 		return handleerror(err), products
@@ -926,9 +1057,9 @@ func ProductList(limit int, r *http.Request, permission Permissions) (message Me
 	return message, products
 }
 
-func sortrequestdeletesql(requestid int, permission Permissions) (message Message) {
+func sortrequestdeletesql(requestid int, user User) (message Message) {
 	//Debug
-	log.WithFields(log.Fields{"username": permission.User}).Info("Deleting order ", order, "...")
+	log.WithFields(log.Fields{"username": user.Username}).Info("Deleting order ", order, "...")
 
 	//Test Connection
 	pingErr := db.Ping()
@@ -952,7 +1083,7 @@ func sortrequestdeletesql(requestid int, permission Permissions) (message Messag
 }
 
 // Product Insert
-func ProductInsert(r *http.Request, permission Permissions) (message Message) {
+func ProductInsert(r *http.Request, user User) (message Message) {
 	// Get a database handle.
 	var err error
 
@@ -1005,15 +1136,15 @@ func ProductInsert(r *http.Request, permission Permissions) (message Message) {
 		i = append(i, 0)
 	}
 	i = append(i, season)
-	log.WithFields(log.Fields{"username": permission.User}).Debug("Reorder: ", reorder)
+	log.WithFields(log.Fields{"username": user.Username}).Debug("Reorder: ", reorder)
 
 	//Build the Query
 	newquery = "REPLACE INTO skus (`sku_internal`, `manufacturer_code`, `sku_manufacturer`, `processing_request`, `sorting_request`, `unit`, `unit_price`, `Currency`, `order_qty`,`product_option`,`reorder`,season) VALUES (REPLACE(?,' ',''),?,?,?,?,?,?,?,?,?,?,?)"
 
 	//Run Query
-	log.WithFields(log.Fields{"username": permission.User}).Debug(i...) //debug variables map
-	log.WithFields(log.Fields{"username": permission.User}).Debug("Running Product List")
-	log.WithFields(log.Fields{"username": permission.User}).Debug(newquery)
+	log.WithFields(log.Fields{"username": user.Username}).Debug(i...) //debug variables map
+	log.WithFields(log.Fields{"username": user.Username}).Debug("Running Product List")
+	log.WithFields(log.Fields{"username": user.Username}).Debug(newquery)
 	rows, err := db.Query(newquery, i...)
 	if err != nil {
 		return handleerror(err)
@@ -1033,7 +1164,7 @@ func ProductInsert(r *http.Request, permission Permissions) (message Message) {
 	qty(sku)
 
 	//Logging
-	log.WithFields(log.Fields{"username": permission.User}).Info("Inserted Product ", sku)
+	log.WithFields(log.Fields{"username": user.Username}).Info("Inserted Product ", sku)
 	message.Title = "Success"
 	message.Body = "Successfully inserted row"
 	message.Success = true
@@ -1069,58 +1200,59 @@ func Updatepass(user string, pass string, secret string) (message Message, succe
 }
 
 // Authenticate user from DB
-func userauth(user string, pass string) (permission Permissions, message Message) {
+func userauth(username string, pass string) (user User, message Message) {
 	// Get a database handle.
 	var err error
 	var dbpass string
 	//Test Connection
 	pingErr := db.Ping()
-	if pingErr != nil {
-		permission.User = "notfound"
-		return permission, handleerror(pingErr)
-	}
+	// if pingErr != nil {
+	// 	user.Role = "notfound"
+	// 	return user, handleerror(pingErr)
+	// }
 
-	var r Permissions
+	var r User
 
 	//set Variables
 	//Query
 	var newquery string = "select password, permissions, admin, management from orders.users where username = ?"
-	// log.WithFields(log.Fields{"username": permission.User}).Debug(newquery)
-	rows, err := db.Query(newquery, user)
+	// log.WithFields(log.Fields{"username": user.Role}).Debug(newquery)
+	rows, err := db.Query(newquery, username)
 	if err != nil {
-		permission.User = "notfound"
-		return permission, handleerror(pingErr)
+		user.Role = "notfound"
+		return user, handleerror(pingErr)
 	}
 	defer rows.Close()
 	//Pull Data
 	for rows.Next() {
-		err := rows.Scan(&dbpass, &r.Perms, &r.Admin, &r.Mgmt)
+		err := rows.Scan(&dbpass, &r.Role, &r.Permissions.Admin, &r.Permissions.Mgmt)
+		log.Debug("Role:", r.Role)
 		if err != nil {
-			permission.User = "notfound"
-			return permission, handleerror(pingErr)
+			user.Role = "notfound"
+			return user, handleerror(pingErr)
 		}
 	}
 	err = rows.Err()
 	if err != nil {
-		permission.User = "notfound"
-		return permission, handleerror(pingErr)
+		user.Role = "notfound"
+		return user, handleerror(pingErr)
 	}
 
 	//If Permissions do not exist for user
-	if r.Perms == "" {
+	if r.Role == "" {
 		message.Title = "Permission not found"
 		message.Body = "Permissions not set for user. Please contact your system administrator."
-		permission.User = "notfound"
-		return permission, message
+		user.Role = "notfound"
+		return user, message
 	}
 
-	log.Debug("Checking Permissions: ", r.Perms)
+	log.Debug("Checking Permissions: ", r.Role)
 	//If user has not set a password
 	if dbpass == "" {
 		message.Title = "Set Password"
 		message.Body = "Password not set, please create password"
-		permission.User = "newuser"
-		return permission, message
+		user.Role = "newuser"
+		return user, message
 	}
 
 	if comparePasswords(dbpass, []byte(pass)) {
@@ -1132,13 +1264,13 @@ func userauth(user string, pass string) (permission Permissions, message Message
 	}
 	message.Title = "Login Failed"
 	message.Body = "Login Failed"
-	permission.User = "notfound"
-	return permission, message
+	user.Role = "notfound"
+	return user, message
 }
 
 // Authenticate user from DB
-func userdata(user string) (permission Permissions) {
-	permission.User = user
+func userdata(username string) (user User) {
+	// user.Role = user
 	// Get a database handle.
 	var err error
 	//Test Connection
@@ -1148,16 +1280,16 @@ func userdata(user string) (permission Permissions) {
 	}
 	//set Variables
 	//Query
-	var newquery string = "select permissions from orders.users where username = ?"
-	// log.WithFields(log.Fields{"username": permission.User}).Debug(newquery)
-	rows, err := db.Query(newquery, user)
+	var newquery string = "select username,usercode,permissions,admin,management,manager,sorting from orders.users where username = ?"
+	// log.WithFields(log.Fields{"username": user.Role}).Debug(newquery)
+	rows, err := db.Query(newquery, username)
 	if err != nil {
 		handleerror(err)
 	}
 	defer rows.Close()
 	//Pull Data
 	for rows.Next() {
-		err := rows.Scan(&permission.Perms)
+		err := rows.Scan(&user.Username, &user.Usercode, &user.Role, &user.Permissions.Admin, &user.Permissions.Mgmt, &user.Manager, &user.Permissions.Sorting)
 		if err != nil {
 			handleerror(err)
 		}
@@ -1166,12 +1298,12 @@ func userdata(user string) (permission Permissions) {
 	if err != nil {
 		handleerror(err)
 	}
-	if permission.Perms == "" {
-		permission.Perms = "notfound"
-		return permission
+	if user.Role == "" {
+		user.Role = "notfound"
+		return user
 	}
 
-	return permission
+	return user
 }
 
 // Update QTY and IMG for products
