@@ -2,11 +2,17 @@
 <html>
 <head>
   {{template "header"}}
-  <title>User Management</title>
+  <title>{{.Title}}</title>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
   <style>
+    #message {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      z-index: 999;
+    }
     .table-responsive-stack tr {
       display: -webkit-box;
       display: -ms-flexbox;
@@ -51,6 +57,7 @@
 </head>
 <body>
   {{template "navigation" .}}
+  {{$admin := .Permission.Permissions.Admin}}
   <div class="container">
     <div id="message" class="alert"></div>
     <h1>{{.Title}}</h1>
@@ -65,11 +72,34 @@
                 <th scope="col">Role</th>
                 <th scope="col">Manager</th>
                 <th scope="col">Sorting</th>
+                {{if $admin}}<th scope="col">Mgmt</th>{{end}}
                 <th scope="col"></th>
                 <th scope="col"></th>
               </tr>
             </thead>
             <tbody>
+              <tr>
+              <td><input type="text" class="form-control" name="username"></td>
+              <td><input type="text" class="form-control" name="usercode" readonly></td>
+              <td>
+                <select class="form-control" name="role">
+                  <option value=""></option>
+                  <option value="admin">Admin</option>
+                  <option value="manage">Management</option>
+                  <option value="receiving">Receiving</option>
+                  <option value="sorting">Sorting</option>
+                  <option value="cs">CS</option>
+                </select>
+              </td>
+              <td><input type="text" class="form-control" name="manager"></td>
+              <td><input type="checkbox"  name="sorting"></td>
+              {{if $admin}}<td><input type="checkbox"  name="management"></td>{{end}}
+              <td>
+                <button type="button" class="btn btn-primary save-user">Create</button>
+                </td>
+                <td>
+              </td>
+            </tr>
               {{range $user := .Users}}
                 <tr>
                   <td><input type="text" class="form-control" name="username" value="{{$user.Username}}"></td>
@@ -81,10 +111,12 @@
                       <option value="manage" {{if eq $user.Role "manage"}}selected{{end}}>Management</option>
                       <option value="receiving" {{if eq $user.Role "receiving"}}selected{{end}}>Receiving</option>
                       <option value="sorting" {{if eq $user.Role "sorting"}}selected{{end}}>Sorting</option>
+                      <option value="cs" {{if eq $user.Role "cs"}}selected{{end}}>CS</option>
                     </select>
                   </td>
                   <td><input type="text" class="form-control" name="manager" value="{{$user.Manager}}"></td>
                   <td><input type="checkbox"  name="sorting" {{if $user.Sorting}}checked{{end}}></td>
+                  {{if $admin}}<td><input type="checkbox"  name="management" {{if $user.Management}}checked{{end}}></td>{{end}}
                   <td>
                     <button type="button" class="btn btn-primary save-user">Save</button>
                     </td>
@@ -95,6 +127,9 @@
               {{end}}
             </tbody>
           </table>
+          <br>
+          <br>
+          <br>
         </div>
       </div>
     </div>
@@ -111,6 +146,7 @@
         var role = $(this).parent().siblings().find('[name=role]').val();
         var manager = $(this).parent().siblings().find('[name=manager]').val();
         var sorting = $(this).parent().siblings().find('[name=sorting]').prop('checked');
+        var management = $(this).parent().siblings().find('[name=management]').prop('checked');
         var usercode = $(this).parent().siblings().find('[name=usercode]').val();
 
         // Send AJAX request to server to update user information
@@ -122,12 +158,17 @@
             role: role,
             manager: manager,
             sorting: sorting,
-            usercode: usercode
+            usercode: usercode,
+            management: management
           },
           success: function(response) {
             // Display success message to user
             $('#message').removeClass().addClass('alert');
             $('#message').addClass('alert-success').text(response);
+            setTimeout(function() {
+                $('#message').removeClass().addClass('alert');
+                $('#message').text('');
+            }, 5000); // Clear message after 5 seconds
 
             // Reload page to show updated user information
             //location.reload();
@@ -136,6 +177,10 @@
             // Display error message to user
             $('#message').removeClass().addClass('alert');
             $('#message').addClass('alert-danger').text(xhr.responseText);
+            setTimeout(function() {
+                $('#message').removeClass().addClass('alert');
+                $('#message').text('');
+            }, 5000); // Clear message after 5 seconds
           }
         });
       });

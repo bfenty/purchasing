@@ -236,7 +236,7 @@ func Receiving(w http.ResponseWriter, r *http.Request) {
 	t.Execute(w, page)
 }
 
-// Page of list of all Sort Requests
+// Page of list of all Users
 func Users(w http.ResponseWriter, r *http.Request) {
 	var page Page
 	page.Permission = auth(w, r)

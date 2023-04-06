@@ -1,6 +1,7 @@
 <html>
 <head>
-  {{template "header"}}  
+  {{template "header"}}
+  <title>{{.Title}}</title>
   <style>
 
     #message {
@@ -71,23 +72,23 @@
           <table class="table table-striped table-responsive-stack" id="sorttable">
             <thead class="table-dark" style="position: sticky; top: 0; z-index: 1;">
               <tr>
-                <th>Request ID</th>
-                <th>SKU</th>
-                <th>Description</th>
-                <th>Manufacturer Part</th>
-                <th>Instructions</th>
-                <th>Weight Out</th>
-                <th>Weight In</th>
-                <th>Difference</th>
-                <th>Pieces</th>
-                <th>Check Out</th>
-                <th>Check In</th>
-                <th>Sorter</th>
-                <th>Status</th>
-                <th>Priority</th>
-                <th></th>
-                <th></th>
-                <th></th>
+                <th scope="col">Request ID</th>
+                <th scope="col">SKU</th>
+                <th scope="col">Description</th>
+                <th scope="col">Manufacturer Part</th>
+                <th scope="col">Instructions</th>
+                <th scope="col">Weight Out</th>
+                <th scope="col">Weight In</th>
+                <th scope="col">Difference</th>
+                <th scope="col">Pieces</th>
+                <th scope="col">Check Out</th>
+                <th scope="col">Check In</th>
+                <th scope="col">Sorter</th>
+                <th scope="col">Status</th>
+                <th scope="col">Priority</th>
+                <th scope="col"></th>
+                <th scope="col"></th>
+                <th scope="col"></th>
               </tr>
             </thead>
             <tbody>

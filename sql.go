@@ -445,6 +445,12 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 	} else {
 		sorting = 0
 	}
+	var management int
+	if r.FormValue("management") == "true" {
+		management = 1
+	} else {
+		management = 0
+	}
 	// sorting, _ := strconv.ParseBool(r.FormValue("sorting"))
 	println(username, usercode, role, sorting)
 
@@ -462,11 +468,11 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 	// Prepare the SQL statement for inserting the data
 	//Logging
 	log.Info("Creating Query")
-	newquery := "REPLACE INTO orders.users (username, usercode, permissions, sorting,manager) VALUES (?, ?, ?, ?, ?)"
+	newquery := "REPLACE INTO orders.users (username, usercode, permissions, sorting,manager,management) VALUES (?, ?, ?, ?, ?, ?)"
 
 	// Execute the SQL statement with the form values
 	log.Info("Executing Query")
-	rows, err := db.Query(newquery, username, usercode, role, sorting, manager)
+	rows, err := db.Query(newquery, username, usercode, role, sorting, manager, management)
 	defer rows.Close()
 
 	if err != nil {
