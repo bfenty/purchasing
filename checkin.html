@@ -144,6 +144,21 @@
 
       console.log('Form data:', data);
 
+      let hours = parseInt(data.get('hours'));
+      if (isNaN(hours) || hours <= 0) {
+        // Return an error message if hours is not a number or is less than or equal to zero
+        let messageDiv = document.getElementById('message');
+        messageDiv.style.display = 'block';
+        messageDiv.classList.remove('alert-success');
+        messageDiv.classList.add('alert-danger');
+        messageDiv.innerText = 'Hours must be a number greater than zero';
+        // Remove the message after 5 seconds
+        setTimeout(() => {
+          messageDiv.style.display = 'none';
+        }, 5000);
+        return;
+      }
+
       fetch('/sortingupdate', {
         method: 'POST',
         headers: {

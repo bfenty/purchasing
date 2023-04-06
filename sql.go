@@ -774,6 +774,23 @@ func Sortinginsert(w http.ResponseWriter, r *http.Request) {
 	delete(data, "difference")
 	log.Debug(data)
 
+	// Check if the status is being updated to 'checkin'
+	if data["status"] == "checkin" {
+		// Check that hours are not blank
+		if data["hours"] == nil || data["hours"] == "" {
+			// Return an error message if hours are blank
+			message := Message{Title: "Error", Body: "Hours cannot be blank when updating status to 'checkin'", Success: false}
+			response, err := json.Marshal(message)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			w.Header().Set("Content-Type", "application/json")
+			w.Write(response)
+			return
+		}
+	}
+
 	// Define variables
 	var newquery string
 	var values []interface{}
