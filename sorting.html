@@ -1,6 +1,6 @@
 <html>
 <head>
-  {{template "header"}}
+  {{template "header"}}  
   <style>
 
     #message {
@@ -49,6 +49,13 @@
           width:100%;
       }
     }
+
+    @media screen and (min-width: 768px) {
+      .table-responsive-stack td,
+      .table-responsive-stack th {
+        display: table-cell;
+      }
+    }
   </style>
 </head>
 <body>
@@ -84,9 +91,125 @@
               </tr>
             </thead>
             <tbody>
+              <form action="/sorting" method="GET">
+              <tr>
+                <td><input type="text" class="form-control" name="search-requestid" placeholder="Request ID"></td>
+                <td><input type="text" class="form-control" name="search-sku" placeholder="SKU"></td>
+                <td><input type="text" class="form-control" name="search-description" placeholder="Description"></td>
+                <td><input type="text" class="form-control" name="search-manufacturerpart" placeholder="Manufacturer Part"></td>
+                <td><input type="text" class="form-control" name="search-instructions" placeholder="Instructions"></td>
+                <td><input type="text" class="form-control" name="search-weightout" placeholder="Weight Out"></td>
+                <td><input type="text" class="form-control" name="search-weightin" placeholder="Weight In"></td>
+                <td>
+                  <select class="form-select" name="search-difference">
+                    <option value="">Difference</option>
+                    <option value="positive">Positive</option>
+                    <option value="negative">Negative</option>
+                  </select>
+                </td>
+                <td><input type="text" class="form-control" name="search-pieces" placeholder="Pieces"></td>
+                <td><input type="text" class="form-control" name="search-checkout" placeholder="Check Out"></td>
+                <td><input type="text" class="form-control" name="search-checkin" placeholder="Check In"></td>
+                <td>
+                  <select class="form-select" name="search-sorter">
+                    <option value="">Sorter</option>
+                    {{range $.Users}}
+                    <option value="{{.Username}}">{{.Username}}</option>
+                    {{end}}
+                  </select>
+                </td>
+                <td>
+                  <select class="form-select" name="search-status">
+                    <option value="">Status</option>
+                    <option value="New">New</option>
+                    <option value="Checkout">Checkout</option>
+                    <option value="Checkin">Checkin</option>
+                  </select>
+                </td>
+                <td>
+                  <select class="form-select" name="search-priority">
+                    <option value="">Priority</option>
+                    <option value="0">Normal</option>
+                    <option value="1">High</option>
+                  </select>
+                </td>
+                <td><input type='submit' value='Search' class="btn btn-primary"></td>
+                <td></td>
+                <td></td>
+              </tr>  
+            </form>
+            {{if $admin}}  
+            <form class="update-form" id="insert-form">
+              <tr>
+                <td></td>
+                <td><input type="text" class="form-control sku" id="sku" name="sku" placeholder="SKU"></td>
+                <td><input type="text" class="form-control description" id="description" name="description" placeholder="Description"></td>
+                <td><input type="text" class="form-control manufacturerpart" id="manufacturerpart" name="manufacturerpart" placeholder="Manufacturer Part"></td>
+                <td><input type="text" class="form-control instructions" id="instructions" name="instructions" placeholder="Instructions"></td>
+                <td>
+                  <div class="input-group">
+                    <input type="text" class="form-control weightout" id="weightout" name="weightout" placeholder="Weight Out">
+                    <span class="input-group-text">g</span>
+                  </div>
+                </td>
+                <td>
+                  <div class="input-group">
+                    <input type="text" class="form-control weightin" id="weightin" name="weightin" placeholder="Weight In">
+                    <span class="input-group-text">g</span>
+                  </div>
+                </td>
+                <td>
+                  <div class="input-group">
+                    <input type="text" class="form-control difference" id="difference" name="difference" readonly placeholder="Difference">
+                    <span class="input-group-text">g</span>
+                  </div>
+                </td>
+                <td>
+                  <div class="input-group">
+                    <input type="text" class="form-control pieces" id="pieces" name="pieces" placeholder="Pieces">
+                    <span class="input-group-text">pcs</span>
+                  </div>
+                </td>
+                <td><input type="date" class="form-control checkout" id="checkout" name="checkout" placeholder="Checkout Date"></td>
+                <td><input type="date" class="form-control checkin" id="checkin" name="checkin" placeholder="Checkin Date"></td>
+                <td>
+                  <select class="form-select" id="sorter" name="sorter">
+                    <option selected disabled value="">Sorter</option>
+                    {{range $.Users}}
+                    <option value='{{.Username}}'>{{.Username}}</option>
+                    {{end}}
+                    <option></option>
+                  </select>
+                </td>
+                <td>
+                  {{if $admin}}
+                  <select class="form-select" id="status" name="status">
+                    <option selected disabled value="">Status</option>
+                    <option value="New">New</option>
+                    <option value="Checkout">Checkout</option>
+                    <option value="Checkin">Checkin</option>
+                  </select>
+                  {{end}}
+                </td>
+                <td>
+                  {{if $admin}}
+                  <select class="form-select" id="prty" name="prty">
+                    <option selected disabled value="">Priority</option>
+                    <option value="0">Normal</option>
+                    <option value="1">High</option>
+                  </select>
+                  {{end}}
+                </td>
+                <td><input type='hidden' id='active' name='active' value='1'><input type='submit' value='Insert' class="btn btn-primary update-request"></td>
+                <td></td>
+                <td></td>
+                </tr>
+                </form>
+                {{end}}
+            
               {{range $index, $value := .SortRequests}}
-              <form id="row{{$index}}">
-                <tr>
+              <form id="row{{$index}}" class="update-form">
+                <tr {{if .Warn}} class="table-warning"{{end}}>
                   <td><input type="text" class="form-control requestid" id="requestid" name="requestid" value="{{.ID}}"></td>
                   <td><input type="text" class="form-control sku" id="sku" name="sku" value="{{.SKU}}"></td>
                   <td><input type="text" class="form-control description" id="description" name="description" value="{{.Description}}"></td>
@@ -140,102 +263,126 @@
     </div>
   </div>
   {{template "footer" .}}
+  
   <script>
-    document.querySelectorAll('form').forEach(form => {
-  form.addEventListener('submit', e => {
-    e.preventDefault();
+    document.querySelectorAll('form.update-form').forEach(form => {
+      form.addEventListener('submit', e => {
+        e.preventDefault();
 
-    let formId = e.target.id;
-    let form = document.getElementById(formId);
-    let data = new FormData(form);
+        let formId = e.target.id;
+        let form = document.getElementById(formId);
+        let data = new FormData(form);
 
-    console.log('Form data:', data);
+        console.log('Form data:', data);
 
-    fetch('/sortingupdate', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(Object.fromEntries(data))
-    })
-    .then(response => {
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-      return response.json();
-    })
-    .then(data => {
-      console.log('Server response:', data);
-      // Handle the response from the server
-      let messageDiv = document.getElementById('message');
-      if (data.Success) {
-        messageDiv.style.display = 'block';
-        messageDiv.classList.remove('alert-danger');
-        messageDiv.classList.add('alert-success');
-        messageDiv.innerText = data.Body;
-      } else {
-        messageDiv.style.display = 'block';
-        messageDiv.classList.remove('alert-success');
-        messageDiv.classList.add('alert-danger');
-        messageDiv.innerText = data.Body;
-      }
-      // Remove the message after 5 seconds
-      setTimeout(() => {
-        messageDiv.style.display = 'none';
-      }, 5000);
-    })
-    .catch(error => {
-      console.error('Error:', error);
-      // Handle the error
-    });
-  });
-});
-  </script>
-  <script>
-    $(document).ready(function() {
-      // Handle click event for Archive button
-      $('.archive-request').on('click', function() {
-        // Get the user code from the data attribute
-        var requestid = $(this).data('requestid');
-  
-        // Store a reference to the clicked button for later use
-        var $clickedButton = $(this);
-  
-        // Show the modal dialogue
-        $('#archiveRequestModal').modal('show');
-  
-        // Handle confirmation
-        $('#confirmArchiveRequest').on('click', function() {
-          // Make AJAX call to API endpoint
-          $.ajax({
-            url: '/sortingupdate',
-            method: 'POST',
-            data: {  
-              requestid: requestid,
-              active: 0
-            },
-            success: function(response) {
-              // Display success message
-              $clickedButton.closest('tr').find('.alert').addClass('alert-success').text('Request archived successfully.');
-  
-              // Hide the modal dialogue
-              $('#archiveRequestModal').modal('hide');
-  
-              // Reload the page
-              location.reload();
-            },
-            error: function(xhr, status, error) {
-              // Display error message
-              $clickedButton.closest('tr').find('.alert').addClass('alert-danger').text(xhr.responseText);
-  
-              // Hide the modal dialogue
-              $('#archiveRequestModal').modal('hide');
-            }
-          });
+        fetch('/sortingupdate', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(Object.fromEntries(data))
+        })
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Network response was not ok');
+          }
+          return response.json();
+        })
+        .then(data => {
+          console.log('Server response:', data);
+          // Handle the response from the server
+          let messageDiv = document.getElementById('message');
+          if (data.Success) {
+            messageDiv.style.display = 'block';
+            messageDiv.classList.remove('alert-danger');
+            messageDiv.classList.add('alert-success');
+            messageDiv.innerText = data.Body;
+            location.reload();
+          } else {
+            messageDiv.style.display = 'block';
+            messageDiv.classList.remove('alert-success');
+            messageDiv.classList.add('alert-danger');
+            messageDiv.innerText = data.Body;
+          }
+          // Remove the message after 5 seconds
+          setTimeout(() => {
+            messageDiv.style.display = 'none';
+          }, 5000);
+
+          //for dynamic table reload, later:
+  //         fetch('/sorting')
+  // .then(response => {
+  //   if (!response.ok) {
+  //     throw new Error('Network response was not ok');
+  //   }
+  //   return response.text();
+  // })
+  // .then(data => {
+  //   // Replace the table body with the updated data
+  //   document.querySelector('#sorttable tbody').innerHTML = data;
+  // })
+  // .catch(error => {
+  //   console.error('Error:', error);
+  //   // Handle the error
+  // });
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          // Handle the error
         });
       });
     });
   </script>
+  <script>
+ $(document).ready(function() {
+  // Handle click event for Archive button
+  $('.archive-request').on('click', function() {
+    // Get the user code from the data attribute
+    var requestid = $(this).data('requestid');
+
+    // Store a reference to the clicked button for later use
+    var $clickedButton = $(this);
+
+    // Show the modal dialogue
+    $('#archiveRequestModal').modal('show');
+
+    // Handle confirmation
+    $('#confirmArchiveRequest').on('click', function() {
+      // Make AJAX call to API endpoint
+      console.log('Making AJAX call to API endpoint...');
+      console.log('Request:',requestid)
+      var requestData = {  
+          requestid: requestid,
+          active: 0
+      }
+      $.ajax({
+        url: '/sortingupdate',
+        method: 'POST',
+        data: JSON.stringify(requestData),
+        success: function(response) {
+          console.log('AJAX call successful.');
+          // Display success message
+          $('#message').removeClass('alert-danger').addClass('alert-success').text(response);
+
+          // Hide the modal dialogue
+          $('#archiveRequestModal').modal('hide');
+
+          // Reload the page
+          location.reload();
+        },
+        error: function(xhr, status, error) {
+          console.error('AJAX call failed:', error);
+          // Display error message
+          $('#message').removeClass('alert-success').addClass('alert-danger').text(xhr.responseText);
+
+          // Hide the modal dialogue
+          $('#archiveRequestModal').modal('hide');
+        }
+      });
+    });
+  });
+});
+</script>
   <script>
     $(document).ready(function() {   
       // inspired by http://jsfiddle.net/arunpjohny/564Lxosz/1/

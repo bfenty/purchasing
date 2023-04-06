@@ -616,19 +616,19 @@ func listsortrequests(user User, action string, r *http.Request) (message Messag
 
 	//Gather Search Parameters
 	queryParams := map[string]string{
-		"sku":              r.URL.Query().Get("sku"),
-		"description":      r.URL.Query().Get("description"),
-		"sku_manufacturer": r.URL.Query().Get("manufacturerpart"),
-		"instructions":     r.URL.Query().Get("instructions"),
-		"weightout":        r.URL.Query().Get("weightout"),
-		"weightin":         r.URL.Query().Get("weightin"),
-		"pieces":           r.URL.Query().Get("pieces"),
-		"hours":            r.URL.Query().Get("hours"),
-		"checkout":         r.URL.Query().Get("checkout"),
-		"checkint":         r.URL.Query().Get("checkin"),
-		"sorter":           r.URL.Query().Get("sorter"),
-		"status":           r.URL.Query().Get("status"),
-		"priority":         r.URL.Query().Get("priority"),
+		"sku":              r.URL.Query().Get("search-sku"),
+		"description":      r.URL.Query().Get("search-description"),
+		"sku_manufacturer": r.URL.Query().Get("search-manufacturerpart"),
+		"instructions":     r.URL.Query().Get("search-instructions"),
+		"weightout":        r.URL.Query().Get("search-weightout"),
+		"weightin":         r.URL.Query().Get("search-weightin"),
+		"pieces":           r.URL.Query().Get("search-pieces"),
+		"hours":            r.URL.Query().Get("search-hours"),
+		"checkout":         r.URL.Query().Get("search-checkout"),
+		"checkint":         r.URL.Query().Get("search-checkin"),
+		"sorter":           r.URL.Query().Get("search-sorter"),
+		"status":           r.URL.Query().Get("search-status"),
+		"prty":             r.URL.Query().Get("search-priority"),
 	}
 
 	var i []interface{}
@@ -640,8 +640,9 @@ func listsortrequests(user User, action string, r *http.Request) (message Messag
 		newquery = "SELECT requestid, sku,description,instructions,weightin,weightout,pieces,hours,checkout,checkint,COALESCE(sorter,''),status,sku_manufacturer,prty from sortrequest WHERE active=1 "
 		for param, value := range queryParams {
 			if value != "" {
+				value = value + "%"
 				i = append(i, value)
-				newquery += fmt.Sprintf(" AND %s = ?", param)
+				newquery += fmt.Sprintf(" AND %s LIKE ?", param)
 			}
 		}
 		newquery += " order by 1 desc"
@@ -694,14 +695,15 @@ func listsortrequests(user User, action string, r *http.Request) (message Messag
 		} else {
 			// Handle the case where r.Pieces is nil
 			c = 0.0
-			fmt.Println("r.Pieces is nil")
+			// fmt.Println("r.Pieces is nil")
 		}
 		r.Difference = a - b - (c * 0.4555)
 		r.Difference = math.Round(r.Difference*100) / 100 // Round to 2 decimal places
 		if r.Difference < (-0.1*a) && a != 0 {
 			r.Warn = true
 		}
-		log.Info(c)
+		r.Difference = -r.Difference
+		// log.Info(c)
 		sortrequests = append(sortrequests, r)
 	}
 	return message, sortrequests
@@ -718,6 +720,7 @@ func Sortinginsert(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Read the request data as JSON
+	log.Debug("Decoding JSON")
 	var data map[string]interface{}
 	err := json.NewDecoder(r.Body).Decode(&data)
 	if err != nil {
@@ -725,6 +728,7 @@ func Sortinginsert(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	log.Debug("fixing values")
 	// Rename "sku_manufacturer" key to match the database column name
 	if val, ok := data["manufacturerpart"]; ok {
 		delete(data, "manufacturerpart")
@@ -732,13 +736,14 @@ func Sortinginsert(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Rename "sku_manufacturer" key to match the database column name
-	if val, ok := data["checkint"]; ok {
-		delete(data, "checkint")
-		data["checkin"] = val
+	if val, ok := data["checkin"]; ok {
+		delete(data, "checkin")
+		data["checkint"] = val
 	}
 
 	// Remove the "difference" field, which is not in the database
 	delete(data, "difference")
+	log.Debug(data)
 
 	// Define variables
 	var newquery string
@@ -746,7 +751,8 @@ func Sortinginsert(w http.ResponseWriter, r *http.Request) {
 	var message Message
 
 	// Construct SQL query based on request data
-	if data["requestid"] == nil || data["requestid"] == "" { //if this is a new request
+	log.Debug("Constructing SQL")
+	if data["requestid"] == nil || data["requestid"] == "" || data["requestid"] == "<nil>" { //if this is a new request
 		newquery = "REPLACE INTO sortrequest ("
 		for key, value := range data {
 			if value == "<nil>" {
@@ -758,7 +764,7 @@ func Sortinginsert(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 		newquery = newquery[:len(newquery)-1] + ") VALUES ("
-		for range data {
+		for range values {
 			newquery += "?,"
 		}
 		newquery = newquery[:len(newquery)-1] + ")"
