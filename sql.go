@@ -465,13 +465,19 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 		usercode = strconv.Itoa(maxUsercode + 1)
 	}
 
-	// Prepare the SQL statement for inserting the data
-	//Logging
-	log.Info("Creating Query")
-	newquery := "REPLACE INTO orders.users (username, usercode, permissions, sorting,manager,management) VALUES (?, ?, ?, ?, ?, ?)"
+	// Prepare the SQL statement for inserting or updating the data
+	newquery := `
+		INSERT INTO orders.users (username, usercode, permissions, sorting, manager, management)
+		VALUES (?, ?, ?, ?, ?, ?)
+		ON DUPLICATE KEY UPDATE
+		username = VALUES(username),
+		permissions = VALUES(permissions),
+		sorting = VALUES(sorting),
+		manager = VALUES(manager),
+		management = VALUES(management)
+		`
 
 	// Execute the SQL statement with the form values
-	log.Info("Executing Query")
 	rows, err := db.Query(newquery, username, usercode, role, sorting, manager, management)
 	defer rows.Close()
 
@@ -481,6 +487,23 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Failed to update user information.", http.StatusInternalServerError)
 		return
 	}
+
+	// // Prepare the SQL statement for inserting the data
+	// //Logging
+	// log.Info("Creating Query")
+	// newquery := "REPLACE INTO orders.users (username, usercode, permissions, sorting,manager,management) VALUES (?, ?, ?, ?, ?, ?)"
+
+	// // Execute the SQL statement with the form values
+	// log.Info("Executing Query")
+	// rows, err := db.Query(newquery, username, usercode, role, sorting, manager, management)
+	// defer rows.Close()
+
+	// if err != nil {
+	// 	// Handle error
+	// 	println(err)
+	// 	http.Error(w, "Failed to update user information.", http.StatusInternalServerError)
+	// 	return
+	// }
 
 	// Redirect the user to the users page
 	// http.Redirect(w, r, "/users", http.StatusSeeOther)
