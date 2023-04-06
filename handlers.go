@@ -81,7 +81,7 @@ func Signin(w http.ResponseWriter, r *http.Request) {
 	if user.Role == "newuser" {
 		log.Debug(message.Body)
 		w.WriteHeader(http.StatusCreated)
-		fmt.Fprintf(w, "New user created")
+		fmt.Fprintf(w, "/signup")
 		return
 	}
 
@@ -117,6 +117,11 @@ func Signin(w http.ResponseWriter, r *http.Request) {
 		log.Debug(message.Body)
 		w.WriteHeader(http.StatusOK)
 		fmt.Fprintf(w, "/products")
+		return
+	case "newuser":
+		log.Debug(message.Body)
+		w.WriteHeader(http.StatusOK)
+		fmt.Fprintf(w, "/signup")
 		return
 	default:
 		w.WriteHeader(http.StatusOK)
