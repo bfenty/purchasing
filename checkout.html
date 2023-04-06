@@ -12,8 +12,11 @@
   {{template "navigation" .}}
   <br>
   {{template "messagebox" .}}
+  <br>
   {{$permission := .Permission.Role}}
-  {{$user := .Permission.User}}
+  <br>
+  {{$user := .Permission.Username}}
+  <br>
   {{$date := .Date}}
         <!-- Checkout Table -->
         <table class="table table-striped table-hover">
