@@ -171,43 +171,43 @@
     });
     
     function checkExistingErrors(requestid) {
-  var prevRequestid = $('#existing-errors').data('requestid');
-  if (prevRequestid !== requestid) {
-    // Clear the existing errors box and hide it if the request ID has changed
-    $('#existing-errors').empty();
-    $('#existing-errors').hide();
-  }
-
-  $.ajax({
-    type: 'GET',
-    url: '/checkexistingerrors',
-    data: {'requestid': requestid},
-    success: function(data) {
-      if (data.length > 0) {
-        // Display the existing errors box
-        $('#existing-errors').show();
-        $('#existing-errors').data('requestid', requestid);
-
-        // Add a box for each error
-        for (var i = 0; i < data.length; i++) {
-          var error = data[i];
-          var html = '<div class="card"><div class="card-body">';
-          html += '<h5 class="card-title">Existing Error</h5>';
-          html += '<p class="card-text"><strong>Error Type:</strong> ' + error.errortype + '</p>';
-          html += '<p class="card-text"><strong>Notes:</strong> ' + error.notes + '</p>';
-          html += '</div></div>';
-          $('#existing-errors').append(html);
-        }
-      } else {
-        // Hide the existing errors box if there are no errors
+      var prevRequestid = $('#existing-errors').data('requestid');
+      if (prevRequestid !== requestid) {
+        // Clear the existing errors box and hide it if the request ID has changed
         $('#existing-errors').empty();
         $('#existing-errors').hide();
       }
-    }
-  });
-}
 
-</script>       
+      $.ajax({
+        type: 'GET',
+        url: '/checkexistingerrors',
+        data: {'requestid': requestid},
+        success: function(data) {
+          if (data.length > 0) {
+            // Display the existing errors box
+            $('#existing-errors').show();
+            $('#existing-errors').data('requestid', requestid);
+
+            // Add a box for each error
+            for (var i = 0; i < data.length; i++) {
+              var error = data[i];
+              var html = '<div class="card"><div class="card-body">';
+              html += '<h5 class="card-title">Existing Error</h5>';
+              html += '<p class="card-text"><strong>Error Type:</strong> ' + error.errortype + '</p>';
+              html += '<p class="card-text"><strong>Notes:</strong> ' + error.notes + '</p>';
+              html += '</div></div>';
+              $('#existing-errors').append(html);
+            }
+          } else {
+            // Hide the existing errors box if there are no errors
+            $('#existing-errors').empty();
+            $('#existing-errors').hide();
+          }
+        }
+      });
+    }
+
+    </script>       
        
 {{template "footer" .}}
 </body>

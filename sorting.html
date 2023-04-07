@@ -1,6 +1,7 @@
 <html>
 <head>
   {{template "header"}}
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{{.Title}}</title>
   <style>
 
@@ -31,6 +32,12 @@
 
     .table-responsive-stack .table-responsive-stack-thead {
       font-weight: bold;
+    }
+
+    @media screen and (max-width: 1400px) {
+      .input-group-text {
+        display: none;
+      }
     }
 
     @media screen and (max-width: 768px) {
@@ -74,7 +81,9 @@
                 <th scope="col">Request ID</th>
                 <th scope="col">SKU</th>
                 <th scope="col">Description</th>
-                <th scope="col">Manufacturer Part</th>
+                {{if $admin}}
+                  <th scope="col">Manufacturer Part</th>
+                {{end}}
                 <th scope="col">Instructions</th>
                 <th scope="col">Weight Out</th>
                 <th scope="col">Weight In</th>
@@ -84,7 +93,9 @@
                 <th scope="col">Check In</th>
                 <th scope="col">Sorter</th>
                 <th scope="col">Status</th>
-                <th scope="col">Priority</th>
+                {{if $admin}}
+                  <th scope="col">Priority</th>
+                {{end}}
                 <th scope="col"></th>
                 <th scope="col"></th>
                 <th scope="col"></th>
@@ -96,7 +107,9 @@
                 <td><input type="text" class="form-control" name="search-requestid" placeholder="Request ID"></td>
                 <td><input type="text" class="form-control" name="search-sku" placeholder="SKU"></td>
                 <td><input type="text" class="form-control" name="search-description" placeholder="Description"></td>
-                <td><input type="text" class="form-control" name="search-manufacturerpart" placeholder="Manufacturer Part"></td>
+                {{if $admin}}
+                  <td><input type="text" class="form-control" name="search-manufacturerpart" placeholder="Manufacturer Part"></td>
+                {{end}}
                 <td><input type="text" class="form-control" name="search-instructions" placeholder="Instructions"></td>
                 <td><input type="text" class="form-control" name="search-weightout" placeholder="Weight Out"></td>
                 <td><input type="text" class="form-control" name="search-weightin" placeholder="Weight In"></td>
@@ -126,6 +139,7 @@
                     <option value="Checkin">Checkin</option>
                   </select>
                 </td>
+                {{if $admin}}
                 <td>
                   <select class="form-select" name="search-priority">
                     <option value="">Priority</option>
@@ -133,6 +147,7 @@
                     <option value="1">High</option>
                   </select>
                 </td>
+                {{end}}
                 <td><input type='submit' value='Search' class="btn btn-primary"></td>
                 <td></td>
                 <td></td>
@@ -181,25 +196,25 @@
                     <option></option>
                   </select>
                 </td>
+                {{if $admin}}
                 <td>
-                  {{if $admin}}
                   <select class="form-select" id="status" name="status">
                     <option selected disabled value="">Status</option>
                     <option value="New">New</option>
                     <option value="Checkout">Checkout</option>
                     <option value="Checkin">Checkin</option>
                   </select>
-                  {{end}}
                 </td>
+                {{end}}
+                {{if $admin}}
                 <td>
-                  {{if $admin}}
                   <select class="form-select" id="prty" name="prty">
                     <option selected disabled value="">Priority</option>
                     <option value="0">Normal</option>
                     <option value="1">High</option>
                   </select>
-                  {{end}}
                 </td>
+                {{end}}
                 <td><input type='hidden' id='active' name='active' value='1'><input type='submit' value='Insert' class="btn btn-primary update-request"></td>
                 <td></td>
                 <td></td>
@@ -213,7 +228,9 @@
                   <td><input type="text" class="form-control requestid" id="requestid" name="requestid" value="{{.ID}}"></td>
                   <td><input type="text" class="form-control sku" id="sku" name="sku" value="{{.SKU}}"></td>
                   <td><input type="text" class="form-control description" id="description" name="description" value="{{.Description}}"></td>
-                  <td><input type="text" class="form-control manufacturerpart" id="manufacturerpart" name="manufacturerpart" value="{{.ManufacturerPart}}"></td>
+                  {{if $admin}}
+                    <td><input type="text" class="form-control manufacturerpart" id="manufacturerpart" name="manufacturerpart" value="{{.ManufacturerPart}}"></td>
+                  {{end}}
                   <td><input type="text" class="form-control instructions" id="instructions" name="instructions" value="{{.Instructions}}"></td>
                   <td><div class="input-group"><input type="text" class="form-control weightout" id="weightout" name="weightout" value="{{.Weightout}}"><span class="input-group-text">g</span></div></td>
                   <td><div class="input-group"><input type="text" class="form-control weightin" id="weightin" name="weightin" value="{{.Weightin}}"><span class="input-group-text">g</span></div></td>
@@ -241,18 +258,19 @@
                       <input class="form-control" type="text" id="status" name="status" value="{{.Status}}" readonly>
                     {{end}}
                   </td>
+                  {{if $admin}}
                   <td>
                     <select class="form-select" id="prty" name="prty">
                       <option value="0" {{if eq .Priority 0}}selected{{end}}>Normal</option>
                       <option value="1" {{if eq .Priority 1}}selected{{end}}>High</option>
                     </select>
                   </td>
+                  {{end}}
                   <td><input type='hidden' id='active' name='active' value='1'><input type='submit' value='Update' class="btn btn-primary update-request"></td>
+                </form>
                   <td><button type="button" class="btn btn-danger archive-request" id="archiveRequest" name="archiveRequest" data-requestid="{{.ID}}">Archive</button></td>
-                  <td></td>
+                  <td><button class="btn btn-warning error" id="error" name="error" data-requestid="{{.ID}}">Error</button></td>
                 </tr>
-                
-              </form>
             {{end}}
             </tbody>
           </table>
@@ -263,7 +281,24 @@
     </div>
   </div>
   {{template "footer" .}}
+  <script>
+    $(document).ready(function() {
+      // Handle click event for Error button
+      $('.error').on('click', function() {
+        // Get the requestid from the data attribute
+        var requestid = $(this).data('requestid');
   
+        // Redirect to the '/sorterror' page with the 'requestid' parameter if it exists
+        if (requestid) {
+          console.log('Redirecting to /sorterror with requestid=' + requestid);
+          window.location.href = '/sorterror?requestid=' + requestid;
+        } else {
+          console.log('Redirecting to /sorterror');
+          window.location.href = '/sorterror';
+        }
+      }); // Add a closing parenthesis and semicolon here
+    });
+  </script>
   <script>
     document.querySelectorAll('form.update-form').forEach(form => {
       form.addEventListener('submit', e => {
@@ -334,55 +369,55 @@
     });
   </script>
   <script>
- $(document).ready(function() {
-  // Handle click event for Archive button
-  $('.archive-request').on('click', function() {
-    // Get the user code from the data attribute
-    var requestid = $(this).data('requestid');
+  $(document).ready(function() {
+    // Handle click event for Archive button
+    $('.archive-request').on('click', function() {
+      // Get the user code from the data attribute
+      var requestid = $(this).data('requestid');
 
-    // Store a reference to the clicked button for later use
-    var $clickedButton = $(this);
+      // Store a reference to the clicked button for later use
+      var $clickedButton = $(this);
 
-    // Show the modal dialogue
-    $('#archiveRequestModal').modal('show');
+      // Show the modal dialogue
+      $('#archiveRequestModal').modal('show');
 
-    // Handle confirmation
-    $('#confirmArchiveRequest').on('click', function() {
-      // Make AJAX call to API endpoint
-      console.log('Making AJAX call to API endpoint...');
-      console.log('Request:',requestid)
-      var requestData = {  
-          requestid: requestid,
-          active: 0
-      }
-      $.ajax({
-        url: '/sortingupdate',
-        method: 'POST',
-        data: JSON.stringify(requestData),
-        success: function(response) {
-          console.log('AJAX call successful.');
-          // Display success message
-          $('#message').removeClass('alert-danger').addClass('alert-success').text(response);
-
-          // Hide the modal dialogue
-          $('#archiveRequestModal').modal('hide');
-
-          // Reload the page
-          location.reload();
-        },
-        error: function(xhr, status, error) {
-          console.error('AJAX call failed:', error);
-          // Display error message
-          $('#message').removeClass('alert-success').addClass('alert-danger').text(xhr.responseText);
-
-          // Hide the modal dialogue
-          $('#archiveRequestModal').modal('hide');
+      // Handle confirmation
+      $('#confirmArchiveRequest').on('click', function() {
+        // Make AJAX call to API endpoint
+        console.log('Making AJAX call to API endpoint...');
+        console.log('Request:',requestid)
+        var requestData = {  
+            requestid: requestid,
+            active: 0
         }
+        $.ajax({
+          url: '/sortingupdate',
+          method: 'POST',
+          data: JSON.stringify(requestData),
+          success: function(response) {
+            console.log('AJAX call successful.');
+            // Display success message
+            $('#message').removeClass('alert-danger').addClass('alert-success').text(response);
+
+            // Hide the modal dialogue
+            $('#archiveRequestModal').modal('hide');
+
+            // Reload the page
+            location.reload();
+          },
+          error: function(xhr, status, error) {
+            console.error('AJAX call failed:', error);
+            // Display error message
+            $('#message').removeClass('alert-success').addClass('alert-danger').text(xhr.responseText);
+
+            // Hide the modal dialogue
+            $('#archiveRequestModal').modal('hide');
+          }
+        });
       });
     });
   });
-});
-</script>
+  </script>
   <script>
     $(document).ready(function() {   
       // inspired by http://jsfiddle.net/arunpjohny/564Lxosz/1/
