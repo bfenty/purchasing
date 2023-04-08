@@ -70,6 +70,8 @@
   {{$admin := .Permission.Permissions.Admin}}
   <div>
     <div id="message" class="alert"></div>
+    <!-- Dennis Nedry Easter Egg -->
+    <img id="gif" src="https://tenor.com/view/jurassic-park-nedry-dennis-no-no-nah-you-didnt-say-the-magic-word-gif-16617306" style="display:none; position:fixed; top:50%; left:50%; transform: translate(-50%, -50%);">
     <h1>{{.Title}}</h1>
     <div class="row" id="userTable">
       <div class="col-sm-12">
@@ -290,6 +292,15 @@
     </div>
   </div>
   {{template "footer" .}}
+  <script>
+    //Dennis Nedry easter egg
+    document.addEventListener("keydown", function(event) {
+      if (event.ctrlKey && event.key === "y") {
+        document.getElementById("gif").style.display = "block";
+      }
+    });
+
+  </script>
   <script>
     $(document).ready(function() {
       // Handle click event for Error button
