@@ -90,6 +90,7 @@
                 <th scope="col">Weight In</th>
                 <th scope="col">Difference</th>
                 <th scope="col">Pieces</th>
+                <th scope="col">Hours</th>
                 <th scope="col">Check Out</th>
                 <th scope="col">Check In</th>
                 <th scope="col">Sorter</th>
@@ -122,6 +123,7 @@
                   </select>
                 </td>
                 <td><input type="text" class="form-control" name="search-pieces" placeholder="Pieces"></td>
+                <td><input type="text" class="form-control" name="search-hours" placeholder="Hours"></td>
                 <td><input type="text" class="form-control" name="search-checkout" placeholder="Check Out"></td>
                 <td><input type="text" class="form-control" name="search-checkin" placeholder="Check In"></td>
                 <td>
@@ -191,6 +193,9 @@
                     <span class="input-group-text">pcs</span>
                   </div>
                 </td>
+                <td>
+                    <input type="text" class="form-control hours" id="hours" name="hours" placeholder="Hours">
+                </td>
                 <td><input type="date" class="form-control checkout" id="checkout" name="checkout" placeholder="Checkout Date"></td>
                 <td><input type="date" class="form-control checkin" id="checkin" name="checkin" placeholder="Checkin Date"></td>
                 <td>
@@ -247,6 +252,7 @@
                   <td><div class="input-group"><input type="text" class="form-control weightin" id="weightin" name="weightin" value="{{.Weightin}}"><span class="input-group-text">g</span></div></td>
                   <td><div class="input-group"><input type="text" class="form-control difference" id="difference" name="difference" value="{{.Difference}}" readonly><span class="input-group-text">g</span></div></td>
                   <td><div class="input-group"><input type="text" class="form-control pieces" id="pieces" name="pieces" value="{{.Pieces}}"><span class="input-group-text">pcs</span></div></td>
+                  <td><input type="text" class="form-control hours" id="hours" name="hours" value="{{.Hours}}"></td>
                   <td><input type="date" class="form-control checkout" id="checkout" name="checkout" value="{{.Checkout}}"></td>
                   <td><input type="date" class="form-control checkin" id="checkin" name="checkin" value="{{.Checkin}}"></td>
                   <td>
