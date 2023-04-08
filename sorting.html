@@ -83,7 +83,7 @@
                 {{if $admin}}
                   <th scope="col">Manufacturer Part</th>
                 {{end}}
-                <th scope="col">Instructions</th>
+                <th scope="col">Pcs per Bag</th>
                 <th scope="col">Weight Out</th>
                 <th scope="col">Weight In</th>
                 <th scope="col">Difference</th>
@@ -109,7 +109,7 @@
                 {{if $admin}}
                   <td><input type="text" class="form-control" name="search-manufacturerpart" placeholder="Manufacturer Part"></td>
                 {{end}}
-                <td><input type="text" class="form-control" name="search-instructions" placeholder="Instructions"></td>
+                <td><input type="text" class="form-control" name="search-instructions" placeholder="Pieces"></td>
                 <td><input type="text" class="form-control" name="search-weightout" placeholder="Weight Out"></td>
                 <td><input type="text" class="form-control" name="search-weightin" placeholder="Weight In"></td>
                 <td>
@@ -159,7 +159,12 @@
                 <td><input type="text" class="form-control sku" id="sku" name="sku" placeholder="SKU"></td>
                 <td><input type="text" class="form-control description" id="description" name="description" placeholder="Description"></td>
                 <td><input type="text" class="form-control manufacturerpart" id="manufacturerpart" name="manufacturerpart" placeholder="Manufacturer Part"></td>
-                <td><input type="text" class="form-control instructions" id="instructions" name="instructions" placeholder="Instructions"></td>
+                <td>
+                  <div class="input-group">
+                  <input type="text" class="form-control instructions" id="instructions" name="instructions" placeholder="Pieces">
+                  <span class="input-group-text">pcs</span>
+                </div>
+                </td>
                 <td>
                   <div class="input-group">
                     <input type="text" class="form-control weightout" id="weightout" name="weightout" placeholder="Weight Out">
@@ -230,7 +235,12 @@
                   {{if $admin}}
                     <td><input type="text" class="form-control manufacturerpart" id="manufacturerpart" name="manufacturerpart" value="{{.ManufacturerPart}}"></td>
                   {{end}}
-                  <td><input type="text" class="form-control instructions" id="instructions" name="instructions" value="{{.Instructions}}"></td>
+                  <td>
+                    <div class="input-group">
+                    <input type="text" class="form-control instructions" id="instructions" name="instructions" value="{{.Instructions}}">
+                    <span class="input-group-text">pcs</span>
+                  </div>
+                  </td>
                   <td><div class="input-group"><input type="text" class="form-control weightout" id="weightout" name="weightout" value="{{.Weightout}}"><span class="input-group-text">g</span></div></td>
                   <td><div class="input-group"><input type="text" class="form-control weightin" id="weightin" name="weightin" value="{{.Weightin}}"><span class="input-group-text">g</span></div></td>
                   <td><div class="input-group"><input type="text" class="form-control difference" id="difference" name="difference" value="{{.Difference}}" readonly><span class="input-group-text">g</span></div></td>
