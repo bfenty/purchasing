@@ -1,135 +1,100 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>Dashboard</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
-          integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm"
-          crossorigin="anonymous">
+    <title>Sort Error Analysis</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <a class="navbar-brand" href="#">Dashboard</a>
-        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav"
-                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav">
-                <li class="nav-item active">
-                    <a class="nav-link" href="#">Home <span class="sr-only">(current)</span></a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#">Dashboard</a>
-                </li>
-            </ul>
-        </div>
-    </nav>
     <div class="container mt-5">
-        <div class="row">
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header">Performance Graph 1</div>
-                    <div class="card-body">
-                        <canvas id="myChart1" width="400" height="400"></canvas>
-                    </div>
-                </div>
+        <h1 class="text-center mb-5">Sort Error Analysis</h1>
+        <div class="row justify-content-center mb-3">
+            <div class="col-3">
+                <label for="sorter">Sorter:</label>
+                <select id="sorter" class="form-control">
+                    <option value="all" selected>All</option>
+                    {{range $.Users}}
+                    <option value="{{.Username}}">{{.Username}}</option>
+                    {{end}}
+                </select>
             </div>
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header">Performance Graph 2</div>
-                    <div class="card-body">
-                        <canvas id="myChart2" width="400" height="400"></canvas>
-                    </div>
-                </div>
+            <div class="col-3">
+                <label for="errorType">Error Type:</label>
+                <select id="errorType" class="form-control">
+                    <option value="all" selected>All</option>
+                    <option value="error1">Error 1</option>
+                    <option value="error2">Error 2</option>
+                    <option value="error3">Error 3</option>
+                </select>
+            </div>
+        </div>
+        <div class="row justify-content-center">
+            <div class="col-md-6 col-lg-4">
+                <canvas id="chart1" width="400" height="400"></canvas>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <canvas id="chart2" width="400" height="400"></canvas>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <canvas id="chart3" width="400" height="400"></canvas>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <canvas id="chart4" width="400" height="400"></canvas>
             </div>
         </div>
     </div>
+    <script>
+        function updateChart(sorter, errorType, chartId) {
+            $.ajax({
+                url: "/dashdata?sorter=" + sorter + "&errorType=" + errorType,
+                type: "GET",
+                success: function(data) {
+                    var chartElement = $("#" + chartId);
+                    var chart = chartElement.data("chart");
 
-    <!-- Bootstrap JS -->
-    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
-            integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
-            crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
-            integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
-            crossorigin="anonymous"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
-            integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAy crossorigin="anonymous"></script>
-
-            <!-- Chart.js -->
-            <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-            
-            <script>
-                // Data for the performance graphs
-                const data1 = {
-                    labels: ["January", "February", "March", "April", "May", "June", "July"],
-                    datasets: [
-                        {
-                            label: "Dataset 1",
-                            data: [65, 59, 80, 81, 56, 55, 40],
-                            backgroundColor: "rgba(255, 99, 132, 0.2)",
-                            borderColor: "rgba(255, 99, 132, 1)",
-                            borderWidth: 1
-                        }
-                    ]
-                };
-            
-                const data2 = {
-                    labels: ["Red", "Blue", "Yellow", "Green", "Purple", "Orange"],
-                    datasets: [
-                        {
-                            label: "Dataset 2",
-                            data: [12, 19, 3, 5, 2, 3],
-                            backgroundColor: [
-                                "rgba(255, 99, 132, 0.2)",
-                                "rgba(54, 162, 235, 0.2)",
-                                "rgba(255, 206, 86, 0.2)",
-                                "rgba(75, 192, 192, 0.2)",
-                                "rgba(153, 102, 255, 0.2)",
-                                "rgba(255, 159, 64, 0.2)"
-                            ],
-                            borderColor: [
-                                "rgba(255, 99, 132, 1)",
-                                "rgba(54, 162, 235, 1)",
-                                "rgba(255, 206, 86, 1)",
-                                "rgba(75, 192, 192, 1)",
-                                "rgba(153, 102, 255, 1)",
-                                "rgba(255, 159, 64, 1)"
-                            ],
-                            borderWidth: 1
-                        }
-                    ]
-                };
-            
-                // Options for the performance graphs
-                const options = {
-                    scales: {
-                        yAxes: [
-                            {
-                                ticks: {
-                                    beginAtZero: true
-                                }
-                            }
-                        ]
+                    if (chart) {
+                        chart.destroy();
                     }
-                };
-            
-                // Create the performance graphs
-                const ctx1 = document.getElementById("myChart1").getContext("2d");
-                const chart1 = new Chart(ctx1, {
-                    type: "bar",
-                    data: data1,
-                    options: options
-                });
-            
-                const ctx2 = document.getElementById("myChart2").getContext("2d");
-                const chart2 = new Chart(ctx2, {
-                    type: "pie",
-                    data: data2,
-                    options: options
-                });
-            </script>
-            </body>
-            </html>
+
+                    chart = new Chart(chartElement, {
+                        type: 'bar',
+                        data: {
+                            labels: ["Aggregated Data"],
+                            datasets: data.datasets
+                        },
+                        options: {
+                            scales: {
+                                yAxes: [{
+                                    ticks: {
+                                        beginAtZero: true
+                                    }
+                                }]
+                            }
+                        }
+                    });
+
+                    chartElement.data("chart", chart);
+                },
+                error: function(xhr, status, error) {
+                    alert("Error: " + error);
+                }
+            });
+        }
+
+        $(document).ready(function() {
+            updateChart("all", "all", "chart1");
+            updateChart("all", "error1", "chart2");
+            updateChart("all", "error2", "chart3");
+            updateChart("all", "error3", "chart4");
+
+            $("#sorter, #errorType").change(function() {
+                updateChart($("#sorter").val(), $("#errorType").val(), "chart1");
+                updateChart($("#sorter").val(), "error1", "chart2");
+                updateChart($("#sorter").val(), "error2", "chart3");
+                updateChart($("#sorter").val(), "error3", "chart4");
+            });
+        });
+    </script>
+</body>
+</html>

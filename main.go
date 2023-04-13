@@ -192,6 +192,7 @@ func main() {
 	http.HandleFunc("/checkexistingerrors", checkExistingErrors)
 	http.HandleFunc("/update-user", UpdateUser)
 	http.HandleFunc("/dashboard", Dashboard)
+	http.HandleFunc("/dashdata", Dashdata)
 
 	http.ListenAndServe(":8082", nil)
 }
@@ -203,6 +204,7 @@ func Dashboard(w http.ResponseWriter, r *http.Request) {
 	page.Permission = auth(w, r)
 	// page.Message, page.SortRequests = listsortrequests(page.Permission, "receiving", r)
 	// page.Message, page.Users = listusers("sorting", page.Permission)
+	page.Message, page.Users = listusers("sorting", page.Permission)
 	t, _ := template.ParseFiles("dashboard.html", "header.html", "login.js")
 	page.Title = "Dashboard"
 	t.Execute(w, page)

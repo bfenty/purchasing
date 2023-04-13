@@ -59,6 +59,92 @@ func opendb() (db *sql.DB, messagebox Message) {
 	return db, messagebox
 }
 
+func Dashdata(w http.ResponseWriter, r *http.Request) {
+	sorter := r.FormValue("sorter")
+	errorType := r.FormValue("errorType")
+
+	log.Debugf("Sorter: %s", sorter)
+	log.Debugf("Error Type: %s", errorType)
+
+	// Construct the SQL query based on the selected filter values
+	query := "SELECT COALESCE(sorter, 'Unknown') AS sorter, COALESCE(errortype, 'Unknown') AS errortype, COALESCE(MONTH(checkint), 0) AS month, COUNT(1) AS errorcount FROM sorterror a LEFT JOIN sortrequest b ON a.requestid = b.requestid WHERE 1"
+	if sorter != "all" || errorType != "all" {
+		query += " AND"
+		if sorter != "all" {
+			query += fmt.Sprintf(" sorter = '%s'", sorter)
+		}
+		if sorter != "all" && errorType != "all" {
+			query += " AND"
+		}
+		if errorType != "all" {
+			query += fmt.Sprintf(" errortype = '%s'", errorType)
+		}
+	}
+	query += " GROUP BY sorter, errortype, month"
+	log.Debugf("Executing SQL query: %s", query)
+	rows, err := db.Query(query)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer rows.Close()
+
+	type Dataset struct {
+		Label           string `json:"label"`
+		Data            []int  `json:"data"`
+		BackgroundColor string `json:"backgroundColor"`
+		BorderColor     string `json:"borderColor"`
+		BorderWidth     int    `json:"borderWidth"`
+	}
+
+	type Response struct {
+		Labels   []string  `json:"labels"`
+		Datasets []Dataset `json:"datasets"`
+	}
+
+	var response Response
+
+	for rows.Next() {
+		var sorter, errorType string
+		var month, errorCount int
+		err := rows.Scan(&sorter, &errorType, &month, &errorCount)
+		if err != nil {
+			log.Fatal(err)
+		}
+		if sorter == "" {
+			sorter = "Unknown"
+		}
+		if errorType == "" {
+			errorType = "Unknown"
+		}
+
+		var dataset Dataset
+		dataset.Label = fmt.Sprintf("%s - %s", sorter, errorType)
+		dataset.Data = append(dataset.Data, errorCount)
+		dataset.BackgroundColor = "rgba(255, 99, 132, 0.2)"
+		dataset.BorderColor = "rgba(255, 99, 132, 1)"
+		dataset.BorderWidth = 1
+
+		if len(response.Labels) == 0 {
+			response.Labels = append(response.Labels, fmt.Sprintf("%d", month))
+		} else if response.Labels[len(response.Labels)-1] != fmt.Sprintf("%d", month) {
+			response.Labels = append(response.Labels, fmt.Sprintf("%d", month))
+		}
+
+		if len(response.Datasets) > 0 && response.Datasets[len(response.Datasets)-1].Label == dataset.Label {
+			response.Datasets[len(response.Datasets)-1].Data = append(response.Datasets[len(response.Datasets)-1].Data, errorCount)
+		} else {
+			response.Datasets = append(response.Datasets, dataset)
+		}
+	}
+
+	if err := rows.Err(); err != nil {
+		log.Fatal(err)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
+}
+
 func LookupRequestID(w http.ResponseWriter, r *http.Request) {
 	requestID := r.URL.Query().Get("requestid")
 
