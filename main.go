@@ -193,6 +193,7 @@ func main() {
 	http.HandleFunc("/update-user", UpdateUser)
 	http.HandleFunc("/dashboard", Dashboard)
 	http.HandleFunc("/dashdata", Dashdata)
+	http.HandleFunc("/efficiencydata", Efficiency)
 
 	http.ListenAndServe(":8082", nil)
 }

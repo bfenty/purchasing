@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"math"
+	"time"
 
 	// "log"
 	"fmt"
@@ -143,6 +144,102 @@ func Dashdata(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(response)
+}
+
+func EfficiencyHandler(w http.ResponseWriter, r *http.Request) {
+	// Test connection
+	pingErr := db.Ping()
+	if pingErr != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("Failed to connect to database"))
+		return
+	}
+
+	startdateStr := r.FormValue("startdate")
+	enddateStr := r.FormValue("enddate")
+	startdate, err := time.Parse("2006-01-02", startdateStr)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("Invalid start date"))
+		return
+	}
+	enddate, err := time.Parse("2006-01-02", enddateStr)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("Invalid end date"))
+		return
+	}
+
+	// Construct the SQL query
+	query := `
+		SELECT d.user, SUM(d.items)/SUM(e.hours) AS efficiency
+		FROM (
+			SELECT a.date, a.user, c.usercode, SUM(b.items_total) AS items
+			FROM (
+				SELECT ordernum, station, user, DATE(scans.time) AS date
+				FROM scans
+				WHERE station='pick'
+				GROUP BY ordernum, station, user, DATE(scans.time)
+			) a
+			INNER JOIN (
+				SELECT id, items_total
+				FROM orders
+			) b ON a.ordernum = b.id
+			LEFT JOIN (
+				SELECT usercode, username
+				FROM users
+			) c ON a.user = c.username
+			GROUP BY a.date, a.user, c.usercode
+		) d
+		LEFT JOIN (
+			SELECT DATE(clock_in) AS clockin, payroll_id, SUM(paid_hours) AS hours
+			FROM shifts
+			WHERE role='Shipping'
+			GROUP BY DATE(clock_in), payroll_id
+		) e ON d.date = e.clockin AND d.usercode = e.payroll_id
+		WHERE d.items IS NOT NULL AND e.hours IS NOT NULL AND d.date BETWEEN ? AND ?
+		GROUP BY d.user
+		ORDER BY 1, 2;
+	`
+
+	// Execute the query
+	rows, err := db.Query(query, startdate, enddate)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("Failed to execute query"))
+		return
+	}
+	defer rows.Close()
+
+	// Build the response
+	var response Response
+	for rows.Next() {
+		var user string
+		var efficiency float64
+		if err := rows.Scan(&user, &efficiency); err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte("Failed to scan rows"))
+			return
+		}
+
+		dataset := Dataset{
+			Label:           user,
+			Data:            []float64{efficiency},
+			BackgroundColor: "rgba(255, 99, 132, 0.2)",
+			BorderColor:     "rgba(255, 99, 132, 1)",
+			BorderWidth:     1,
+		}
+		response.Datasets = append(response.Datasets, dataset)
+	}
+	response.Labels = []string{"Efficiency"}
+
+	// Encode the response to JSON and write it to the HTTP response
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("Failed to encode response"))
+		return
+	}
 }
 
 func LookupRequestID(w http.ResponseWriter, r *http.Request) {
