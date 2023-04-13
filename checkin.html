@@ -144,8 +144,8 @@
 
       console.log('Form data:', data);
 
-      let hours = parseInt(data.get('hours'));
-      if (isNaN(hours) || hours <= 0) {
+      let hours = parseFloat(data.get('hours'));
+      if (isNaN(hours) || hours <= 0 || hours === '') {
         // Return an error message if hours is not a number or is less than or equal to zero
         let messageDiv = document.getElementById('message');
         messageDiv.style.display = 'block';
