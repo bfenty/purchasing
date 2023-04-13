@@ -140,6 +140,11 @@ $('#myModal').on('shown.bs.modal', function () {
     {{end}}
       {{if or (eq $permission "admin") (eq $permission "receiving") (eq $permission "purchasing") (eq $permission "sorting")}}
       <li class="nav-item active">
+        <a class="nav-link active" href="/dashboard">Dashboard <span class="sr-only">(current)</span></a>
+      </li>
+      {{end}}
+      {{if or (eq $permission "admin") (eq $permission "receiving") (eq $permission "purchasing") (eq $permission "sorting")}}
+      <li class="nav-item active">
         <a class="nav-link active" href="/logout">Logout <span class="sr-only">(current)</span></a>
       </li>
       {{end}}
