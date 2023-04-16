@@ -5,9 +5,65 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+
+        #message {
+          position: fixed;
+          top: 10px;
+          right: 10px;
+          z-index: 999;
+        }
+        .table-responsive-stack tr {
+          display: -webkit-box;
+          display: -ms-flexbox;
+          display: flex;
+          -webkit-box-orient: horizontal;
+          -webkit-box-direction: normal;
+              -ms-flex-direction: row;
+                  flex-direction: row;
+        }
+      
+        .table-responsive-stack td,
+        .table-responsive-stack th {
+          display:block;
+        /*      
+          flex-grow | flex-shrink | flex-basis   */
+          -ms-flex: 1 1 auto;
+            flex: 1 1 auto;
+        }
+      
+        .table-responsive-stack .table-responsive-stack-thead {
+          font-weight: bold;
+        }
+      
+        @media screen and (max-width: 768px) {
+          .table-responsive-stack tr {
+              -webkit-box-orient: vertical;
+              -webkit-box-direction: normal;
+                  -ms-flex-direction: column;
+                      flex-direction: column;
+              border-bottom: 3px solid #ccc;
+              display:block;
+              
+          }
+          /*  IE9 FIX   */
+          .table-responsive-stack td {
+              float: left\9;
+              width:100%;
+          }
+        }
+      
+        @media screen and (min-width: 768px) {
+          /* Set the width of each column */
+          th, td {
+            width: 6.25%;
+          }
+        }
+      </style>
 </head>
 <body>
     {{template "navigation" .}}
+    <div id="message" class="alert"></div>
     <div class="container mt-5">
         <h1 class="text-center mb-5">Sort Error Analysis</h1>
         <div class="row justify-content-center mb-3">
@@ -79,24 +135,77 @@
                     chartElement.data("chart", chart);
                 },
                 error: function(xhr, status, error) {
-                    alert("Error: " + error);
+                    $("#message").addClass("alert-danger");
+                    $("#message").text("Error: " + error);
+                }
+            });
+        }
+
+        function updateEfficiencyChart(startDate, endDate) {
+            $.ajax({
+                url: "/efficiencydata?startdate=" + startDate + "&enddate=" + endDate,
+                type: "GET",
+                success: function(data) {
+                    var chartElement = $("#chart2");
+                    var chart = chartElement.data("chart");
+
+                    if (chart) {
+                        chart.destroy();
+                    }
+
+                    chart = new Chart(chartElement, {
+                        type: 'bar',
+                        data: {
+                            labels: data.labels,
+                            datasets: data.datasets
+                        },
+                        options: {
+                            legend: {
+                                display: false
+                            },
+                            scales: {
+                                xAxes: [{
+                                    ticks: {
+                                        autoSkip: false
+                                    }
+                                }],
+                                yAxes: [{
+                                    ticks: {
+                                        beginAtZero: true
+                                    }
+                                }]
+                            },
+                            labels: {
+                                display: true
+                            }
+                        }
+                    });
+
+                    chartElement.data("chart", chart);
+                },
+                error: function(xhr, status, error) {
+                    $("#message").addClass("alert-danger");
+                    $("#message").text("Error: " + error);
                 }
             });
         }
 
         $(document).ready(function() {
             updateChart("all", "all", "chart1");
-            updateChart("all", "error1", "chart2");
-            updateChart("all", "error2", "chart3");
-            updateChart("all", "error3", "chart4");
+            updateEfficiencyChart("2022-01-01", "2022-12-31");
+            updateChart("all", "error1", "chart3");
+            updateChart("all", "error2", "chart4");
 
             $("#sorter, #errorType").change(function() {
                 updateChart($("#sorter").val(), $("#errorType").val(), "chart1");
-                updateChart($("#sorter").val(), "error1", "chart2");
-                updateChart($("#sorter").val(), "error2", "chart3");
-                updateChart($("#sorter").val(), "error3", "chart4");
+                updateChart($("#sorter").val(), "error1", "chart3");
+                updateChart($("#sorter").val(), "error2", "chart4");
+            });
+
+            $("#dateRange").on("apply.daterangepicker", function(ev, picker) {
+                updateEfficiencyChart(picker.startDate.format("YYYY-MM-DD"), picker.endDate.format("YYYY-MM-DD"));
             });
         });
-    </script>
+    </script>   
 </body>
 </html>

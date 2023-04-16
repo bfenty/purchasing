@@ -118,23 +118,25 @@ func Dashdata(w http.ResponseWriter, r *http.Request) {
 			errorType = "Unknown"
 		}
 
-		var dataset Dataset
-		dataset.Label = fmt.Sprintf("%s - %s", sorter, errorType)
-		dataset.Data = append(dataset.Data, errorCount)
-		dataset.BackgroundColor = "rgba(255, 99, 132, 0.2)"
-		dataset.BorderColor = "rgba(255, 99, 132, 1)"
-		dataset.BorderWidth = 1
-
-		if len(response.Labels) == 0 {
-			response.Labels = append(response.Labels, fmt.Sprintf("%d", month))
-		} else if response.Labels[len(response.Labels)-1] != fmt.Sprintf("%d", month) {
-			response.Labels = append(response.Labels, fmt.Sprintf("%d", month))
+		var found bool
+		for i, dataset := range response.Datasets {
+			if dataset.Label == fmt.Sprintf("%s - %s", sorter, errorType) {
+				response.Datasets[i].Data = append(dataset.Data, errorCount)
+				found = true
+				break
+			}
 		}
 
-		if len(response.Datasets) > 0 && response.Datasets[len(response.Datasets)-1].Label == dataset.Label {
-			response.Datasets[len(response.Datasets)-1].Data = append(response.Datasets[len(response.Datasets)-1].Data, errorCount)
-		} else {
+		if !found {
+			var dataset Dataset
+			dataset.Label = fmt.Sprintf("%s - %s", sorter, errorType)
+			dataset.Data = []int{errorCount}
+			dataset.BackgroundColor = "rgba(255, 99, 132, 0.2)"
+			dataset.BorderColor = "rgba(255, 99, 132, 1)"
+			dataset.BorderWidth = 1
+
 			response.Datasets = append(response.Datasets, dataset)
+			response.Labels = append(response.Labels, fmt.Sprintf("%s - %s", sorter, errorType))
 		}
 	}
 
@@ -146,7 +148,21 @@ func Dashdata(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
-func EfficiencyHandler(w http.ResponseWriter, r *http.Request) {
+func Efficiency(w http.ResponseWriter, r *http.Request) {
+
+	//Define structs used in this query
+	type Dataset struct {
+		Label           string    `json:"label"`
+		Data            []float64 `json:"data"`
+		BackgroundColor []string  `json:"backgroundColor"`
+		BorderColor     []string  `json:"borderColor"`
+		BorderWidth     int       `json:"borderWidth"`
+	}
+
+	type Response struct {
+		Labels   []string  `json:"labels"`
+		Datasets []Dataset `json:"datasets"`
+	}
 	// Test connection
 	pingErr := db.Ping()
 	if pingErr != nil {
@@ -171,37 +187,9 @@ func EfficiencyHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Construct the SQL query
-	query := `
-		SELECT d.user, SUM(d.items)/SUM(e.hours) AS efficiency
-		FROM (
-			SELECT a.date, a.user, c.usercode, SUM(b.items_total) AS items
-			FROM (
-				SELECT ordernum, station, user, DATE(scans.time) AS date
-				FROM scans
-				WHERE station='pick'
-				GROUP BY ordernum, station, user, DATE(scans.time)
-			) a
-			INNER JOIN (
-				SELECT id, items_total
-				FROM orders
-			) b ON a.ordernum = b.id
-			LEFT JOIN (
-				SELECT usercode, username
-				FROM users
-			) c ON a.user = c.username
-			GROUP BY a.date, a.user, c.usercode
-		) d
-		LEFT JOIN (
-			SELECT DATE(clock_in) AS clockin, payroll_id, SUM(paid_hours) AS hours
-			FROM shifts
-			WHERE role='Shipping'
-			GROUP BY DATE(clock_in), payroll_id
-		) e ON d.date = e.clockin AND d.usercode = e.payroll_id
-		WHERE d.items IS NOT NULL AND e.hours IS NOT NULL AND d.date BETWEEN ? AND ?
-		GROUP BY d.user
-		ORDER BY 1, 2;
-	`
+	query := "SELECT d.user,sum(d.items)/sum(e.hours) FROM (SELECT a.date,a.user,c.usercode,sum(b.items_total) items FROM (SELECT ordernum, station, user, DATE(scans.time) as date from orders.scans where station='pick' group by ordernum, station, user, DATE(scans.time)) a INNER JOIN (SELECT id, items_total from orders.orders) b on a.ordernum = b.id LEFT JOIN (SELECT usercode,username from orders.users) c on a.user = c.username GROUP BY a.date,a.user,c.usercode) d LEFT JOIN (SELECT DATE(clock_in) clockin,payroll_id, sum(paid_hours) hours from orders.shifts where role='Shipping' group by DATE(clock_in),payroll_id) e on d.date = e.clockin and d.usercode = e.payroll_id WHERE d.items IS NOT NULL and e.hours IS NOT NULL and d.date between ? and ? GROUP BY d.user ORDER BY 1,2;"
 
+	log.Debugf("Executing SQL query: %s", query)
 	// Execute the query
 	rows, err := db.Query(query, startdate, enddate)
 	if err != nil {
@@ -213,25 +201,35 @@ func EfficiencyHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Build the response
 	var response Response
+	var dataset Dataset
 	for rows.Next() {
 		var user string
 		var efficiency float64
-		if err := rows.Scan(&user, &efficiency); err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte("Failed to scan rows"))
-			return
+		err := rows.Scan(&user, &efficiency)
+		if err != nil {
+			log.Fatal(err)
 		}
 
-		dataset := Dataset{
-			Label:           user,
-			Data:            []float64{efficiency},
-			BackgroundColor: "rgba(255, 99, 132, 0.2)",
-			BorderColor:     "rgba(255, 99, 132, 1)",
-			BorderWidth:     1,
+		var color string
+		switch {
+		case efficiency > 150:
+			color = "rgba(75, 192, 192, 0.2)"
+		case efficiency > 100:
+			color = "rgba(255, 206, 86, 0.2)"
+		default:
+			color = "rgba(255, 99, 132, 0.2)"
 		}
-		response.Datasets = append(response.Datasets, dataset)
+
+		dataset.Data = append(dataset.Data, efficiency)
+		response.Labels = append(response.Labels, user)
+		dataset.BackgroundColor = append(dataset.BackgroundColor, color)
+		dataset.BorderColor = append(dataset.BorderColor, color)
+		dataset.BorderWidth = 1
 	}
-	response.Labels = []string{"Efficiency"}
+	dataset.Label = "Efficiency"
+	response.Datasets = append(response.Datasets, dataset)
+
+	// response.Labels = []string{"Efficiency"}
 
 	// Encode the response to JSON and write it to the HTTP response
 	w.Header().Set("Content-Type", "application/json")
