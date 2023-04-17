@@ -951,22 +951,29 @@ func Sortinginsert(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.WithFields(log.Fields{"username": user.Username}).Debug("fixing values")
+	log.WithFields(log.Fields{"username": user.Username, "request": data["requestid"]}).Debug("Fixing values")
 	// Rename "sku_manufacturer" key to match the database column name
 	if val, ok := data["manufacturerpart"]; ok {
 		delete(data, "manufacturerpart")
 		data["sku_manufacturer"] = val
 	}
 
-	// Rename "sku_manufacturer" key to match the database column name
+	// Rename "checkin" key to match the database column name
 	if val, ok := data["checkin"]; ok {
 		delete(data, "checkin")
 		data["checkint"] = val
 	}
 
-	// Remove the "difference" field, which is not in the database
+	//fix <nil> request ID
+	if data["requestid"] == "<nil>" {
+		log.WithFields(log.Fields{"username": user.Username, "request": data["requestid"]}).Debug("requestid is nil")
+		data["requestid"] = ""
+	}
+
+	// Remove the "difference" and "layout" fields, which are not in the database
 	delete(data, "difference")
-	log.WithFields(log.Fields{"username": user.Username}).Debug(data)
+	delete(data, "layout")
+	log.WithFields(log.Fields{"username": user.Username, "request": data["requestid"]}).Debug(data)
 
 	// Check if the status is being updated to 'checkin'
 	if data["status"] == "checkin" {
@@ -991,7 +998,7 @@ func Sortinginsert(w http.ResponseWriter, r *http.Request) {
 	var message Message
 
 	// Construct SQL query based on request data
-	log.WithFields(log.Fields{"username": user.Username}).Debug("Constructing SQL")
+	log.WithFields(log.Fields{"username": user.Username, "request": data["requestid"]}).Debug("Constructing SQL")
 	if data["requestid"] == nil || data["requestid"] == "" || data["requestid"] == "<nil>" { //if this is a new request
 		newquery = "REPLACE INTO sortrequest ("
 		for key, value := range data {
@@ -1002,6 +1009,7 @@ func Sortinginsert(w http.ResponseWriter, r *http.Request) {
 				newquery += "`" + key + "`,"
 				values = append(values, value)
 			}
+			log.WithFields(log.Fields{"username": user.Username, "request": data["requestid"], key: value}).Debug("added to query")
 		}
 		newquery = newquery[:len(newquery)-1] + ") VALUES ("
 		for range values {
@@ -1035,7 +1043,7 @@ func Sortinginsert(w http.ResponseWriter, r *http.Request) {
 		"requestid": data["requestid"],
 		"query":     newquery,
 		"values":    values,
-	}).Debug("Sortinginsert: received data")
+	}).Info("Sortinginsert: received data")
 
 	stmt, err := db.Prepare(newquery)
 	if err != nil {

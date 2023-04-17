@@ -143,7 +143,7 @@
                   </select>
                 </td>
                 {{end}}
-                {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "dataentry") (eq $layout "mgmt")}}<td class="btn-col"><input type='hidden' id='active' name='active' value='1'><input type='submit' value='Insert' class="btn btn-primary update-request"></td>{{end}}
+                {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "dataentry") (eq $layout "mgmt")}}<td class="btn-col"><input type='hidden' id='requestid' name='requestid' value=''><input type='hidden' id='active' name='active' value='1'><input type='submit' value='Insert' class="btn btn-primary update-request"></td>{{end}}
                 {{if or (eq $layout "full") ($mgmt)}}<td class="btn-col"></td>{{end}}
                 {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "mgmt")}}<td class="btn-col"></td>{{end}}
                 </tr>
