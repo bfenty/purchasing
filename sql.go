@@ -64,8 +64,11 @@ func Dashdata(w http.ResponseWriter, r *http.Request) {
 	sorter := r.FormValue("sorter")
 	errorType := r.FormValue("errorType")
 
-	log.Debugf("Sorter: %s", sorter)
-	log.Debugf("Error Type: %s", errorType)
+	//Auth User
+	user := auth(w, r)
+
+	log.WithFields(log.Fields{"username": user.Username}).Debugf("Sorter: %s", sorter)
+	log.WithFields(log.Fields{"username": user.Username}).Debugf("Error Type: %s", errorType)
 
 	// Construct the SQL query based on the selected filter values
 	query := "SELECT COALESCE(sorter, 'Unknown') AS sorter, COALESCE(errortype, 'Unknown') AS errortype, COALESCE(MONTH(checkint), 0) AS month, COUNT(1) AS errorcount FROM sorterror a LEFT JOIN sortrequest b ON a.requestid = b.requestid WHERE 1"
@@ -82,7 +85,7 @@ func Dashdata(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	query += " GROUP BY sorter, errortype, month"
-	log.Debugf("Executing SQL query: %s", query)
+	log.WithFields(log.Fields{"username": user.Username}).Debugf("Executing SQL query: %s", query)
 	rows, err := db.Query(query)
 	if err != nil {
 		log.Fatal(err)
@@ -150,6 +153,9 @@ func Dashdata(w http.ResponseWriter, r *http.Request) {
 
 func Efficiency(w http.ResponseWriter, r *http.Request) {
 
+	//Auth User
+	user := auth(w, r)
+
 	//Define structs used in this query
 	type Dataset struct {
 		Label           string    `json:"label"`
@@ -189,7 +195,7 @@ func Efficiency(w http.ResponseWriter, r *http.Request) {
 	// Construct the SQL query
 	query := "SELECT d.user,sum(d.items)/sum(e.hours) FROM (SELECT a.date,a.user,c.usercode,sum(b.items_total) items FROM (SELECT ordernum, station, user, DATE(scans.time) as date from orders.scans where station='pick' group by ordernum, station, user, DATE(scans.time)) a INNER JOIN (SELECT id, items_total from orders.orders) b on a.ordernum = b.id LEFT JOIN (SELECT usercode,username from orders.users) c on a.user = c.username GROUP BY a.date,a.user,c.usercode) d LEFT JOIN (SELECT DATE(clock_in) clockin,payroll_id, sum(paid_hours) hours from orders.shifts where role='Shipping' group by DATE(clock_in),payroll_id) e on d.date = e.clockin and d.usercode = e.payroll_id WHERE d.items IS NOT NULL and e.hours IS NOT NULL and d.date between ? and ? GROUP BY d.user ORDER BY 1,2;"
 
-	log.Debugf("Executing SQL query: %s", query)
+	log.WithFields(log.Fields{"username": user.Username}).Debugf("Executing SQL query: %s", query)
 	// Execute the query
 	rows, err := db.Query(query, startdate, enddate)
 	if err != nil {
@@ -264,8 +270,11 @@ func LookupRequestID(w http.ResponseWriter, r *http.Request) {
 }
 
 func sortErrorUpdate(w http.ResponseWriter, r *http.Request) {
+	//Auth User
+	user := auth(w, r)
+
 	fmt.Println("TEST")
-	log.Debug("Inserting Error")
+	log.WithFields(log.Fields{"username": user.Username}).Debug("Inserting Error")
 	// Parse the form data
 	err := r.ParseForm()
 	if err != nil {
@@ -570,7 +579,7 @@ func listusers(role string, user User) (message Message, users []User) {
 	pingErr := db.Ping()
 	if pingErr != nil {
 		db, message = opendb()
-		log.Debug(pingErr)
+		log.WithFields(log.Fields{"username": user.Username}).Debug(pingErr)
 		return handleerror(pingErr), users
 	}
 
@@ -588,7 +597,7 @@ func listusers(role string, user User) (message Message, users []User) {
 	rows, err := db.Query(newquery)
 	defer rows.Close()
 	if err != nil {
-		log.Debug(err)
+		log.WithFields(log.Fields{"username": user.Username}).Debug(err)
 		return handleerror(err), users
 	}
 
@@ -597,7 +606,7 @@ func listusers(role string, user User) (message Message, users []User) {
 		var r User
 		err := rows.Scan(&r.Username, &r.Usercode, &r.Role, &r.Sorting, &r.Manager, &r.Management)
 		if err != nil {
-			log.Debug(err)
+			log.WithFields(log.Fields{"username": user.Username}).Debug(err)
 			return handleerror(err), users
 		}
 		users = append(users, r)
@@ -614,12 +623,14 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 		// return handleerror(pingErr)
 	}
 
+	user := auth(w, r)
+
 	// Get the form values from the request
 	username := r.FormValue("username")
 	usercode := r.FormValue("usercode")
 	role := r.FormValue("role")
 	manager := r.FormValue("manager")
-	log.Debug("username:", username, " usercode:", usercode, " role:", role, " manager:", manager)
+	log.WithFields(log.Fields{"username": user.Username}).Debug("username:", username, " usercode:", usercode, " role:", role, " manager:", manager)
 	var sorting int
 	if r.FormValue("sorting") == "true" {
 		sorting = 1
@@ -929,8 +940,10 @@ func Sortinginsert(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	user := auth(w, r)
+
 	// Read the request data as JSON
-	log.Debug("Decoding JSON")
+	log.WithFields(log.Fields{"username": user.Username}).Debug("Decoding JSON")
 	var data map[string]interface{}
 	err := json.NewDecoder(r.Body).Decode(&data)
 	if err != nil {
@@ -938,7 +951,7 @@ func Sortinginsert(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Debug("fixing values")
+	log.WithFields(log.Fields{"username": user.Username}).Debug("fixing values")
 	// Rename "sku_manufacturer" key to match the database column name
 	if val, ok := data["manufacturerpart"]; ok {
 		delete(data, "manufacturerpart")
@@ -953,7 +966,7 @@ func Sortinginsert(w http.ResponseWriter, r *http.Request) {
 
 	// Remove the "difference" field, which is not in the database
 	delete(data, "difference")
-	log.Debug(data)
+	log.WithFields(log.Fields{"username": user.Username}).Debug(data)
 
 	// Check if the status is being updated to 'checkin'
 	if data["status"] == "checkin" {
@@ -978,7 +991,7 @@ func Sortinginsert(w http.ResponseWriter, r *http.Request) {
 	var message Message
 
 	// Construct SQL query based on request data
-	log.Debug("Constructing SQL")
+	log.WithFields(log.Fields{"username": user.Username}).Debug("Constructing SQL")
 	if data["requestid"] == nil || data["requestid"] == "" || data["requestid"] == "<nil>" { //if this is a new request
 		newquery = "REPLACE INTO sortrequest ("
 		for key, value := range data {
@@ -1453,7 +1466,7 @@ func userauth(username string, pass string) (user User, message Message) {
 	//Pull Data
 	for rows.Next() {
 		err := rows.Scan(&dbpass, &r.Role, &r.Permissions.Admin, &r.Permissions.Mgmt)
-		log.Debug("Role:", r.Role)
+		log.WithFields(log.Fields{"username": user.Username}).Debug("Role:", r.Role)
 		if err != nil {
 			user.Role = "notfound"
 			return user, handleerror(pingErr)
@@ -1473,7 +1486,7 @@ func userauth(username string, pass string) (user User, message Message) {
 		return user, message
 	}
 
-	log.Debug("Checking Permissions: ", r.Role)
+	log.WithFields(log.Fields{"username": user.Username}).Debug("Checking Permissions: ", r.Role)
 	//If user has not set a password
 	if dbpass == "" {
 		message.Title = "Set Password"

@@ -91,7 +91,7 @@
                   </select>
                 </td>
                 {{end}}
-                {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "dataentry") (eq $layout "mgmt")}}<td class="btn-col"><input type='submit' value='Search' class="btn btn-primary"></td>{{end}}
+                {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "dataentry") (eq $layout "mgmt")}}<td class="btn-col"><input type=hidden name=layout id=layout value={{$layout}}><input type='submit' value='Search' class="btn btn-primary"></td>{{end}}
                 {{if or (eq $layout "full")}}<td class="btn-col"></td>{{end}}
                 {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "mgmt")}}<td class="btn-col"></td>{{end}}
               </tr>  
