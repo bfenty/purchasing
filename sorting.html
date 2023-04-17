@@ -8,6 +8,7 @@
   {{template "navigation" .}}
   {{$permission := .Permission.Role}}
   {{$admin := .Permission.Permissions.Admin}}
+  {{$layout := .Layout}}
   <div>
     <div id="message" class="alert"></div>
     <!-- Dennis Nedry Easter Egg -->
@@ -21,27 +22,23 @@
             <thead class="table-dark" style="position: sticky; top: 0; z-index: 1;">
               <tr>
                 <th scope="col">Request ID</th>
-                <th scope="col">SKU</th>
-                <th scope="col">Description</th>
-                {{if $admin}}
-                  <th scope="col">Manufacturer Part</th>
-                {{end}}
-                <th scope="col">Pcs/Bag</th>
-                <th scope="col">Weight Out</th>
-                <th scope="col">Weight In</th>
-                <th scope="col">Difference</th>
-                <th scope="col">Units</th>
-                <th scope="col">Hours</th>
-                <th scope="col">Check Out</th>
-                <th scope="col">Check In</th>
-                <th scope="col">Sorter</th>
-                <th scope="col">Status</th>
-                {{if $admin}}
-                  <th scope="col">Priority</th>
-                {{end}}
-                <th scope="col" class="btn-col"></th>
-                <th scope="col" class="btn-col"></th>
-                <th scope="col" class="btn-col"></th>
+                {{if or (eq $layout "receiving") (eq $layout "full") (eq $layout "dataentry") (eq $layout "mgmt")}}<th scope="col">SKU</th>{{end}}
+                {{if or (eq $layout "receiving") (eq $layout "full") (eq $layout "dataentry")}}<th scope="col">Description</th>{{end}}
+                {{if or (eq $layout "full") (eq $layout "dataentry")}}<th scope="col">Manufacturer Part</th>{{end}}
+                {{if or (eq $layout "receiving") (eq $layout "full") (eq $layout "dataentry") (eq $layout "mgmt")}}<th scope="col">Pcs/Bag</th>{{end}}
+                {{if or (eq $layout "receiving") (eq $layout "full") (eq $layout "dataentry")}}<th scope="col">Weight Out</th>{{end}}
+                {{if or (eq $layout "receiving") (eq $layout "full")}}<th scope="col">Weight In</th>{{end}}
+                {{if or (eq $layout "receiving") (eq $layout "full")}}<th scope="col">Difference</th>{{end}}
+                {{if or (eq $layout "receiving") (eq $layout "full")}}<th scope="col">Units</th>{{end}}
+                {{if or (eq $layout "receiving") (eq $layout "full") (eq $layout "mgmt")}}<th scope="col">Hours</th>{{end}}
+                {{if or (eq $layout "full") (eq $layout "mgmt")}}<th scope="col">Check Out</th>{{end}}
+                {{if or (eq $layout "full") (eq $layout "mgmt")}}<th scope="col">Check In</th>{{end}}
+                {{if or (eq $layout "full") (eq $layout "mgmt")}}<th scope="col">Sorter</th>{{end}}
+                {{if or (eq $layout "full")}}<th scope="col">Status</th>{{end}}
+                {{if or (eq $layout "full")}}<th scope="col">Priority</th>{{end}}
+                {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "dataentry") (eq $layout "mgmt")}}<th scope="col" class="btn-col"></th>{{end}}
+                {{if or (eq $layout "full")}}<th scope="col" class="btn-col"></th>{{end}}
+                {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "mgmt")}}<th scope="col" class="btn-col"></th>{{end}}
               </tr>
             </thead>
             <tbody>
@@ -49,26 +46,25 @@
               <form action="/sorting" method="GET">
               <tr>
                 <td><input type="text" class="form-control" name="search-requestid" placeholder="Request ID"></td>
-                <td><input type="text" class="form-control" name="search-sku" placeholder="SKU"></td>
-                <td><input type="text" class="form-control" name="search-description" placeholder="Description"></td>
-                {{if $admin}}
-                  <td><input type="text" class="form-control" name="search-manufacturerpart" placeholder="Manufacturer Part"></td>
-                {{end}}
-                <td><input type="text" class="form-control" name="search-instructions" pattern="[0-9]+(\.[0-9]+)?" title="Please enter a valid decimal number" placeholder="Pieces"></td>
-                <td><input type="text" class="form-control" name="search-weightout" placeholder="Weight Out"></td>
-                <td><input type="text" class="form-control" name="search-weightin" placeholder="Weight In"></td>
-                <td>
+                {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "dataentry") (eq $layout "mgmt")}}<td><input type="text" class="form-control" name="search-sku" placeholder="SKU"></td>{{end}}
+                {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "dataentry")}}<td><input type="text" class="form-control" name="search-description" placeholder="Description"></td>{{end}}
+                {{if or (eq $layout "full") (eq $layout "dataentry")}}<td><input type="text" class="form-control" name="search-manufacturerpart" placeholder="Manufacturer Part"></td>{{end}}
+                {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "dataentry") (eq $layout "mgmt")}}<td><input type="text" class="form-control" name="search-instructions" pattern="[0-9]+(\.[0-9]+)?" title="Please enter a valid decimal number" placeholder="Pieces"></td>{{end}}
+                {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "dataentry")}}<td><input type="text" class="form-control" name="search-weightout" placeholder="Weight Out"></td>{{end}}
+                {{if or (eq $layout "full") (eq $layout "receiving")}}<td><input type="text" class="form-control" name="search-weightin" placeholder="Weight In"></td>{{end}}
+                {{if or (eq $layout "full") (eq $layout "receiving")}}<td>
                   <select class="form-select" name="search-difference">
                     <option value="">Difference</option>
                     <option value="positive">Positive</option>
                     <option value="negative">Negative</option>
                   </select>
                 </td>
-                <td><input type="text" class="form-control" name="search-pieces" pattern="[0-9]+(\.[0-9]+)?" title="Please enter a valid decimal number" placeholder="Units"></td>
-                <td><input type="text" class="form-control" name="search-hours" placeholder="Hours"></td>
-                <td><input type="text" class="form-control" name="search-checkout" placeholder="Check Out"></td>
-                <td><input type="text" class="form-control" name="search-checkin" placeholder="Check In"></td>
-                <td>
+                {{end}}
+                {{if or (eq $layout "full") (eq $layout "receiving")}}<td><input type="text" class="form-control" name="search-pieces" pattern="[0-9]+(\.[0-9]+)?" title="Please enter a valid decimal number" placeholder="Units"></td>{{end}}
+                {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "mgmt")}}<td><input type="text" class="form-control" name="search-hours" placeholder="Hours"></td>{{end}}
+                {{if or (eq $layout "full") (eq $layout "mgmt")}}<td><input type="text" class="form-control" name="search-checkout" placeholder="Check Out"></td>{{end}}
+                {{if or (eq $layout "full") (eq $layout "mgmt")}}<td><input type="text" class="form-control" name="search-checkin" placeholder="Check In"></td>{{end}}
+                {{if or (eq $layout "full") (eq $layout "mgmt")}}<td>
                   <select class="form-select" name="search-sorter">
                     <option value="">Sorter</option>
                     {{range $.Users}}
@@ -76,7 +72,8 @@
                     {{end}}
                   </select>
                 </td>
-                <td>
+                {{end}}
+                {{if or (eq $layout "full")}}<td>
                   <select class="form-select" name="search-status">
                     <option value="">Status</option>
                     <option value="New">New</option>
@@ -84,7 +81,8 @@
                     <option value="Checkin">Checkin</option>
                   </select>
                 </td>
-                {{if $admin}}
+                {{end}}
+                {{if or (eq $layout "full")}}
                 <td>
                   <select class="form-select" name="search-priority">
                     <option value="">Priority</option>
@@ -93,9 +91,9 @@
                   </select>
                 </td>
                 {{end}}
-                <td class="btn-col"><input type='submit' value='Search' class="btn btn-primary"></td>
-                <td class="btn-col"></td>
-                <td class="btn-col"></td>
+                {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "dataentry") (eq $layout "mgmt")}}<td class="btn-col"><input type='submit' value='Search' class="btn btn-primary"></td>{{end}}
+                {{if or (eq $layout "full")}}<td class="btn-col"></td>{{end}}
+                {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "mgmt")}}<td class="btn-col"></td>{{end}}
               </tr>  
             </form>
             {{if $admin}}  
@@ -103,17 +101,18 @@
             <form class="update-form" id="insert-form">
               <tr>
                 <td></td>
-                <td><input type="text" class="form-control sku" id="sku" name="sku" placeholder="SKU"></td>
-                <td><input type="text" class="form-control description" id="description" name="description" placeholder="Description"></td>
-                <td><input type="text" class="form-control manufacturerpart" id="manufacturerpart" name="manufacturerpart" placeholder="Manufacturer Part"></td>
-                <td><div class="input-group"><input type="text" class="form-control instructions" id="instructions" name="instructions" pattern="[0-9]+(\.[0-9]+)?" title="Please enter a valid decimal number" placeholder="Pieces"></div></td>
-                <td><div class="input-group"><input type="text" class="form-control weightout" id="weightout" name="weightout" placeholder="Weight Out"></div></td>
-                <td><div class="input-group"><input type="text" class="form-control weightin" id="weightin" name="weightin" placeholder="Weight In"></div></td>
-                <td><div class="input-group"><input type="text" class="form-control difference" id="difference" name="difference" readonly placeholder="Difference"></div></td>
-                <td><div class="input-group"><input type="text" class="form-control pieces" id="pieces" name="pieces" pattern="[0-9]+(\.[0-9]+)?" title="Please enter a valid decimal number" placeholder="Pieces"></div></td>
-                <td><input type="text" class="form-control hours" id="hours" name="hours" placeholder="Hours"></td>
-                <td><input type="date" class="form-control checkout" id="checkout" name="checkout" placeholder="Checkout Date"></td>
-                <td><input type="date" class="form-control checkin" id="checkin" name="checkin" placeholder="Checkin Date"></td>
+                {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "dataentry") (eq $layout "mgmt")}}<td><input type="text" class="form-control sku" id="sku" name="sku" placeholder="SKU"></td>{{end}}
+                {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "dataentry")}}<td><input type="text" class="form-control description" id="description" name="description" placeholder="Description"></td>{{end}}
+                {{if or (eq $layout "full") (eq $layout "dataentry")}}<td><input type="text" class="form-control manufacturerpart" id="manufacturerpart" name="manufacturerpart" placeholder="Manufacturer Part"></td>{{end}}
+                {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "dataentry") (eq $layout "mgmt")}}<td><div class="input-group"><input type="text" class="form-control instructions" id="instructions" name="instructions" pattern="[0-9]+(\.[0-9]+)?" title="Please enter a valid decimal number" placeholder="Pieces"></div></td>{{end}}
+                {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "dataentry")}}<td><div class="input-group"><input type="text" class="form-control weightout" id="weightout" name="weightout" placeholder="Weight Out"></div></td>{{end}}
+                {{if or (eq $layout "full") (eq $layout "receiving")}}<td><div class="input-group"><input type="text" class="form-control weightin" id="weightin" name="weightin" placeholder="Weight In"></div></td>{{end}}
+                {{if or (eq $layout "full") (eq $layout "receiving")}}<td><div class="input-group"><input type="text" class="form-control difference" id="difference" name="difference" readonly placeholder="Difference"></div></td>{{end}}
+                {{if or (eq $layout "full") (eq $layout "receiving")}}<td><div class="input-group"><input type="text" class="form-control pieces" id="pieces" name="pieces" pattern="[0-9]+(\.[0-9]+)?" title="Please enter a valid decimal number" placeholder="Pieces"></div></td>{{end}}
+                {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "mgmt")}}<td><input type="text" class="form-control hours" id="hours" name="hours" placeholder="Hours"></td>{{end}}
+                {{if or (eq $layout "full") (eq $layout "mgmt")}} <td><input type="date" class="form-control checkout" id="checkout" name="checkout" placeholder="Checkout Date"></td>{{end}}
+                {{if or (eq $layout "full") (eq $layout "mgmt")}}<td><input type="date" class="form-control checkin" id="checkin" name="checkin" placeholder="Checkin Date"></td>{{end}}
+                {{if or (eq $layout "full") (eq $layout "mgmt")}}
                 <td>
                   <select class="form-select" id="sorter" name="sorter">
                     <option selected disabled value="">Sorter</option>
@@ -123,7 +122,8 @@
                     <option></option>
                   </select>
                 </td>
-                {{if $admin}}
+                {{end}}
+                {{if or (eq $layout "full")}}
                 <td>
                   <select class="form-select" id="status" name="status">
                     <option selected disabled value="">Status</option>
@@ -133,7 +133,7 @@
                   </select>
                 </td>
                 {{end}}
-                {{if $admin}}
+                {{if or (eq $layout "full")}}
                 <td>
                   <select class="form-select" id="prty" name="prty">
                     <option selected disabled value="">Priority</option>
@@ -142,9 +142,9 @@
                   </select>
                 </td>
                 {{end}}
-                <td class="btn-col"><input type='hidden' id='active' name='active' value='1'><input type='submit' value='Insert' class="btn btn-primary update-request"></td>
-                <td class="btn-col"></td>
-                <td class="btn-col"></td>
+                {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "dataentry") (eq $layout "mgmt")}}<td class="btn-col"><input type='hidden' id='active' name='active' value='1'><input type='submit' value='Insert' class="btn btn-primary update-request"></td>{{end}}
+                {{if or (eq $layout "full")}}<td class="btn-col"></td>{{end}}
+                {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "mgmt")}}<td class="btn-col"></td>{{end}}
                 </tr>
                 </form>
                 {{end}}
@@ -153,24 +153,18 @@
               <form id="row{{$index}}" class="update-form">
                 <tr {{if .Warn}} class="table-warning"{{end}}>
                   <td><input type="text" class="form-control requestid" id="requestid" name="requestid" value="{{.ID}}"></td>
-                  <td><input type="text" class="form-control sku" id="sku" name="sku" value="{{.SKU}}"></td>
-                  <td><input type="text" class="form-control description" id="description" name="description" value="{{.Description}}"></td>
-                  {{if $admin}}
-                    <td><input type="text" class="form-control manufacturerpart" id="manufacturerpart" name="manufacturerpart" value="{{with .ManufacturerPart}}{{.}}{{end}}"></td>
-                  {{end}}
-                  <td>
-                    <div class="input-group">
-                    <input type="text" class="form-control instructions" id="instructions" name="instructions" pattern="[0-9]+(\.[0-9]+)?" title="Please enter a valid decimal number" value="{{with .Instructions}}{{.}}{{end}}">
-                    
-                  </div>
-                  </td>
-                  <td><div class="input-group"><input type="text" class="form-control weightout" id="weightout" name="weightout" value="{{.Weightout}}"></div></td>
-                  <td><div class="input-group"><input type="text" class="form-control weightin" id="weightin" name="weightin" value="{{.Weightin}}"></div></td>
-                  <td><div class="input-group"><input type="text" class="form-control difference" id="difference" name="difference" value="{{.Difference}}" readonly></div></td>
-                  <td><div class="input-group"><input type="text" class="form-control pieces" id="pieces" name="pieces" pattern="[0-9]+(\.[0-9]+)?" title="Please enter a valid decimal number" value="{{with .Pieces}}{{.}}{{end}}"></div></td>
-                  <td><input type="text" class="form-control hours" id="hours" name="hours" value="{{with .Hours}}{{.}}{{end}}"></td>
-                  <td><input type="date" class="form-control checkout" id="checkout" name="checkout" value="{{.Checkout}}"></td>
-                  <td><input type="date" class="form-control checkin" id="checkin" name="checkin" value="{{.Checkin}}"></td>
+                  {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "dataentry") (eq $layout "mgmt")}}<td><input type="text" class="form-control sku" id="sku" name="sku" value="{{.SKU}}"></td>{{end}}
+                  {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "dataentry")}}<td><input type="text" class="form-control description" id="description" name="description" value="{{.Description}}"></td>{{end}}
+                  {{if or (eq $layout "full") (eq $layout "dataentry")}}<td><input type="text" class="form-control manufacturerpart" id="manufacturerpart" name="manufacturerpart" value="{{with .ManufacturerPart}}{{.}}{{end}}"></td>{{end}}
+                  {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "dataentry") (eq $layout "mgmt")}}<td><div class="input-group"><input type="text" class="form-control instructions" id="instructions" name="instructions" pattern="[0-9]+(\.[0-9]+)?" title="Please enter a valid decimal number" value="{{with .Instructions}}{{.}}{{end}}"></div></td>{{end}}
+                  {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "dataentry")}}<td><div class="input-group"><input type="text" class="form-control weightout" id="weightout" name="weightout" value="{{.Weightout}}"></div></td>{{end}}
+                  {{if or (eq $layout "full") (eq $layout "receiving")}}<td><div class="input-group"><input type="text" class="form-control weightin" id="weightin" name="weightin" value="{{.Weightin}}"></div></td>{{end}}
+                  {{if or (eq $layout "full") (eq $layout "receiving")}}<td><div class="input-group"><input type="text" class="form-control difference" id="difference" name="difference" value="{{.Difference}}" readonly></div></td>{{end}}
+                  {{if or (eq $layout "full") (eq $layout "receiving")}}<td><div class="input-group"><input type="text" class="form-control pieces" id="pieces" name="pieces" pattern="[0-9]+(\.[0-9]+)?" title="Please enter a valid decimal number" value="{{with .Pieces}}{{.}}{{end}}"></div></td>{{end}}
+                  {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "mgmt")}}<td><input type="text" class="form-control hours" id="hours" name="hours" value="{{with .Hours}}{{.}}{{end}}"></td>{{end}}
+                  {{if or (eq $layout "full") (eq $layout "mgmt")}}<td><input type="date" class="form-control checkout" id="checkout" name="checkout" value="{{.Checkout}}"></td>{{end}}
+                  {{if or (eq $layout "full") (eq $layout "mgmt")}}<td><input type="date" class="form-control checkin" id="checkin" name="checkin" value="{{.Checkin}}"></td>{{end}}
+                  {{if or (eq $layout "full") (eq $layout "mgmt")}}
                   <td>
                     <select class="form-select" id="sorter" name="sorter">
                       <option selected disabled value> {{.Sorter}}</option>
@@ -180,6 +174,8 @@
                       <option></option>
                     </select>
                   </td>
+                  {{end}}
+                  {{if or (eq $layout "full")}}
                   <td>
                     {{if $admin}}
                     <select class="form-select" id="status" name="status">
@@ -191,7 +187,8 @@
                       <input class="form-control" type="text" id="status" name="status" value="{{.Status}}" readonly>
                     {{end}}
                   </td>
-                  {{if $admin}}
+                  {{end}}
+                  {{if or (eq $layout "full")}}
                   <td>
                     <select class="form-select" id="prty" name="prty">
                       <option value="0" {{if eq .Priority 0}}selected{{end}}>Normal</option>
@@ -199,10 +196,10 @@
                     </select>
                   </td>
                   {{end}}
-                  <td class="btn-col"><input type='hidden' id='active' name='active' value='1'><input type='submit' value='Update' class="btn btn-primary update-request"></td>
+                  {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "dataentry") (eq $layout "mgmt")}}<td class="btn-col"><input type='hidden' id='active' name='active' value='1'><input type='submit' value='Update' class="btn btn-primary update-request"></td>{{end}}
                 </form>
-                  <td class="btn-col"><button type="button" class="btn btn-danger archive-request" id="archiveRequest" name="archiveRequest" data-requestid="{{.ID}}">Archive</button></td>
-                  <td class="btn-col"><button class="btn btn-warning error" id="error" name="error" data-requestid="{{.ID}}">Error</button></td>
+                {{if or (eq $layout "full")}}<td class="btn-col"><button type="button" class="btn btn-danger archive-request" id="archiveRequest" name="archiveRequest" data-requestid="{{.ID}}">Archive</button></td>{{end}}
+                {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "mgmt")}}<td class="btn-col"><button class="btn btn-warning error" id="error" name="error" data-requestid="{{.ID}}">Error</button></td>{{end}}
                 </tr>
             {{end}}
             </tbody>
