@@ -17,6 +17,7 @@
       <div class="col-sm-12">
         <div>
           <table class="table table-striped table-hover table-responsive-stack" id="sorttable">
+            <!-- Header -->
             <thead class="table-dark" style="position: sticky; top: 0; z-index: 1;">
               <tr>
                 <th scope="col">Request ID</th>
@@ -38,12 +39,13 @@
                 {{if $admin}}
                   <th scope="col">Priority</th>
                 {{end}}
-                <th scope="col"></th>
-                <th scope="col"></th>
-                <th scope="col"></th>
+                <th scope="col" class="btn-col"></th>
+                <th scope="col" class="btn-col"></th>
+                <th scope="col" class="btn-col"></th>
               </tr>
             </thead>
             <tbody>
+              <!-- Search Form -->
               <form action="/sorting" method="GET">
               <tr>
                 <td><input type="text" class="form-control" name="search-requestid" placeholder="Request ID"></td>
@@ -52,7 +54,7 @@
                 {{if $admin}}
                   <td><input type="text" class="form-control" name="search-manufacturerpart" placeholder="Manufacturer Part"></td>
                 {{end}}
-                <td><input type="text" class="form-control" name="search-instructions" pattern="[0-9]+(\.[0-9]+)?" required title="Please enter a valid decimal number" placeholder="Pieces"></td>
+                <td><input type="text" class="form-control" name="search-instructions" pattern="[0-9]+(\.[0-9]+)?" title="Please enter a valid decimal number" placeholder="Pieces"></td>
                 <td><input type="text" class="form-control" name="search-weightout" placeholder="Weight Out"></td>
                 <td><input type="text" class="form-control" name="search-weightin" placeholder="Weight In"></td>
                 <td>
@@ -62,7 +64,7 @@
                     <option value="negative">Negative</option>
                   </select>
                 </td>
-                <td><input type="text" class="form-control" name="search-pieces" pattern="[0-9]+(\.[0-9]+)?" required title="Please enter a valid decimal number" placeholder="Units"></td>
+                <td><input type="text" class="form-control" name="search-pieces" pattern="[0-9]+(\.[0-9]+)?" title="Please enter a valid decimal number" placeholder="Units"></td>
                 <td><input type="text" class="form-control" name="search-hours" placeholder="Hours"></td>
                 <td><input type="text" class="form-control" name="search-checkout" placeholder="Check Out"></td>
                 <td><input type="text" class="form-control" name="search-checkin" placeholder="Check In"></td>
@@ -91,12 +93,13 @@
                   </select>
                 </td>
                 {{end}}
-                <td><input type='submit' value='Search' class="btn btn-primary"></td>
-                <td></td>
-                <td></td>
+                <td class="btn-col"><input type='submit' value='Search' class="btn btn-primary"></td>
+                <td class="btn-col"></td>
+                <td class="btn-col"></td>
               </tr>  
             </form>
             {{if $admin}}  
+            <!-- Insert New Form -->
             <form class="update-form" id="insert-form">
               <tr>
                 <td></td>
@@ -105,7 +108,7 @@
                 <td><input type="text" class="form-control manufacturerpart" id="manufacturerpart" name="manufacturerpart" placeholder="Manufacturer Part"></td>
                 <td>
                   <div class="input-group">
-                  <input type="text" class="form-control instructions" id="instructions" name="instructions" pattern="[0-9]+(\.[0-9]+)?" required title="Please enter a valid decimal number" placeholder="Pieces">
+                  <input type="text" class="form-control instructions" id="instructions" name="instructions" pattern="[0-9]+(\.[0-9]+)?" title="Please enter a valid decimal number" placeholder="Pieces">
                   
                 </div>
                 </td>
@@ -129,7 +132,7 @@
                 </td>
                 <td>
                   <div class="input-group">
-                    <input type="text" class="form-control pieces" id="pieces" name="pieces" pattern="[0-9]+(\.[0-9]+)?" required title="Please enter a valid decimal number" placeholder="Pieces">
+                    <input type="text" class="form-control pieces" id="pieces" name="pieces" pattern="[0-9]+(\.[0-9]+)?" title="Please enter a valid decimal number" placeholder="Pieces">
                     
                   </div>
                 </td>
@@ -166,13 +169,13 @@
                   </select>
                 </td>
                 {{end}}
-                <td><input type='hidden' id='active' name='active' value='1'><input type='submit' value='Insert' class="btn btn-primary update-request"></td>
-                <td></td>
-                <td></td>
+                <td class="btn-col"><input type='hidden' id='active' name='active' value='1'><input type='submit' value='Insert' class="btn btn-primary update-request"></td>
+                <td class="btn-col"></td>
+                <td class="btn-col"></td>
                 </tr>
                 </form>
                 {{end}}
-            
+            <!-- Main Table -->
               {{range $index, $value := .SortRequests}}
               <form id="row{{$index}}" class="update-form">
                 <tr {{if .Warn}} class="table-warning"{{end}}>
@@ -180,19 +183,19 @@
                   <td><input type="text" class="form-control sku" id="sku" name="sku" value="{{.SKU}}"></td>
                   <td><input type="text" class="form-control description" id="description" name="description" value="{{.Description}}"></td>
                   {{if $admin}}
-                    <td><input type="text" class="form-control manufacturerpart" id="manufacturerpart" name="manufacturerpart" value="{{.ManufacturerPart}}"></td>
+                    <td><input type="text" class="form-control manufacturerpart" id="manufacturerpart" name="manufacturerpart" value="{{with .ManufacturerPart}}{{.}}{{end}}"></td>
                   {{end}}
                   <td>
                     <div class="input-group">
-                    <input type="text" class="form-control instructions" id="instructions" name="instructions" pattern="[0-9]+(\.[0-9]+)?" required title="Please enter a valid decimal number" value="{{.Instructions}}">
+                    <input type="text" class="form-control instructions" id="instructions" name="instructions" pattern="[0-9]+(\.[0-9]+)?" title="Please enter a valid decimal number" value="{{with .Instructions}}{{.}}{{end}}">
                     
                   </div>
                   </td>
                   <td><div class="input-group"><input type="text" class="form-control weightout" id="weightout" name="weightout" value="{{.Weightout}}"></div></td>
                   <td><div class="input-group"><input type="text" class="form-control weightin" id="weightin" name="weightin" value="{{.Weightin}}"></div></td>
                   <td><div class="input-group"><input type="text" class="form-control difference" id="difference" name="difference" value="{{.Difference}}" readonly></div></td>
-                  <td><div class="input-group"><input type="text" class="form-control pieces" id="pieces" name="pieces" pattern="[0-9]+(\.[0-9]+)?" required title="Please enter a valid decimal number" value="{{.Pieces}}"></div></td>
-                  <td><input type="text" class="form-control hours" id="hours" name="hours" value="{{.Hours}}"></td>
+                  <td><div class="input-group"><input type="text" class="form-control pieces" id="pieces" name="pieces" pattern="[0-9]+(\.[0-9]+)?" title="Please enter a valid decimal number" value="{{with .Pieces}}{{.}}{{end}}"></div></td>
+                  <td><input type="text" class="form-control hours" id="hours" name="hours" value="{{with .Hours}}{{.}}{{end}}"></td>
                   <td><input type="date" class="form-control checkout" id="checkout" name="checkout" value="{{.Checkout}}"></td>
                   <td><input type="date" class="form-control checkin" id="checkin" name="checkin" value="{{.Checkin}}"></td>
                   <td>
@@ -223,10 +226,10 @@
                     </select>
                   </td>
                   {{end}}
-                  <td><input type='hidden' id='active' name='active' value='1'><input type='submit' value='Update' class="btn btn-primary update-request"></td>
+                  <td class="btn-col"><input type='hidden' id='active' name='active' value='1'><input type='submit' value='Update' class="btn btn-primary update-request"></td>
                 </form>
-                  <td><button type="button" class="btn btn-danger archive-request" id="archiveRequest" name="archiveRequest" data-requestid="{{.ID}}">Archive</button></td>
-                  <td><button class="btn btn-warning error" id="error" name="error" data-requestid="{{.ID}}">Error</button></td>
+                  <td class="btn-col"><button type="button" class="btn btn-danger archive-request" id="archiveRequest" name="archiveRequest" data-requestid="{{.ID}}">Archive</button></td>
+                  <td class="btn-col"><button class="btn btn-warning error" id="error" name="error" data-requestid="{{.ID}}">Error</button></td>
                 </tr>
             {{end}}
             </tbody>
@@ -384,7 +387,7 @@
     });
   });
   </script>
-  <script>
+  <!-- <script>
     $(document).ready(function() {   
       // inspired by http://jsfiddle.net/arunpjohny/564Lxosz/1/
       $('.table-responsive-stack').each(function (i) {
@@ -434,7 +437,7 @@
       };
       // document ready  
       });
-  </script>
+  </script> -->
     <!-- Modal Dialogue -->
       <div class="modal fade" id="archiveRequestModal" tabindex="-1" role="dialog" aria-labelledby="archiveRequestModalLabel" aria-hidden="true">
         <div class="modal-dialog" role="document">
