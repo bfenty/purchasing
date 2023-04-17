@@ -63,6 +63,7 @@ type Product struct {
 type Page struct {
 	Title         string
 	Date          string
+	Layout        string
 	Message       Message
 	Permission    User
 	ProductList   []Product
@@ -261,6 +262,11 @@ func Sorting(w http.ResponseWriter, r *http.Request) {
 		page.Message, page.SortRequests = listsortrequests(page.Permission, "all", r)
 	}
 	page.Message, page.Users = listusers("sorting", page.Permission)
+	// Get the value of the 'layout' variable from the query string
+	layout := r.URL.Query().Get("layout")
+	// Set Page.Layout to the value of the 'layout' variable
+	page.Layout = layout
+
 	t, _ := template.ParseFiles("sorting.html", "header.html", "login.js")
 	page.Title = "Sorting"
 	t.Execute(w, page)

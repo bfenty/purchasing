@@ -172,18 +172,14 @@ $('#myModal').on('shown.bs.modal', function () {
       <a class="nav-link active" href="/orderlist">Orders<span class="sr-only">(current)</span></a>
     </li>
     {{end}}
-  {{if or (eq $permission "receiving")}}
-    <li class="nav-item active">
-      <a class="nav-link active" href="/receiving">Receiving<span class="sr-only">(current)</span></a>
-    </li>
-    {{end}}
-  {{if or (eq $permission "admin") (eq $permission "purchasing")}}
+  {{if or (eq $permission "admin") (eq $permission "purchasing") (eq $permission "receiving")}}
   <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
             Sorting
           </a>
           <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-            <li><a class="dropdown-item" href="/sorting">Data Entry</a></li>
+            <li><a class="dropdown-item" href="/sorting?layout=dataentry">Data Entry</a></li>
+            <li><a class="dropdown-item" href="/sorting?layout=receiving">Receiving</a></li>
             <li><a class="dropdown-item" href="/checkout">Checkout</a></li>
             <li><a class="dropdown-item" href="/checkin">Checkin</a></li>
           </ul>
