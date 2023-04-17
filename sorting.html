@@ -2,67 +2,7 @@
 <head>
   {{template "header"}}
   <title>{{.Title}}</title>
-  <style>
-
-    #message {
-      position: fixed;
-      top: 10px;
-      right: 10px;
-      z-index: 999;
-    }
-    .table-responsive-stack tr {
-      display: -webkit-box;
-      display: -ms-flexbox;
-      display: flex;
-      -webkit-box-orient: horizontal;
-      -webkit-box-direction: normal;
-          -ms-flex-direction: row;
-              flex-direction: row;
-    }
-
-    .table-responsive-stack td,
-    .table-responsive-stack th {
-      display:block;
-    /*      
-      flex-grow | flex-shrink | flex-basis   */
-      -ms-flex: 1 1 auto;
-        flex: 1 1 auto;
-    }
-
-    .table-responsive-stack .table-responsive-stack-thead {
-      font-weight: bold;
-    }
-
-    @media screen and (max-width: 1400px) {
-      .input-group-text {
-        display: none;
-      }
-    }
-
-    @media screen and (max-width: 1000px) {
-      .table-responsive-stack tr {
-          -webkit-box-orient: vertical;
-          -webkit-box-direction: normal;
-              -ms-flex-direction: column;
-                  flex-direction: column;
-          border-bottom: 3px solid #ccc;
-          display:block;
-          
-      }
-      /*  IE9 FIX   */
-      .table-responsive-stack td {
-          float: left\9;
-          width:100%;
-      }
-    }
-
-    @media screen and (min-width: 1000px) {
-      /* Set the width of each column */
-      th, td {
-        width: 6.25%;
-      }
-    }
-  </style>
+  
 </head>
 <body>
   {{template "navigation" .}}
@@ -75,8 +15,8 @@
     <h1>{{.Title}}</h1>
     <div class="row" id="userTable">
       <div class="col-sm-12">
-        <div class="table-responsive">
-          <table class="table table-striped table-responsive-stack" id="sorttable">
+        <div>
+          <table class="table table-striped table-hover table-responsive-stack" id="sorttable">
             <thead class="table-dark" style="position: sticky; top: 0; z-index: 1;">
               <tr>
                 <th scope="col">Request ID</th>
@@ -85,11 +25,11 @@
                 {{if $admin}}
                   <th scope="col">Manufacturer Part</th>
                 {{end}}
-                <th scope="col">Pcs per Bag</th>
+                <th scope="col">Pcs/Bag</th>
                 <th scope="col">Weight Out</th>
                 <th scope="col">Weight In</th>
                 <th scope="col">Difference</th>
-                <th scope="col">Pieces</th>
+                <th scope="col">Units</th>
                 <th scope="col">Hours</th>
                 <th scope="col">Check Out</th>
                 <th scope="col">Check In</th>
@@ -112,7 +52,7 @@
                 {{if $admin}}
                   <td><input type="text" class="form-control" name="search-manufacturerpart" placeholder="Manufacturer Part"></td>
                 {{end}}
-                <td><input type="text" class="form-control" name="search-instructions" placeholder="Pieces"></td>
+                <td><input type="text" class="form-control" name="search-instructions" pattern="[0-9]+(\.[0-9]+)?" required title="Please enter a valid decimal number" placeholder="Pieces"></td>
                 <td><input type="text" class="form-control" name="search-weightout" placeholder="Weight Out"></td>
                 <td><input type="text" class="form-control" name="search-weightin" placeholder="Weight In"></td>
                 <td>
@@ -122,7 +62,7 @@
                     <option value="negative">Negative</option>
                   </select>
                 </td>
-                <td><input type="text" class="form-control" name="search-pieces" placeholder="Pieces"></td>
+                <td><input type="text" class="form-control" name="search-pieces" pattern="[0-9]+(\.[0-9]+)?" required title="Please enter a valid decimal number" placeholder="Units"></td>
                 <td><input type="text" class="form-control" name="search-hours" placeholder="Hours"></td>
                 <td><input type="text" class="form-control" name="search-checkout" placeholder="Check Out"></td>
                 <td><input type="text" class="form-control" name="search-checkin" placeholder="Check In"></td>
@@ -165,32 +105,32 @@
                 <td><input type="text" class="form-control manufacturerpart" id="manufacturerpart" name="manufacturerpart" placeholder="Manufacturer Part"></td>
                 <td>
                   <div class="input-group">
-                  <input type="text" class="form-control instructions" id="instructions" name="instructions" placeholder="Pieces">
-                  <span class="input-group-text">pcs</span>
+                  <input type="text" class="form-control instructions" id="instructions" name="instructions" pattern="[0-9]+(\.[0-9]+)?" required title="Please enter a valid decimal number" placeholder="Pieces">
+                  
                 </div>
                 </td>
                 <td>
                   <div class="input-group">
                     <input type="text" class="form-control weightout" id="weightout" name="weightout" placeholder="Weight Out">
-                    <span class="input-group-text">g</span>
+                    
                   </div>
                 </td>
                 <td>
                   <div class="input-group">
                     <input type="text" class="form-control weightin" id="weightin" name="weightin" placeholder="Weight In">
-                    <span class="input-group-text">g</span>
+                    
                   </div>
                 </td>
                 <td>
                   <div class="input-group">
                     <input type="text" class="form-control difference" id="difference" name="difference" readonly placeholder="Difference">
-                    <span class="input-group-text">g</span>
+                    
                   </div>
                 </td>
                 <td>
                   <div class="input-group">
-                    <input type="text" class="form-control pieces" id="pieces" name="pieces" placeholder="Pieces">
-                    <span class="input-group-text">pcs</span>
+                    <input type="text" class="form-control pieces" id="pieces" name="pieces" pattern="[0-9]+(\.[0-9]+)?" required title="Please enter a valid decimal number" placeholder="Pieces">
+                    
                   </div>
                 </td>
                 <td>
@@ -244,14 +184,14 @@
                   {{end}}
                   <td>
                     <div class="input-group">
-                    <input type="text" class="form-control instructions" id="instructions" name="instructions" value="{{.Instructions}}">
-                    <span class="input-group-text">pcs</span>
+                    <input type="text" class="form-control instructions" id="instructions" name="instructions" pattern="[0-9]+(\.[0-9]+)?" required title="Please enter a valid decimal number" value="{{.Instructions}}">
+                    
                   </div>
                   </td>
-                  <td><div class="input-group"><input type="text" class="form-control weightout" id="weightout" name="weightout" value="{{.Weightout}}"><span class="input-group-text">g</span></div></td>
-                  <td><div class="input-group"><input type="text" class="form-control weightin" id="weightin" name="weightin" value="{{.Weightin}}"><span class="input-group-text">g</span></div></td>
-                  <td><div class="input-group"><input type="text" class="form-control difference" id="difference" name="difference" value="{{.Difference}}" readonly><span class="input-group-text">g</span></div></td>
-                  <td><div class="input-group"><input type="text" class="form-control pieces" id="pieces" name="pieces" value="{{.Pieces}}"><span class="input-group-text">pcs</span></div></td>
+                  <td><div class="input-group"><input type="text" class="form-control weightout" id="weightout" name="weightout" value="{{.Weightout}}"></div></td>
+                  <td><div class="input-group"><input type="text" class="form-control weightin" id="weightin" name="weightin" value="{{.Weightin}}"></div></td>
+                  <td><div class="input-group"><input type="text" class="form-control difference" id="difference" name="difference" value="{{.Difference}}" readonly></div></td>
+                  <td><div class="input-group"><input type="text" class="form-control pieces" id="pieces" name="pieces" pattern="[0-9]+(\.[0-9]+)?" required title="Please enter a valid decimal number" value="{{.Pieces}}"></div></td>
                   <td><input type="text" class="form-control hours" id="hours" name="hours" value="{{.Hours}}"></td>
                   <td><input type="date" class="form-control checkout" id="checkout" name="checkout" value="{{.Checkout}}"></td>
                   <td><input type="date" class="form-control checkin" id="checkin" name="checkin" value="{{.Checkin}}"></td>

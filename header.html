@@ -70,6 +70,72 @@ $('#myModal').on('shown.bs.modal', function () {
 }
 
 </style>
+<style>
+
+  #message {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    z-index: 999;
+  }
+  .table-responsive-stack tr {
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-orient: horizontal;
+    -webkit-box-direction: normal;
+        -ms-flex-direction: row;
+            flex-direction: row;
+  }
+
+  .table-responsive-stack td,
+  .table-responsive-stack th {
+    display:block;
+  /*      
+    flex-grow | flex-shrink | flex-basis   */
+    -ms-flex: 1 1 auto;
+      flex: 1 1 auto;
+  }
+
+  .table-responsive-stack .table-responsive-stack-thead {
+    font-weight: bold;
+  }
+
+  @media screen and (max-width: 1400px) {
+    .input-group-text {
+      display: none;
+    }
+  }
+
+  @media screen and (max-width: 1000px) {
+    .table-responsive-stack tr {
+        -webkit-box-orient: vertical;
+        -webkit-box-direction: normal;
+            -ms-flex-direction: column;
+                flex-direction: column;
+        border-bottom: 3px solid #ccc;
+        display:block;
+        
+    }
+    /*  IE9 FIX   */
+    .table-responsive-stack td {
+        float: left\9;
+        width:100%;
+    }
+  }
+
+  @media screen and (min-width: 1000px) {
+    /* Set the width of each column */
+    th, td {
+      width: 6.25%;
+    }
+  }
+
+  .form-control, .form-select, .btn{
+    font-size: 0.8rem; /* or any other size you prefer */
+  }
+
+</style>
 {{end}}
 
 {{define "navigation"}}
