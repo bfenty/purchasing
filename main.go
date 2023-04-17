@@ -193,6 +193,7 @@ func main() {
 	http.HandleFunc("/checkexistingerrors", checkExistingErrors)
 	http.HandleFunc("/update-user", UpdateUser)
 	http.HandleFunc("/dashboard", Dashboard)
+	http.HandleFunc("/reporting", Dashboard)
 	http.HandleFunc("/dashdata", Dashdata)
 	http.HandleFunc("/efficiencydata", Efficiency)
 

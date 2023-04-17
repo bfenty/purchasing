@@ -8,6 +8,7 @@
   {{template "navigation" .}}
   {{$permission := .Permission.Role}}
   {{$admin := .Permission.Permissions.Admin}}
+  {{$mgmt := .Permission.Permissions.Mgmt}}
   {{$layout := .Layout}}
   <div>
     <div id="message" class="alert"></div>
@@ -37,7 +38,7 @@
                 {{if or (eq $layout "full")}}<th scope="col">Status</th>{{end}}
                 {{if or (eq $layout "full")}}<th scope="col">Priority</th>{{end}}
                 {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "dataentry") (eq $layout "mgmt")}}<th scope="col" class="btn-col"></th>{{end}}
-                {{if or (eq $layout "full")}}<th scope="col" class="btn-col"></th>{{end}}
+                {{if or (eq $layout "full") ($mgmt)}}<th scope="col" class="btn-col"></th>{{end}}
                 {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "mgmt")}}<th scope="col" class="btn-col"></th>{{end}}
               </tr>
             </thead>
@@ -46,7 +47,7 @@
               <form action="/sorting" method="GET">
               <tr>
                 <td><input type="text" class="form-control" name="search-requestid" placeholder="Request ID"></td>
-                {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "dataentry") (eq $layout "mgmt")}}<td><input type="text" class="form-control" name="search-sku" placeholder="SKU"></td>{{end}}
+                {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "dataentry") (eq $layout "mgmt")}}<td class="col-sku"><input type="text" class="form-control" name="search-sku" placeholder="SKU"></td>{{end}}
                 {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "dataentry")}}<td><input type="text" class="form-control" name="search-description" placeholder="Description"></td>{{end}}
                 {{if or (eq $layout "full") (eq $layout "dataentry")}}<td><input type="text" class="form-control" name="search-manufacturerpart" placeholder="Manufacturer Part"></td>{{end}}
                 {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "dataentry") (eq $layout "mgmt")}}<td><input type="text" class="form-control" name="search-instructions" pattern="[0-9]+(\.[0-9]+)?" title="Please enter a valid decimal number" placeholder="Pieces"></td>{{end}}
@@ -92,7 +93,7 @@
                 </td>
                 {{end}}
                 {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "dataentry") (eq $layout "mgmt")}}<td class="btn-col"><input type=hidden name=layout id=layout value={{$layout}}><input type='submit' value='Search' class="btn btn-primary"></td>{{end}}
-                {{if or (eq $layout "full")}}<td class="btn-col"></td>{{end}}
+                {{if or (eq $layout "full") ($mgmt)}}<td class="btn-col"></td>{{end}}
                 {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "mgmt")}}<td class="btn-col"></td>{{end}}
               </tr>  
             </form>
@@ -101,7 +102,7 @@
             <form class="update-form" id="insert-form">
               <tr>
                 <td></td>
-                {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "dataentry") (eq $layout "mgmt")}}<td><input type="text" class="form-control sku" id="sku" name="sku" placeholder="SKU"></td>{{end}}
+                {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "dataentry") (eq $layout "mgmt")}}<td class="col-sku"><input type="text" class="form-control sku" id="sku" name="sku" placeholder="SKU"></td>{{end}}
                 {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "dataentry")}}<td><input type="text" class="form-control description" id="description" name="description" placeholder="Description"></td>{{end}}
                 {{if or (eq $layout "full") (eq $layout "dataentry")}}<td><input type="text" class="form-control manufacturerpart" id="manufacturerpart" name="manufacturerpart" placeholder="Manufacturer Part"></td>{{end}}
                 {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "dataentry") (eq $layout "mgmt")}}<td><div class="input-group"><input type="text" class="form-control instructions" id="instructions" name="instructions" pattern="[0-9]+(\.[0-9]+)?" title="Please enter a valid decimal number" placeholder="Pieces"></div></td>{{end}}
@@ -143,7 +144,7 @@
                 </td>
                 {{end}}
                 {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "dataentry") (eq $layout "mgmt")}}<td class="btn-col"><input type='hidden' id='active' name='active' value='1'><input type='submit' value='Insert' class="btn btn-primary update-request"></td>{{end}}
-                {{if or (eq $layout "full")}}<td class="btn-col"></td>{{end}}
+                {{if or (eq $layout "full") ($mgmt)}}<td class="btn-col"></td>{{end}}
                 {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "mgmt")}}<td class="btn-col"></td>{{end}}
                 </tr>
                 </form>
@@ -153,7 +154,7 @@
               <form id="row{{$index}}" class="update-form">
                 <tr {{if .Warn}} class="table-warning"{{end}}>
                   <td><input type="text" class="form-control requestid" id="requestid" name="requestid" value="{{.ID}}"></td>
-                  {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "dataentry") (eq $layout "mgmt")}}<td><input type="text" class="form-control sku" id="sku" name="sku" value="{{.SKU}}"></td>{{end}}
+                  {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "dataentry") (eq $layout "mgmt")}}<td class="col-sku"><input type="text" class="form-control sku" id="sku" name="sku" value="{{.SKU}}"></td>{{end}}
                   {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "dataentry")}}<td><input type="text" class="form-control description" id="description" name="description" value="{{.Description}}"></td>{{end}}
                   {{if or (eq $layout "full") (eq $layout "dataentry")}}<td><input type="text" class="form-control manufacturerpart" id="manufacturerpart" name="manufacturerpart" value="{{with .ManufacturerPart}}{{.}}{{end}}"></td>{{end}}
                   {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "dataentry") (eq $layout "mgmt")}}<td><div class="input-group"><input type="text" class="form-control instructions" id="instructions" name="instructions" pattern="[0-9]+(\.[0-9]+)?" title="Please enter a valid decimal number" value="{{with .Instructions}}{{.}}{{end}}"></div></td>{{end}}
@@ -198,7 +199,7 @@
                   {{end}}
                   {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "dataentry") (eq $layout "mgmt")}}<td class="btn-col"><input type='hidden' id='active' name='active' value='1'><input type='submit' value='Update' class="btn btn-primary update-request"></td>{{end}}
                 </form>
-                {{if or (eq $layout "full")}}<td class="btn-col"><button type="button" class="btn btn-danger archive-request" id="archiveRequest" name="archiveRequest" data-requestid="{{.ID}}">Archive</button></td>{{end}}
+                {{if or (eq $layout "full") ($mgmt)}}<td class="btn-col"><button type="button" class="btn btn-danger archive-request" id="archiveRequest" name="archiveRequest" data-requestid="{{.ID}}">Archive</button></td>{{end}}
                 {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "mgmt")}}<td class="btn-col"><button class="btn btn-warning error" id="error" name="error" data-requestid="{{.ID}}">Error</button></td>{{end}}
                 </tr>
             {{end}}

@@ -101,38 +101,17 @@ $('#myModal').on('shown.bs.modal', function () {
     font-weight: bold;
   }
 
-  @media screen and (max-width: 1400px) {
-    .input-group-text {
-      display: none;
-    }
-  }
-
-  @media screen and (max-width: 1000px) {
-    .table-responsive-stack tr {
-        -webkit-box-orient: vertical;
-        -webkit-box-direction: normal;
-            -ms-flex-direction: column;
-                flex-direction: column;
-        border-bottom: 3px solid #ccc;
-        display:block;
-        
-    }
-    /*  IE9 FIX   */
-    .table-responsive-stack td {
-        float: left\9;
-        width:100%;
-    }
-  }
-
-  @media screen and (min-width: 1000px) {
     /* Set the width of each column */
     th, td {
       width: 6.25%;
     }
     .btn-col {
       width: 4.5%;
+      max-width: 100px;
     }
-  }
+    .col-sku {
+      min-width: 110px;
+    }
 
   .form-control, .form-select, .btn{
     font-size: 0.8rem; /* or any other size you prefer */
@@ -178,15 +157,23 @@ $('#myModal').on('shown.bs.modal', function () {
             Sorting
           </a>
           <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-            <li><a class="dropdown-item" href="/sorting?layout=dataentry">Data Entry</a></li>
+            {{if or (eq $permission "admin") (eq $permission "purchasing")}}<li><a class="dropdown-item" href="/sorting?layout=dataentry">Data Entry</a></li>{{end}}
             <li><a class="dropdown-item" href="/sorting?layout=receiving">Receiving</a></li>
-            <li><a class="dropdown-item" href="/sorting?layout=full">Sort Requests</a></li>
-            <li><a class="dropdown-item" href="/sorting?layout=mgmt">Management</a></li>
+            {{if or (eq $permission "admin") (eq $permission "purchasing")}}<li><a class="dropdown-item" href="/sorting?layout=full">Sort Requests</a></li>{{end}}
+            {{if or (eq $permission "admin") (eq $permission "purchasing")}}<li><a class="dropdown-item" href="/sorting?layout=mgmt">Management</a></li>{{end}}
             <li><a class="dropdown-item" href="/checkout">Checkout</a></li>
             <li><a class="dropdown-item" href="/checkin">Checkin</a></li>
           </ul>
         </li>
     {{end}} 
+    {{if or (eq $permission "admin") (eq $permission "purchasing") (eq $permission "receiving")}}
+    <li class="nav-item dropdown" style="position:relative; z-index: 9999;">
+      <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Reporting</a>
+      <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+        <li><a class="dropdown-item" href="/reporting?layout=sorting">Sorting</a></li>
+      </ul>
+    </li>
+    {{end}}
       {{if or (eq $permission "sorting")}}
       <li class="nav-item active">
         <a class="nav-link active" href="/checkout">Checkout <span class="sr-only">(current)</span></a>
@@ -205,11 +192,6 @@ $('#myModal').on('shown.bs.modal', function () {
       <a class="nav-link active" href="/sorterror">Sort Errors<span class="sr-only">(current)</span></a>
     </li>
     {{end}}
-      {{if or (eq $permission "admin") (eq $permission "receiving") (eq $permission "purchasing") (eq $permission "sorting")}}
-      <li class="nav-item active">
-        <a class="nav-link active" href="/dashboard">Dashboard <span class="sr-only">(current)</span></a>
-      </li>
-      {{end}}
       {{if or (eq $permission "admin") (eq $permission "receiving") (eq $permission "purchasing") (eq $permission "sorting")}}
       <li class="nav-item active">
         <a class="nav-link active" href="/logout">Logout <span class="sr-only">(current)</span></a>
