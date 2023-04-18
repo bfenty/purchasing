@@ -189,6 +189,7 @@ func main() {
 	http.HandleFunc("/userdelete", userDeleteHandler)
 	http.HandleFunc("/lookuprequestid", LookupRequestID)
 	http.HandleFunc("/sorterror", SortError)
+	http.HandleFunc("/sorterrorlist", SortErrorList)
 	http.HandleFunc("/sorterrorupdate", sortErrorUpdate)
 	http.HandleFunc("/checkexistingerrors", checkExistingErrors)
 	http.HandleFunc("/update-user", UpdateUser)
