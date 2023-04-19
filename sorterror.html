@@ -51,7 +51,7 @@
         event.preventDefault();
 
         // Check if all fields are populated
-        var requiredFields = ['errorType', 'notes'];
+        var requiredFields = ['notes'];
         for (var i = 0; i < requiredFields.length; i++) {
             var field = requiredFields[i];
             if (!$('#' + field).val()) {
