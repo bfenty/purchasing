@@ -47,36 +47,48 @@
   <div class="container">
     <h2>Report Error</h2>
     <script>
-        function submitErrorForm(event) {
-          event.preventDefault();
-        
-          var formData = $('#error-form').serialize();
-          var url = $('#error-form').attr('action');
-        
-          console.log('Submitting form data:', formData);
-          console.log('Sending AJAX request to:', url);
-        
-          $.ajax({
+    function submitErrorForm(event) {
+        event.preventDefault();
+
+        // Check if all fields are populated
+        var requiredFields = ['errorType', 'notes'];
+        for (var i = 0; i < requiredFields.length; i++) {
+            var field = requiredFields[i];
+            if (!$('#' + field).val()) {
+                $('#message').addClass('alert-danger').text('Please fill in all required fields.');
+                return;
+            }
+        }
+
+        var formData = $('#error-form').serialize();
+        var url = $('#error-form').attr('action');
+
+        console.log('Submitting form data:', formData);
+        console.log('Sending AJAX request to:', url);
+
+        $.ajax({
             type: 'POST',
             url: url,
             data: formData,
             success: function(data) {
                 console.log('AJAX request succeeded:', data);
+                $('#message').addClass('alert-success').text('Error report submitted successfully.');
                 $('#success-message').fadeIn(function() {
                     $(this).delay(3000).fadeOut();
                 });
 
                 $('#error-form')[0].reset();
                 $('#existing-errors').empty().hide();
-                },
+            },
             error: function(jqXHR, textStatus, errorThrown) {
-              console.error('AJAX request failed:', textStatus, errorThrown);
-              $('#error-message').fadeIn().delay(3000).fadeOut();
+                console.error('AJAX request failed:', textStatus, errorThrown);
+                $('#message').addClass('alert-danger').text('Error submitting error report.');
+                $('#error-message').fadeIn().delay(3000).fadeOut();
             }
-          });
-        }
-        </script>
-  
+        });
+    }
+</script>
+  <div id="message" class="alert"></div>
   <div id="success-message" style="display: none;">
     <div class="alert alert-success" role="alert">
       Error reported successfully!
@@ -95,11 +107,11 @@
       </div>
       <div class="form-group">
         <label for="sorter">Sorter:</label>
-        <input type="text" class="form-control" id="sorter" name="sorter">
+        <input type="text" class="form-control" id="sorter" name="sorter" readonly>
       </div>
       <div class="form-group">
         <label for="description">Description:</label>
-        <textarea class="form-control" id="description" name="description"></textarea>
+        <textarea class="form-control" id="description" name="description" readonly></textarea>
       </div>
       <div class="form-group">
         <label for="errortype">Error Type:</label>
@@ -130,31 +142,20 @@
         </ul>
       </div>
       
-
-  <script>
-    $(document).ready(function() {
-      var requestid = getParameterByName('requestid');
-      if (requestid) {
-        $('#requestid').val(requestid);
-      }
-    });
-    
-    function getParameterByName(name, url) {
-      if (!url) url = window.location.href;
-      name = name.replace(/[\[\]]/g, '\\$&');
-      var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),
-          results = regex.exec(url);
-      if (!results) return null;
-      if (!results[2]) return '';
-      return decodeURIComponent(results[2].replace(/\+/g, ' '));
-    }
-    </script>
+<script>
+      $(document).ready(function() {
+        var requestid = getParameterByName('requestid');
+        if (requestid) {
+          $('#requestid').val(requestid);
+          handleRequestIdInput(requestid);
+        }
       
-  <script>
-    $(document).ready(function() {
-    
-      $('#requestid').on('input', function() {
-        var requestid = $(this).val();
+        $('#requestid').on('input', function() {
+          handleRequestIdInput($(this).val());
+        });
+      });
+      
+      function handleRequestIdInput(requestid) {
         if (requestid !== '') {
           $.ajax({
             type: 'GET',
@@ -167,47 +168,56 @@
             }
           });
         }
-      });
-    });
-    
-    function checkExistingErrors(requestid) {
-      var prevRequestid = $('#existing-errors').data('requestid');
-      if (prevRequestid !== requestid) {
-        // Clear the existing errors box and hide it if the request ID has changed
-        $('#existing-errors').empty();
-        $('#existing-errors').hide();
       }
-
-      $.ajax({
-        type: 'GET',
-        url: '/checkexistingerrors',
-        data: {'requestid': requestid},
-        success: function(data) {
-          if (data.length > 0) {
-            // Display the existing errors box
-            $('#existing-errors').show();
-            $('#existing-errors').data('requestid', requestid);
-
-            // Add a box for each error
-            for (var i = 0; i < data.length; i++) {
-              var error = data[i];
-              var html = '<div class="card"><div class="card-body">';
-              html += '<h5 class="card-title">Existing Error</h5>';
-              html += '<p class="card-text"><strong>Error Type:</strong> ' + error.errortype + '</p>';
-              html += '<p class="card-text"><strong>Notes:</strong> ' + error.notes + '</p>';
-              html += '</div></div>';
-              $('#existing-errors').append(html);
-            }
-          } else {
-            // Hide the existing errors box if there are no errors
-            $('#existing-errors').empty();
-            $('#existing-errors').hide();
-          }
+      
+      function checkExistingErrors(requestid) {
+        var prevRequestid = $('#existing-errors').data('requestid');
+        if (prevRequestid !== requestid) {
+          // Clear the existing errors box and hide it if the request ID has changed
+          $('#existing-errors').empty();
+          $('#existing-errors').hide();
         }
-      });
-    }
-
-    </script>       
+      
+        $.ajax({
+          type: 'GET',
+          url: '/checkexistingerrors',
+          data: {'requestid': requestid},
+          success: function(data) {
+            if (data.length > 0) {
+              // Display the existing errors box
+              $('#existing-errors').show();
+              $('#existing-errors').data('requestid', requestid);
+      
+              // Add a box for each error
+              for (var i = 0; i < data.length; i++) {
+                var error = data[i];
+                var html = '<div class="card"><div class="card-body">';
+                html += '<h5 class="card-title">Existing Error</h5>';
+                html += '<p class="card-text"><strong>Error Type:</strong> ' + error.errortype + '</p>';
+                html += '<p class="card-text"><strong>Notes:</strong> ' + error.notes + '</p>';
+                html += '</div></div>';
+                $('#existing-errors').append(html);
+              }
+            } else {
+              // Hide the existing errors box if there are no errors
+              $('#existing-errors').empty();
+              $('#existing-errors').hide();
+            }
+          }
+        });
+      }
+      
+      function getParameterByName(name, url) {
+        if (!url) url = window.location.href;
+        name = name.replace(/[\[\]]/g, '\\$&');
+        var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),
+            results = regex.exec(url);
+        if (!results) return null;
+        if (!results[2]) return '';
+        return decodeURIComponent(results[2].replace(/\+/g, ' '));
+      }
+    </script>
+      
        
 {{template "footer" .}}
 </body>

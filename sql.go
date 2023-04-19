@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"math"
+	"sort"
 	"time"
 
 	// "log"
@@ -334,6 +335,147 @@ func sortErrorUpdate(w http.ResponseWriter, r *http.Request) {
 		"errortype":   errortype,
 		"notes":       notes,
 	}).Debug("Error reported successfully")
+}
+
+func SortErrorList(w http.ResponseWriter, r *http.Request) {
+
+	user := auth(w, r)
+	log.WithFields(log.Fields{"username": user.Username}).Debug("Generating Sorting Error List")
+	type ErrorReport struct {
+		ErrorType string `json:"errortype"`
+		Notes     string `json:"notes"`
+		RequestID uint64 `json:"requestid"`
+		SKU       string `json:"sku"`
+		Sorter    string `json:"sorter"`
+		Checkin   string `json:"checkin"`
+	}
+
+	// Parse query parameters for filtering
+	requestIDParam := r.URL.Query().Get("requestid")
+	errorTypeParam := r.URL.Query().Get("errortype")
+	skuParam := r.URL.Query().Get("sku")
+	sorterParam := r.URL.Query().Get("sorter")
+	startDateParam := r.URL.Query().Get("startdate")
+	endDateParam := r.URL.Query().Get("enddate")
+
+	// Construct SQL query with filtering parameters
+	query := "SELECT a.errortype, a.notes, a.requestid, b.sku, b.sorter, b.checkint FROM purchasing.sorterror a INNER JOIN purchasing.sortrequest b ON a.requestid = b.requestid"
+	args := []interface{}{}
+	if requestIDParam != "" {
+		requestID, err := strconv.Atoi(requestIDParam)
+		if err != nil {
+			log.WithError(err).Error("Failed to parse request ID query parameter")
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		query += " WHERE a.requestid = ?"
+		args = append(args, requestID)
+	}
+	if errorTypeParam != "" {
+		if len(args) == 0 {
+			query += " WHERE"
+		} else {
+			query += " AND"
+		}
+		query += " a.errortype = ?"
+		args = append(args, errorTypeParam)
+	}
+	if skuParam != "" {
+		if len(args) == 0 {
+			query += " WHERE"
+		} else {
+			query += " AND"
+		}
+		query += " b.sku = ?"
+		args = append(args, skuParam)
+	}
+	if sorterParam != "" {
+		if len(args) == 0 {
+			query += " WHERE"
+		} else {
+			query += " AND"
+		}
+		query += " b.sorter = ?"
+		args = append(args, sorterParam)
+	}
+	if startDateParam != "" {
+		startDate, err := time.Parse("2006-01-02", startDateParam)
+		if err != nil {
+			log.WithError(err).Error("Failed to parse start date query parameter")
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		if len(args) == 0 {
+			query += " WHERE"
+		} else {
+			query += " AND"
+		}
+		query += " b.checkint >= ?"
+		args = append(args, startDate)
+	}
+	if endDateParam != "" {
+		endDate, err := time.Parse("2006-01-02", endDateParam)
+		if err != nil {
+			log.WithError(err).Error("Failed to parse end date query parameter")
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		if len(args) == 0 {
+			query += " WHERE"
+		} else {
+			query += " AND"
+		}
+		query += " b.checkint <= ?"
+		args = append(args, endDate)
+	}
+
+	//Debug
+	log.WithFields(log.Fields{"username": user.Username}).Debug("Query:", query)
+
+	// Retrieve error reports from the database
+	rows, err := db.Query(query, args...)
+	if err != nil {
+		log.WithError(err).Error("Failed to retrieve error reports")
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+
+	// Convert database rows to ErrorReport structs
+	errorReports := []ErrorReport{}
+	for rows.Next() {
+		var errorReport ErrorReport
+		var requestID sql.NullInt64 // Use sql.NullInt64 for the requestid field
+		err := rows.Scan(&errorReport.ErrorType, &errorReport.Notes, &requestID, &errorReport.SKU, &errorReport.Sorter, &errorReport.Checkin)
+		if err != nil {
+			log.WithError(err).Error("Failed to scan error report")
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		if requestID.Valid { // Check if the requestid value is valid
+			errorReport.RequestID = uint64(requestID.Int64)
+			errorReports = append(errorReports, errorReport)
+		}
+	}
+
+	if err := rows.Err(); err != nil {
+		log.WithError(err).Error("Failed to retrieve error reports")
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	// Sort error reports by request ID in ascending order
+	sort.Slice(errorReports, func(i, j int) bool {
+		return errorReports[i].RequestID < errorReports[j].RequestID
+	})
+
+	// Encode error reports to JSON and write response
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(errorReports); err != nil {
+		log.WithError(err).Error("Failed to encode error reports")
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 }
 
 func checkExistingErrors(w http.ResponseWriter, r *http.Request) {
