@@ -209,6 +209,10 @@ func Dashboard(w http.ResponseWriter, r *http.Request) {
 	// page.Message, page.SortRequests = listsortrequests(page.Permission, "receiving", r)
 	// page.Message, page.Users = listusers("sorting", page.Permission)
 	page.Message, page.Users = listusers("sorting", page.Permission)
+	// Get the value of the 'layout' variable from the query string
+	layout := r.URL.Query().Get("layout")
+	// Set Page.Layout to the value of the 'layout' variable
+	page.Layout = layout
 	t, _ := template.ParseFiles("dashboard.html", "header.html", "login.js")
 	page.Title = "Dashboard"
 	t.Execute(w, page)

@@ -64,9 +64,10 @@
 </head>
 <body>
     {{template "navigation" .}}
+    {{$layout := .Layout}}
     <div id="message" class="alert"></div>
         <div class="container mt-5">
-            <h1 class="text-center mb-5">Sort Error Analysis</h1>
+            {{if or (eq $layout "sorting")}}<h1 class="text-center mb-5">Sort Error Analysis</h1>{{end}}
             <div class="row justify-content-center mb-3">
                 <div class="col-3">
                     <label for="sorter">Sorter:</label>
