@@ -58,6 +58,7 @@
 <body>
   {{template "navigation" .}}
   {{$admin := .Permission.Permissions.Admin}}
+  {{$manage := .Permission.Permissions.Mgmt}}
   <div class="container">
     <div id="message" class="alert"></div>
     <h1>{{.Title}}</h1>
@@ -121,7 +122,7 @@
                     <button type="button" class="btn btn-primary save-user">Save</button>
                     </td>
                     <td>
-                    <button type="button" class="btn btn-danger archive-user" data-userid="{{$user.Usercode}}">Archive</button>
+                    {{if $manage}}<button type="button" class="btn btn-danger archive-user" data-userid="{{$user.Usercode}}">Archive</button>{{end}}
                   </td>
                 </tr>
               {{end}}
