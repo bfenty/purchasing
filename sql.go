@@ -1058,10 +1058,12 @@ func listsortrequests(user User, action string, r *http.Request) (message Messag
 		} else {
 			// Handle the case where r.Pieces is nil
 			c = 0.0
-			// fmt.Println("r.Pieces is nil")
 		}
-		r.Difference = a - b - (c * 0.4555)
+		r.Difference = a - b - (c * 0.4555)               //0.4555 is the bag weight in grams
 		r.Difference = math.Round(r.Difference*100) / 100 // Round to 2 decimal places
+		if a != 0 {
+			r.DifferencePercent = formatAsPercent(r.Difference / a) //Get the percentage of the weight in
+		}
 		if r.Difference < (-0.1*a) && a != 0 {
 			r.Warn = true
 		}
@@ -1216,82 +1218,6 @@ func Sortinginsert(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(response)
 }
-
-// // Sorting Insert
-// func Sortinginsert(r *http.Request, user User) (message Message) {
-// 	//Test DB Connection
-// 	pingErr := db.Ping()
-// 	if pingErr != nil {
-// 		db, message = opendb()
-// 		return handleerror(pingErr)
-// 	}
-
-// 	//define variables
-// 	var newquery string
-// 	var values []interface{}
-
-// 	data := map[string]string{
-// 		"sku":              r.URL.Query().Get("sku"),
-// 		"description":      r.URL.Query().Get("description"),
-// 		"instructions":     r.URL.Query().Get("instructions"),
-// 		"weightin":         r.URL.Query().Get("weightin"),
-// 		"weightout":        r.URL.Query().Get("weightout"),
-// 		"pieces":           r.URL.Query().Get("pieces"),
-// 		"hours":            r.URL.Query().Get("hours"),
-// 		"checkout":         r.URL.Query().Get("checkout"),
-// 		"checkint":         r.URL.Query().Get("checkin"),
-// 		"sorter":           r.URL.Query().Get("sorter"),
-// 		"status":           r.URL.Query().Get("status"),
-// 		"sku_manufacturer": r.URL.Query().Get("manufacturerpart"),
-// 		"prty":             r.URL.Query().Get("priority"),
-// 		"requestid":        r.URL.Query().Get("requestid"),
-// 	}
-
-// 	if data["requestid"] == "" { //if this is a new request
-// 		newquery = "REPLACE INTO sortrequest ("
-// 		for key, value := range data {
-// 			if value != "" {
-// 				newquery += "`" + key + "`,"
-// 				values = append(values, value)
-// 			}
-// 		}
-// 		newquery = newquery[:len(newquery)-1] + ") VALUES ("
-// 		for key, value := range data {
-// 			if value != "" {
-// 				log.WithFields(log.Fields{"username": user.Username}).Debug("key:", key, ", value:", value)
-// 				newquery += "?,"
-// 			}
-// 		}
-// 		newquery = newquery[:len(newquery)-1] + ")"
-// 	} else { //if updating an existing request
-// 		newquery = "UPDATE sortrequest SET "
-// 		for key, value := range data {
-// 			if value == "<nil>" {
-// 				value = "" //fix <nil> values being inserted
-// 			}
-// 			if value != "" {
-// 				newquery += "`" + key + "`=?,"
-// 				values = append(values, value)
-// 			}
-// 		}
-// 		newquery = newquery[:len(newquery)-1] //get rid of the last comma
-// 		newquery += " WHERE requestid=" + data["requestid"]
-// 	}
-
-// 	log.WithFields(log.Fields{"username": user.Username}).Debug("newquery: ", newquery)
-// 	rows, err := db.Query(newquery, values...)
-// 	if err != nil {
-// 		return handleerror(err)
-// 	}
-// 	defer rows.Close()
-
-// 	//Logging
-// 	log.WithFields(log.Fields{"username": user.Username}).Info("Inserted Product ", data["sku"])
-// 	message.Title = "Success"
-// 	message.Body = "Successfully inserted row"
-// 	message.Success = true
-// 	return message
-// }
 
 func nextorder(manufacturer string, user User) (message Message, order Order) {
 	// Get a database handle.

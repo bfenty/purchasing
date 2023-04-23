@@ -24,22 +24,23 @@ type Order struct {
 }
 
 type SortRequest struct {
-	ID               int
-	SKU              string
-	Description      *string
-	Instructions     *string
-	Weightin         *float64
-	Weightout        *float64
-	Difference       float64
-	Pieces           *int
-	Hours            *float64
-	Checkout         *string
-	Checkin          *string
-	Sorter           string
-	Status           string
-	ManufacturerPart *string
-	Priority         int
-	Warn             bool
+	ID                int
+	SKU               string
+	Description       *string
+	Instructions      *string
+	Weightin          *float64
+	Weightout         *float64
+	Difference        float64
+	DifferencePercent string
+	Pieces            *int
+	Hours             *float64
+	Checkout          *string
+	Checkin           *string
+	Sorter            string
+	Status            string
+	ManufacturerPart  *string
+	Priority          int
+	Warn              bool
 }
 
 type Product struct {
@@ -72,13 +73,6 @@ type Page struct {
 	SortRequests2 []SortRequest
 	Users         []User
 }
-
-// type Permissions struct {
-// 	User  string
-// 	Perms string
-// 	Admin int
-// 	Mgmt  int
-// }
 
 type Message struct {
 	Success bool
@@ -132,6 +126,11 @@ func handleerror2(err error, w http.ResponseWriter) Message {
 	// }).Debug("Error response sent to client")
 
 	return message
+}
+
+// format as percent
+func formatAsPercent(value float64) string {
+	return fmt.Sprintf("%.2f%%", value*100)
 }
 
 // Handle Error Messages
