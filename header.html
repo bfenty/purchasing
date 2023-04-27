@@ -118,6 +118,28 @@ $('#myModal').on('shown.bs.modal', function () {
   }
 
 </style>
+<style>
+  .chart-container {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  }
+
+  @media (max-width: 768px) {
+  .chart-container {
+      flex-direction: column;
+      justify-content: center;
+      align-items: flex-start;
+  }
+
+  #sorter-chart {
+      margin-bottom: 20px;
+  }
+  }
+
+</style>
 {{end}}
 
 {{define "navigation"}}

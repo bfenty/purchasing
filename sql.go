@@ -292,7 +292,7 @@ func sortErrorUpdate(w http.ResponseWriter, r *http.Request) {
 	notes := r.Form.Get("notes")
 
 	// Insert the error into the database
-	result, err := db.Exec("REPLACE INTO purchasing.sorterror (requestid, errortype, notes) VALUES (?, ?, ?)", requestid, errortype, notes)
+	result, err := db.Exec("REPLACE INTO purchasing.sorterror (requestid, errortype, notes,reporter) VALUES (?, ?, ?, ?)", requestid, errortype, notes, user.Username)
 	if err != nil {
 		log.WithError(err).Error("Error inserting error into database")
 		http.Error(w, "Error inserting error into database", http.StatusInternalServerError)
@@ -348,6 +348,7 @@ func SortErrorList(w http.ResponseWriter, r *http.Request) {
 		SKU       string `json:"sku"`
 		Sorter    string `json:"sorter"`
 		Checkin   string `json:"checkin"`
+		Reporter  string `json:"reporter"`
 	}
 
 	// Parse query parameters for filtering
@@ -359,7 +360,7 @@ func SortErrorList(w http.ResponseWriter, r *http.Request) {
 	endDateParam := r.URL.Query().Get("enddate")
 
 	// Construct SQL query with filtering parameters
-	query := "SELECT a.errortype, a.notes, a.requestid, b.sku, b.sorter, b.checkint FROM purchasing.sorterror a INNER JOIN purchasing.sortrequest b ON a.requestid = b.requestid"
+	query := "SELECT a.errortype, a.notes, a.requestid, b.sku, b.sorter, b.checkint, a.reporter FROM purchasing.sorterror a INNER JOIN purchasing.sortrequest b ON a.requestid = b.requestid"
 	args := []interface{}{}
 	if requestIDParam != "" {
 		requestID, err := strconv.Atoi(requestIDParam)
@@ -446,7 +447,8 @@ func SortErrorList(w http.ResponseWriter, r *http.Request) {
 	for rows.Next() {
 		var errorReport ErrorReport
 		var requestID sql.NullInt64 // Use sql.NullInt64 for the requestid field
-		err := rows.Scan(&errorReport.ErrorType, &errorReport.Notes, &requestID, &errorReport.SKU, &errorReport.Sorter, &errorReport.Checkin)
+		var reporter sql.NullString // Use sql.NullString for the reporter field
+		err := rows.Scan(&errorReport.ErrorType, &errorReport.Notes, &requestID, &errorReport.SKU, &errorReport.Sorter, &errorReport.Checkin, &reporter)
 		if err != nil {
 			log.WithError(err).Error("Failed to scan error report")
 			w.WriteHeader(http.StatusInternalServerError)
@@ -454,8 +456,11 @@ func SortErrorList(w http.ResponseWriter, r *http.Request) {
 		}
 		if requestID.Valid { // Check if the requestid value is valid
 			errorReport.RequestID = uint64(requestID.Int64)
-			errorReports = append(errorReports, errorReport)
 		}
+		if reporter.Valid { // Check if the reporter value is valid
+			errorReport.Reporter = reporter.String
+		}
+		errorReports = append(errorReports, errorReport)
 	}
 
 	if err := rows.Err(); err != nil {

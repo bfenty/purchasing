@@ -61,28 +61,7 @@
           }
         }
       </style> -->
-    <style>
-        .chart-container {
-        display: flex;
-        flex-direction: row;
-        flex-wrap: wrap;
-        justify-content: space-between;
-        align-items: center;
-        }
 
-        @media (max-width: 768px) {
-        .chart-container {
-            flex-direction: column;
-            justify-content: center;
-            align-items: flex-start;
-        }
-
-        #sorter-chart {
-            margin-bottom: 20px;
-        }
-        }
-
-    </style>
     </head>
 <body>
     {{template "navigation" .}}
@@ -131,7 +110,7 @@
         <div class="row justify-content-center mt-5">
             <div class="col-md-8">
                 <table id="error-reports" class="table table-striped table-bordered">
-                    <thead>
+                    <thead class="table-dark">
                         <tr>
                             <th>Request ID</th>
                             <th>Error Type</th>
@@ -139,6 +118,7 @@
                             <th>SKU</th>
                             <th>Sorter</th>
                             <th>Check In Date</th>
+                            <th>Reporter</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -180,7 +160,7 @@
                 var table = $('#error-reports tbody');
                 table.empty();
                 $.each(data, function(index, item) {
-                    table.append('<tr><td>' + item.requestid + '</td><td>' + item.errortype + '</td><td>' + item.notes + '</td><td>' + item.sku + '</td><td>' + item.sorter + '</td><td>' + item.checkin + '</td></tr>');
+                    table.append('<tr><td>' + item.requestid + '</td><td>' + item.errortype + '</td><td>' + item.notes + '</td><td>' + item.sku + '</td><td>' + item.sorter + '</td><td>' + item.checkin + '</td><td>' + item.reporter + '</td></tr>');
                 });
             }
         
