@@ -31,7 +31,7 @@
                 {{if or (eq $layout "receiving") (eq $layout "full")}}<th scope="col">Weight In</th>{{end}}
                 {{if or (eq $layout "receiving") (eq $layout "full")}}<th scope="col">Difference</th>{{end}}
                 {{if or (eq $layout "receiving") (eq $layout "full")}}<th scope="col">%</th>{{end}}
-                {{if or (eq $layout "receiving") (eq $layout "full")}}<th scope="col">Units</th>{{end}}
+                {{if or (eq $layout "receiving") (eq $layout "full") (eq $layout "mgmt")}}<th scope="col">Units</th>{{end}}
                 {{if or (eq $layout "receiving") (eq $layout "full") (eq $layout "mgmt")}}<th scope="col">Hours</th>{{end}}
                 {{if or (eq $layout "full") (eq $layout "mgmt")}}<th scope="col">Check Out</th>{{end}}
                 {{if or (eq $layout "full") (eq $layout "mgmt")}}<th scope="col">Check In</th>{{end}}
@@ -63,7 +63,7 @@
                 </td>
                 {{end}}
                 {{if or (eq $layout "full") (eq $layout "receiving")}}<td></td>{{end}}
-                {{if or (eq $layout "full") (eq $layout "receiving")}}<td><input type="text" class="form-control" name="search-pieces" pattern="[0-9]+(\.[0-9]+)?" title="Please enter a valid decimal number" placeholder="Units"></td>{{end}}
+                {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "mgmt")}}<td><input type="text" class="form-control" name="search-pieces" pattern="[0-9]+(\.[0-9]+)?" title="Please enter a valid decimal number" placeholder="Units"></td>{{end}}
                 {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "mgmt")}}<td><input type="text" class="form-control" name="search-hours" placeholder="Hours"></td>{{end}}
                 {{if or (eq $layout "full") (eq $layout "mgmt")}}<td><input type="text" class="form-control" name="search-checkout" placeholder="Check Out"></td>{{end}}
                 {{if or (eq $layout "full") (eq $layout "mgmt")}}<td><input type="text" class="form-control" name="search-checkin" placeholder="Check In"></td>{{end}}
@@ -112,7 +112,7 @@
                 {{if or (eq $layout "full") (eq $layout "receiving")}}<td><div class="input-group"><input type="text" class="form-control weightin" id="weightin" name="weightin" placeholder="Weight In"></div></td>{{end}}
                 {{if or (eq $layout "full") (eq $layout "receiving")}}<td><div class="input-group"><input type="text" class="form-control difference" id="difference" name="difference" readonly placeholder="Difference"></div></td>{{end}}
                 {{if or (eq $layout "full") (eq $layout "receiving")}}<td></td>{{end}}
-                {{if or (eq $layout "full") (eq $layout "receiving")}}<td><div class="input-group"><input type="text" class="form-control pieces" id="pieces" name="pieces" pattern="[0-9]+(\.[0-9]+)?" title="Please enter a valid decimal number" placeholder="Pieces"></div></td>{{end}}
+                {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "mgmt")}}<td><div class="input-group"><input type="text" class="form-control pieces" id="pieces" name="pieces" pattern="[0-9]+(\.[0-9]+)?" title="Please enter a valid decimal number" placeholder="Pieces"></div></td>{{end}}
                 {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "mgmt")}}<td><input type="text" class="form-control hours" id="hours" name="hours" placeholder="Hours"></td>{{end}}
                 {{if or (eq $layout "full") (eq $layout "mgmt")}} <td><input type="date" class="form-control checkout" id="checkout" name="checkout" placeholder="Checkout Date"></td>{{end}}
                 {{if or (eq $layout "full") (eq $layout "mgmt")}}<td><input type="date" class="form-control checkin" id="checkin" name="checkin" placeholder="Checkin Date"></td>{{end}}
@@ -165,7 +165,7 @@
                   {{if or (eq $layout "full") (eq $layout "receiving")}}<td><div class="input-group"><input type="text" class="form-control weightin" id="weightin" name="weightin" value="{{.Weightin}}"></div></td>{{end}}
                   {{if or (eq $layout "full") (eq $layout "receiving")}}<td><div class="input-group"><input type="text" class="form-control difference" id="difference" name="difference" value="{{.Difference}}" readonly></div></td>{{end}}
                   {{if or (eq $layout "full") (eq $layout "receiving")}}<td><div class="input-group"><input type="text" class="form-control differencepercent" id="differencepercent" name="differencepercent" value="{{.DifferencePercent}}" readonly percent></div></td>{{end}}
-                  {{if or (eq $layout "full") (eq $layout "receiving")}}<td><div class="input-group"><input type="text" class="form-control pieces" id="pieces" name="pieces" pattern="[0-9]+(\.[0-9]+)?" title="Please enter a valid decimal number" value="{{with .Pieces}}{{.}}{{end}}"></div></td>{{end}}
+                  {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "mgmt")}}<td><div class="input-group"><input type="text" class="form-control pieces" id="pieces" name="pieces" pattern="[0-9]+(\.[0-9]+)?" title="Please enter a valid decimal number" value="{{with .Pieces}}{{.}}{{end}}"></div></td>{{end}}
                   {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "mgmt")}}<td><input type="text" class="form-control hours" id="hours" name="hours" value="{{with .Hours}}{{.}}{{end}}"></td>{{end}}
                   {{if or (eq $layout "full") (eq $layout "mgmt")}}<td><input type="date" class="form-control checkout" id="checkout" name="checkout" value="{{.Checkout}}"></td>{{end}}
                   {{if or (eq $layout "full") (eq $layout "mgmt")}}<td><input type="date" class="form-control checkin" id="checkin" name="checkin" value="{{.Checkin}}"></td>{{end}}
