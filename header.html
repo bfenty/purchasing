@@ -151,7 +151,7 @@ $('#myModal').on('shown.bs.modal', function () {
       <a class="nav-link active" href="/orderlist">Orders<span class="sr-only">(current)</span></a>
     </li>
     {{end}}
-  {{if or (eq $permission "admin") (eq $permission "purchasing") (eq $permission "receiving")}}
+  {{if or (eq $permission "admin") (eq $permission "purchasing") (eq $permission "receiving") (.Permission.Permissions.Sorting)}}
   <li class="nav-item dropdown" style="position:relative; z-index: 9999;">
           <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
             Sorting

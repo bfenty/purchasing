@@ -88,66 +88,67 @@
     {{template "navigation" .}}
     {{$layout := .Layout}}
     <div id="message" class="alert"></div>
-        <div class="container mt-5">
-            {{if or (eq $layout "sorting")}}<h1 class="text-center mb-5">Sort Error Analysis</h1>{{end}}
-            <div class="row justify-content-center mb-3">
-                <div class="col-3">
-                    <label for="sorter">Sorter:</label>
-                    <select id="sorter" class="form-control">
-                        <option value="all" selected>All</option>
-                        {{range $.Users}}
-                        <option value="{{.Username}}">{{.Username}}</option>
-                        {{end}}
-                    </select>
-                </div>
-                <div class="col-3">
-                    <label for="errorType">Error Type:</label>
-                    <select id="errorType" class="form-control">
-                        <option value="all" selected>All</option>
-                        <option value="sorter">Sorter</option>
-                        <option value="error2">Error 2</option>
-                        <option value="other">Other</option>
-                    </select>
-                </div>
-                <div class="col-3">
-                    <label for="startDate">Start Date:</label>
-                    <input id="startDate" name="startDate" type="date" class="form-control">
-                </div>
-                <div class="col-3">
-                    <label for="endDate">End Date:</label>
-                    <input id="endDate" name="endDate" type="date" class="form-control">
-                </div>
+    <div class="container mt-5">
+        {{if or (eq $layout "sorting")}}<h1 class="text-center mb-5">Sort Error Analysis</h1>{{end}}
+        <div class="row justify-content-center mb-3">
+            <div class="col-12 col-md-3">
+                <label for="sorter">Sorter:</label>
+                <select id="sorter" class="form-control flex-column">
+                    <option value="all" selected>All</option>
+                    {{range $.Users}}
+                    <option value="{{.Username}}">{{.Username}}</option>
+                    {{end}}
+                </select>
             </div>
-            <!-- Sorting Errors Graph -->
-                <div class="row mt-5">
-                    <div class="col-md-6">
-                      <canvas id="sorter-chart"></canvas>
-                    </div>
-                    <div class="col-md-6">
-                      <canvas id="date-chart"></canvas>
-                    </div>
-                  </div>            
-            <!-- Sorting Errors Table -->
-            <div class="row justify-content-center mt-5">
-                <div class="col-md-8">
-                    <table id="error-reports" class="table table-striped table-bordered">
-                        <thead>
-                            <tr>
-                                <th>Request ID</th>
-                                <th>Error Type</th>
-                                <th>Notes</th>
-                                <th>SKU</th>
-                                <th>Sorter</th>
-                                <th>Check In Date</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                        </tbody>
-                    </table>
-                </div>
+            <div class="col-12 col-md-3">
+                <label for="errorType">Error Type:</label>
+                <select id="errorType" class="form-control flex-column">
+                    <option value="all" selected>All</option>
+                    <option value="sorter">Sorter</option>
+                    <option value="error2">Error 2</option>
+                    <option value="other">Other</option>
+                </select>
+            </div>
+            <div class="col-12 col-md-3">
+                <label for="startDate">Start Date:</label>
+                <input id="startDate" name="startDate" type="date" class="form-control">
+            </div>
+            <div class="col-12 col-md-3">
+                <label for="endDate">End Date:</label>
+                <input id="endDate" name="endDate" type="date" class="form-control">
             </div>
         </div>
-    <br><br><br>
+        <!-- Sorting Errors Graph -->
+            <div class="row mt-5">
+                <div class="col-md-6">
+                  <canvas id="sorter-chart"></canvas>
+                </div>
+                <div class="col-md-6">
+                  <canvas id="date-chart"></canvas>
+                </div>
+              </div>            
+        <!-- Sorting Errors Table -->
+        <div class="row justify-content-center mt-5">
+            <div class="col-md-8">
+                <table id="error-reports" class="table table-striped table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Request ID</th>
+                            <th>Error Type</th>
+                            <th>Notes</th>
+                            <th>SKU</th>
+                            <th>Sorter</th>
+                            <th>Check In Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+<br><br><br>
+
     {{template "footer" .}}
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
     <script>
