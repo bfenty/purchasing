@@ -104,6 +104,7 @@ $(document).ready(function(){
                             <option value='NB'>NB</option>
                             <option value='PG'>PG</option>
                             <option value='VK'>VK</option>
+                            <option value='JCM'>JCM</option>
                           </select>
                         </td>
                         <td><input class="form-control" type='text' id="processrequest" name="processrequest"></td>
@@ -208,6 +209,7 @@ $(document).ready(function(){
                           <option value='NB' {{if eq .Manufacturer "NB"}}selected{{end}}>NB</option>
                           <option value='PG' {{if eq .Manufacturer "PG"}}selected{{end}}>PG</option>
                           <option value='VK' {{if eq .Manufacturer "VK"}}selected{{end}}>VK</option>
+                          <option value='VK' {{if eq .Manufacturer "JCM"}}selected{{end}}>JCM</option>
                         </select>
                       </td>
                       <td><input class="form-control" type='text' id="processrequest" name="processrequest" value="{{.ProcessRequest}}"></td>
