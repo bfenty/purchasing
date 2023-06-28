@@ -1263,6 +1263,7 @@ func nextorder(manufacturer string, user User) (message Message, order Order) {
 func Reorderlist(user User) (message Message, orders []Order) {
 	// Get a database handle.
 	var err error
+	pagesize := 25
 
 	//Test Connection
 	pingErr := db.Ping()
@@ -1270,6 +1271,7 @@ func Reorderlist(user User) (message Message, orders []Order) {
 		db, message = opendb()
 		return handleerror(pingErr), orders
 	}
+
 	//Build the Query
 	newquery := "SELECT skus.manufacturer_code, manufacturer_code.name FROM `skus` left join manufacturer_code on skus.manufacturer_code = manufacturer_code.code WHERE inventory_qty = 0 and reorder = 1 and manufacturer_code != '' group by skus.manufacturer_code, manufacturer_code.name"
 
@@ -1286,9 +1288,10 @@ func Reorderlist(user User) (message Message, orders []Order) {
 		if err != nil {
 			return handleerror(pingErr), orders
 		}
+		log.Debug("Running reorder list for manufacturer ", r.Manufacturer)
 		//Build the Query for the skus in the order
-		newquery := "SELECT a.sku_internal,`manufacturer_code`,`sku_manufacturer`,`product_option`,`processing_request`,`sorting_request`,`unit`,`unit_price`,`Currency`,`order_qty`,`modified`,`reorder`,`inventory_qty`,season,url_thumb,url_standard FROM `skus` a LEFT JOIN (select sku_internal FROM orderskus a left join orders b on a.ordernum = b.ordernum where status != 'Closed') b on a.sku_internal = b.sku_internal WHERE inventory_qty = 0 and reorder = 1 and b.sku_internal is null and manufacturer_code = ?"
-		skurows, err := db.Query(newquery, r.Manufacturer)
+		newquery := "SELECT a.sku_internal,`manufacturer_code`,`sku_manufacturer`,`product_option`,`processing_request`,`sorting_request`,`unit`,`unit_price`,`Currency`,`order_qty`,`modified`,`reorder`,`inventory_qty`,season,url_thumb,url_standard FROM `skus` a LEFT JOIN (select sku_internal FROM orderskus a left join orders b on a.ordernum = b.ordernum where status != 'Closed') b on a.sku_internal = b.sku_internal WHERE inventory_qty = 0 and reorder = 1 and b.sku_internal is null and manufacturer_code = ? LIMIT ?"
+		skurows, err := db.Query(newquery, r.Manufacturer, pagesize)
 		if err != nil {
 			return handleerror(pingErr), orders
 		}
