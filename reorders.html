@@ -38,14 +38,13 @@
     </select> 
     
   <div class="accordion accordion-flush" id="accordion">
-    {{range $i, $value := .Orders}}
     <form method="POST" action="/ordercreate">
     <!-- Modal -->
-    <div class="modal fade" id="exampleModal{{$i}}" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
         <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-            <h5 class="modal-title" id="exampleModalLabel{{$i}}">Confirm Order Create</h5>
+            <h5 class="modal-title" id="exampleModalLabel">Confirm Order Create</h5>
             <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
                 <span aria-hidden="true">&times;</span>
             </button>
@@ -90,19 +89,18 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {{range $i, $value := .Products}}
                     <!-- Image Modal -->
-                    <div class="modal fade" id="ModalImage{{$i}}" tabindex="-1" role="dialog" aria-labelledby="ModalImageLabel" aria-hidden="true">
+                    <div class="modal fade" id="ModalImage" tabindex="-1" role="dialog" aria-labelledby="ModalImageLabel" aria-hidden="true">
                       <div class="modal-dialog" role="document">
                       <div class="modal-content">
                           <div class="modal-header">
-                          <h5 class="modal-title" id="ModalImageLabel{{$i}}">{{.SKU}}</h5>
+                          <h5 class="modal-title" id="ModalImageLabel"></h5>
                               <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
                               <span aria-hidden="true">&times;</span>
                           </button>
                           </div>
                           <div class="modal-body">
-                            <img class="w-100" src="{{.Image.URL_Standard}}">
+                            <img class="w-100" src="">
                           </div>
                           <div class="modal-footer">
                               <form action="/productdelete" method="POST">
@@ -115,21 +113,20 @@
                     <tr>
                             <div class="form-group">
                             <td><a role="button" ><img class="img-rounded" data-bs-toggle="modal" data-bs-target="#ModalImage{{$i}}" src="{{.Image.URL_Thumb}}" height="45px"></a></td>
-                            <td>{{.SKU}}</td>
-                            <td>{{.ManufacturerPart}}</td>
-                            <td>{{.Description}}</td>
-                            <td>{{.Manufacturer}}</td>
-                            <td>{{.ProcessRequest}}</td>
-                            <td>{{.Unit}}</td>
-                            <td>{{.UnitPrice}}</td>
-                            <td>{{.Currency}}</td>
-                            <td>{{.Qty}}</td>
-                            <td><input class="form-check-input" type='checkbox' name='sku' value='{{.SKU}}'></td> 
-                            <td>{{.Season}}</td>
-                            <td>{{.InventoryQTY}}</td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td><input class="form-check-input" type='checkbox' name='sku' value=''></td> 
+                            <td></td>
+                            <td></td>
                             </div>
                     </tr>
-                    {{end}}
                   </form>
                 </tbody>
             </table>
@@ -143,7 +140,6 @@
                   </li>
               </ul>
           </nav>
-    {{end}}
   </div>
 </body>
 </html>

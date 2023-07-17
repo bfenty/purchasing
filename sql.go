@@ -1322,17 +1322,17 @@ func Reorderlist(user User) (message Message, orders []Order) {
 	defer orderrows.Close()
 
 	// Pull Data
-	for orderrows.Next() {
-		var r Order
-		err := orderrows.Scan(&r.Manufacturer, &r.ManufacturerName)
-		if err != nil {
-			return handleerror(pingErr), orders
-		}
+	// for orderrows.Next() {
+	// 	var r Order
+	// 	err := orderrows.Scan(&r.Manufacturer, &r.ManufacturerName)
+	// 	if err != nil {
+	// 		return handleerror(pingErr), orders
+	// 	}
 
-		r.Products = ProductList2(*r.Manufacturer, 1, 25)
-		// Append to the orders
-		orders = append(orders, r)
-	}
+	// 	r.Products = ProductList2(*r.Manufacturer, 1, 25)
+	// 	// Append to the orders
+	// 	orders = append(orders, r)
+	// }
 
 	return message, orders
 }
