@@ -1345,8 +1345,10 @@ func ProductList2(Manufacturer string, page int, pageSize int) (products []Produ
 	defer skurows.Close()
 
 	// Get the total number of rows without LIMIT applied
-	countRows, err := db.Query("SELECT FOUND_ROWS()")
+	countquery := "SELECT COUNT(*) FROM `skus` a LEFT JOIN (select sku_internal FROM orderskus a left join orders b on a.ordernum = b.ordernum where status != 'Closed') b on a.sku_internal = b.sku_internal WHERE inventory_qty = 0 and reorder = 1 and b.sku_internal is null and manufacturer_code = ?"
+	countRows, err := db.Query(countquery, Manufacturer)
 	if err != nil {
+		log.Error(err)
 		return products, totalPages
 	}
 	defer countRows.Close()
@@ -1356,6 +1358,7 @@ func ProductList2(Manufacturer string, page int, pageSize int) (products []Produ
 	if countRows.Next() {
 		err := countRows.Scan(&totalRows)
 		if err != nil {
+			log.Error(err)
 			return products, totalPages
 		}
 	}
