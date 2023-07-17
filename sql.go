@@ -1280,14 +1280,20 @@ func ReordersListHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Call the Reorderlist function with the provided parameters
-	products := ProductList2(Manufacturer, page, pageSize)
+	products, totalPages := ProductList2(Manufacturer, page, pageSize)
 
 	// Convert the orders to JSON
 	response := struct {
-		Products []Product
+		Products    []Product
+		TotalPages  int
+		CurrentPage int
 	}{
-		Products: products,
+		Products:    products,
+		TotalPages:  totalPages,
+		CurrentPage: page,
 	}
+
+	// log.Debug("JSON:", response)
 
 	jsonResponse, err := json.Marshal(response)
 	if err != nil {
@@ -1320,24 +1326,10 @@ func Reorderlist(user User) (message Message, orders []Order) {
 		return handleerror(pingErr), orders
 	}
 	defer orderrows.Close()
-
-	// Pull Data
-	// for orderrows.Next() {
-	// 	var r Order
-	// 	err := orderrows.Scan(&r.Manufacturer, &r.ManufacturerName)
-	// 	if err != nil {
-	// 		return handleerror(pingErr), orders
-	// 	}
-
-	// 	r.Products = ProductList2(*r.Manufacturer, 1, 25)
-	// 	// Append to the orders
-	// 	orders = append(orders, r)
-	// }
-
 	return message, orders
 }
 
-func ProductList2(Manufacturer string, page int, pageSize int) (products []Product) {
+func ProductList2(Manufacturer string, page int, pageSize int) (products []Product, totalPages int) {
 	//Debug
 	log.Debug("Page:", page, " Pagesize:", pageSize)
 
@@ -1351,6 +1343,26 @@ func ProductList2(Manufacturer string, page int, pageSize int) (products []Produ
 	}
 	var skus []Product
 	defer skurows.Close()
+
+	// Get the total number of rows without LIMIT applied
+	countRows, err := db.Query("SELECT FOUND_ROWS()")
+	if err != nil {
+		return products, totalPages
+	}
+	defer countRows.Close()
+
+	// Retrieve the count
+	var totalRows int
+	if countRows.Next() {
+		err := countRows.Scan(&totalRows)
+		if err != nil {
+			return products, totalPages
+		}
+	}
+
+	// Calculate the total number of pages
+	totalPages = int(math.Ceil(float64(totalRows) / float64(pageSize)))
+
 	for skurows.Next() {
 		var r Product
 		err := skurows.Scan(&r.SKU, &r.Manufacturer, &r.ManufacturerPart, &r.Description, &r.ProcessRequest, &r.SortingRequest, &r.Unit, &r.UnitPrice, &r.Currency, &r.Qty, &r.Modified, &r.Reorder, &r.InventoryQTY, &r.Season, &r.Image.URL_Thumb, &r.Image.URL_Standard)
@@ -1359,7 +1371,7 @@ func ProductList2(Manufacturer string, page int, pageSize int) (products []Produ
 		}
 		skus = append(skus, r)
 	}
-	return skus
+	return skus, totalPages
 }
 
 // Product List
