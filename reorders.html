@@ -41,7 +41,7 @@
         data: {
           manufacturer: selectedValue,// Pass the selected value as a parameter
           page: page,
-          pageSize: '50' 
+          pageSize: '100' 
         },
         success: function(response) {
           // Assuming the response is an array of objects containing the table data
@@ -94,17 +94,34 @@
 
       // Enable/disable previous and next buttons based on the current page
       if (CurrentPage > 0) {
-        document.getElementById("#prevButton").disabled = false; 
+        prevButton.removeClass('disabled');
       } else {
-        document.getElementById("#prevButton").disabled = true; 
+        prevButton.addClass('disabled');
       }
 
-      if (CurrentPage < TotalPages - 1) {
-        nextButton.prop('disabled', false);
+      if (CurrentPage < TotalPages-1) {
+        nextButton.removeClass('disabled');
       } else {
-        nextButton.prop('disabled', true);
+        nextButton.addClass('disabled');
       }
     }
+
+    // Function to handle page link clicks
+    function handlePageLinkClick(event) {
+      event.preventDefault();
+      var selectedPage = parseInt($(this).data('page'));
+      if (selectedPage !== CurrentPage) {
+        CurrentPage = selectedPage;
+        var selectedValue = $('#dropdownOptions .dropdown-item.active').data('value');
+        populateTable(selectedValue, CurrentPage);
+        updatePaginationButtons();
+      }
+    }
+
+    
+
+// Attach click event listener to page links
+$('#pagination .page-link').on('click', handlePageLinkClick);
 
 
     // });
