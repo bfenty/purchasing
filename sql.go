@@ -1259,26 +1259,73 @@ func nextorder(manufacturer string, user User) (message Message, order Order) {
 	return message, order
 }
 
+// ReordersListHandler handles the API endpoint for retrieving reordered lists with pagination
+func ReordersListHandler(w http.ResponseWriter, r *http.Request) {
+	// Parse the request parameters
+	Manufacturer := r.URL.Query().Get("manufacturer")
+	pageStr := r.URL.Query().Get("page")
+	pageSizeStr := r.URL.Query().Get("pageSize")
+
+	// Convert the parameters to integers
+	page, err := strconv.Atoi(pageStr)
+	if err != nil {
+		http.Error(w, "Invalid page number", http.StatusBadRequest)
+		return
+	}
+
+	pageSize, err := strconv.Atoi(pageSizeStr)
+	if err != nil {
+		http.Error(w, "Invalid pageSize", http.StatusBadRequest)
+		return
+	}
+
+	// Call the Reorderlist function with the provided parameters
+	products, totalPages := ProductList2(Manufacturer, page, pageSize)
+
+	// Convert the orders to JSON
+	response := struct {
+		Products    []Product
+		TotalPages  int
+		CurrentPage int
+	}{
+		Products:    products,
+		TotalPages:  totalPages,
+		CurrentPage: page,
+	}
+
+	// log.Debug("JSON:", response)
+
+	jsonResponse, err := json.Marshal(response)
+	if err != nil {
+		http.Error(w, "Error encoding JSON response", http.StatusInternalServerError)
+		return
+	}
+
+	// Set the appropriate headers and write the JSON response
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(jsonResponse)
+}
+
 // Reorders List
 func Reorderlist(user User) (message Message, orders []Order) {
 	// Get a database handle.
 	var err error
 
-	//Test Connection
+	// Test Connection
 	pingErr := db.Ping()
 	if pingErr != nil {
 		db, message = opendb()
 		return handleerror(pingErr), orders
 	}
-	//Build the Query
-	newquery := "SELECT skus.manufacturer_code, manufacturer_code.name FROM `skus` left join manufacturer_code on skus.manufacturer_code = manufacturer_code.code WHERE inventory_qty = 0 and reorder = 1 and manufacturer_code != '' group by skus.manufacturer_code, manufacturer_code.name"
 
+	// Build the Query with pagination
+	newquery := "SELECT skus.manufacturer_code, manufacturer_code.name FROM `skus` left join manufacturer_code on skus.manufacturer_code = manufacturer_code.code WHERE inventory_qty = 0 and reorder = 1 and manufacturer_code != '' group by skus.manufacturer_code, manufacturer_code.name"
 	orderrows, err := db.Query(newquery)
 	if err != nil {
 		return handleerror(pingErr), orders
 	}
 	defer orderrows.Close()
-
 	//Pull Data
 	for orderrows.Next() {
 		var r Order
@@ -1286,29 +1333,76 @@ func Reorderlist(user User) (message Message, orders []Order) {
 		if err != nil {
 			return handleerror(pingErr), orders
 		}
-		//Build the Query for the skus in the order
-		newquery := "SELECT a.sku_internal,`manufacturer_code`,`sku_manufacturer`,`product_option`,`processing_request`,`sorting_request`,`unit`,`unit_price`,`Currency`,`order_qty`,`modified`,`reorder`,`inventory_qty`,season,url_thumb,url_standard FROM `skus` a LEFT JOIN (select sku_internal FROM orderskus a left join orders b on a.ordernum = b.ordernum where status != 'Closed') b on a.sku_internal = b.sku_internal WHERE inventory_qty = 0 and reorder = 1 and b.sku_internal is null and manufacturer_code = ?"
-		skurows, err := db.Query(newquery, r.Manufacturer)
-		if err != nil {
-			return handleerror(pingErr), orders
-		}
-		var skus []Product
-		defer skurows.Close()
-		for skurows.Next() {
-			var r Product
-			err := skurows.Scan(&r.SKU, &r.Manufacturer, &r.ManufacturerPart, &r.Description, &r.ProcessRequest, &r.SortingRequest, &r.Unit, &r.UnitPrice, &r.Currency, &r.Qty, &r.Modified, &r.Reorder, &r.InventoryQTY, &r.Season, &r.Image.URL_Thumb, &r.Image.URL_Standard)
-			if err != nil {
-				return handleerror(pingErr), orders
-			}
-			skus = append(skus, r)
-		}
-		r.Products = skus
+		// //Build the Query for the skus in the order
+		// newquery := "SELECT a.sku_internal,`manufacturer_code`,`sku_manufacturer`,`product_option`,`processing_request`,`sorting_request`,`unit`,`unit_price`,`Currency`,`order_qty`,`modified`,`reorder`,`inventory_qty`,season,url_thumb,url_standard FROM `skus` a LEFT JOIN (select sku_internal FROM orderskus a left join orders b on a.ordernum = b.ordernum where status != 'Closed') b on a.sku_internal = b.sku_internal WHERE inventory_qty = 0 and reorder = 1 and b.sku_internal is null and manufacturer_code = ?"
+		// skurows, err := db.Query(newquery, r.Manufacturer)
+		// if err != nil {
+		// 	return handleerror(pingErr), orders
+		// }
+		// var skus []Product
+		// defer skurows.Close()
+		// for skurows.Next() {
+		// 	var r Product
+		// 	err := skurows.Scan(&r.SKU, &r.Manufacturer, &r.ManufacturerPart, &r.Description, &r.ProcessRequest, &r.SortingRequest, &r.Unit, &r.UnitPrice, &r.Currency, &r.Qty, &r.Modified, &r.Reorder, &r.InventoryQTY, &r.Season, &r.Image.URL_Thumb, &r.Image.URL_Standard)
+		// 	if err != nil {
+		// 		return handleerror(pingErr), orders
+		// 	}
+		// 	skus = append(skus, r)
+		// }
+		// r.Products = skus
 		//Append to the orders
 		orders = append(orders, r)
 	}
 
 	return message, orders
+}
 
+func ProductList2(Manufacturer string, page int, pageSize int) (products []Product, totalPages int) {
+	//Debug
+	log.Debug("Page:", page, " Pagesize:", pageSize)
+
+	// Calculate the offset based on the page and page size
+	offset := (page) * pageSize
+	// Build the Query for the skus in the order
+	newquery := "SELECT a.sku_internal,`manufacturer_code`,`sku_manufacturer`,`product_option`,`processing_request`,`sorting_request`,`unit`,`unit_price`,`Currency`,`order_qty`,`modified`,`reorder`,`inventory_qty`,season,url_thumb,url_standard FROM `skus` a LEFT JOIN (select sku_internal FROM orderskus a left join orders b on a.ordernum = b.ordernum where status != 'Closed') b on a.sku_internal = b.sku_internal WHERE inventory_qty = 0 and reorder = 1 and b.sku_internal is null and manufacturer_code = ? LIMIT ?, ?"
+	skurows, err := db.Query(newquery, Manufacturer, offset, pageSize)
+	if err != nil {
+		log.Error(err)
+	}
+	var skus []Product
+	defer skurows.Close()
+
+	// Get the total number of rows without LIMIT applied
+	countquery := "SELECT COUNT(*) FROM `skus` a LEFT JOIN (select sku_internal FROM orderskus a left join orders b on a.ordernum = b.ordernum where status != 'Closed') b on a.sku_internal = b.sku_internal WHERE inventory_qty = 0 and reorder = 1 and b.sku_internal is null and manufacturer_code = ?"
+	countRows, err := db.Query(countquery, Manufacturer)
+	if err != nil {
+		log.Error(err)
+		return products, totalPages
+	}
+	defer countRows.Close()
+
+	// Retrieve the count
+	var totalRows int
+	if countRows.Next() {
+		err := countRows.Scan(&totalRows)
+		if err != nil {
+			log.Error(err)
+			return products, totalPages
+		}
+	}
+
+	// Calculate the total number of pages
+	totalPages = int(math.Ceil(float64(totalRows) / float64(pageSize)))
+
+	for skurows.Next() {
+		var r Product
+		err := skurows.Scan(&r.SKU, &r.Manufacturer, &r.ManufacturerPart, &r.Description, &r.ProcessRequest, &r.SortingRequest, &r.Unit, &r.UnitPrice, &r.Currency, &r.Qty, &r.Modified, &r.Reorder, &r.InventoryQTY, &r.Season, &r.Image.URL_Thumb, &r.Image.URL_Standard)
+		if err != nil {
+			log.Error(err)
+		}
+		skus = append(skus, r)
+	}
+	return skus, totalPages
 }
 
 // Product List
