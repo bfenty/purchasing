@@ -373,7 +373,7 @@ func order(w http.ResponseWriter, r *http.Request) {
 	t.Execute(w, page)
 }
 
-// Reorders Page
+// Reorders Page//
 func reorder(w http.ResponseWriter, r *http.Request) {
 	var page Page
 	page.Permission = auth(w, r)
