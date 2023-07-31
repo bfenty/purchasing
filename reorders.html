@@ -24,55 +24,202 @@
      }
  }
   </script>
+  <script>
+
+    // Function to handle the AJAX request and populate the table
+    function populateTable(selectedValue,page) {
+      // Make an AJAX request here to fetch data based on the selectedValue
+      // You can use the selectedValue to send any necessary parameters to the server
+
+      //Console Logging
+      console.log('Value:',selectedValue)
+
+      // Example AJAX request using jQuery
+      $.ajax({
+        url: '/reorderapi', // Replace with your API endpoint URL
+        method: 'GET',
+        data: {
+          manufacturer: selectedValue,// Pass the selected value as a parameter
+          page: page,
+          pageSize: '50' 
+        },
+        success: function(response) {
+          // Assuming the response is an array of objects containing the table data
+          // Update the table with the received data
+          var tableBody = $('#data-table').find('tbody');
+          tableBody.empty(); // Clear existing table data
+          
+          // Loop through the response data and append rows to the table
+          response.Products.forEach(function(item) {
+            var row = '<tr>';
+            row += '<td><img src="' + item.Image.url_thumbnail + '" data-large-image="' + item.Image.url_standard + '" alt="Product Image" height=45px class="product-image" data-toggle="modal" data-target="#imageModal-' + item.SKU + '"></td>';
+            // row += '<td><img class="img-rounded" data-bs-toggle="modal" height=45px src=' + item.Image.url_thumbnail + '></td>';
+            row += '<td>' + item.SKU + '</td>';
+            row += '<td>' + item.ManufacturerPart + '</td>';
+            row += '<td>' + item.Description + '</td>';
+            row += '<td>' + item.Manufacturer + '</td>';
+            row += '<td>' + item.ProcessRequest + '</td>';
+            row += '<td>' + item.Unit + '</td>';
+            row += '<td>' + item.UnitPrice + '</td>';
+            row += '<td>' + item.Currency + '</td>';
+            row += '<td>' + item.Qty + '</td>';
+            row += '<td><input class="form-check-input" type="checkbox" name="sku" value="' + item.SKU + '"></td>';
+            row += '<td>' + item.Season + '</td>';
+            row += '<td>' + item.InventoryQTY + '</td><td></td>';
+            row += '</tr>';
+            tableBody.append(row);
+          });
+          // Update the current page and total pages variables
+          CurrentPage = response.CurrentPage;
+          TotalPages = response.TotalPages;
+          console.log('Total Pages:',TotalPages)
+          console.log('Current Page:',CurrentPage)
+          // Update the page counter
+          var pageCounter = $('#pageCounter');
+          pageCounter.text('Page ' + (CurrentPage+1) + ' of ' + TotalPages);
+          updatePaginationButtons();
+        },
+        error: function(xhr, status, error) {
+          console.log('AJAX request error:', error);
+        }
+      });
+    }
+
+    // $(document).ready(function() {
+    // Function to update the state of pagination buttons
+    // Function to update the state of pagination buttons
+    function updatePaginationButtons() {
+      var prevButton = $('#prevButton');
+      var nextButton = $('#nextButton');
+
+      // Enable/disable previous and next buttons based on the current page
+      if (CurrentPage > 0) {
+        document.getElementById("#prevButton").disabled = false; 
+      } else {
+        document.getElementById("#prevButton").disabled = true; 
+      }
+
+      if (CurrentPage < TotalPages - 1) {
+        nextButton.prop('disabled', false);
+      } else {
+        nextButton.prop('disabled', true);
+      }
+    }
+
+
+    // });
+
+    // Listen for the change event on the dropdown
+    $('#dropdownOptions').on('click', '.dropdown-item', function(event) {
+      event.preventDefault();
+      var selectedValue = $(this).data('value');
+      populateTable(selectedValue);
+    });
+
+    $(document).ready(function() {
+      // Global variables to track the current page and total number of pages
+      var CurrentPage = 0;
+      var TotalPages = 0;
+      // Call populateTable with the default selected value on page load
+      populateTable('PW',CurrentPage);
+      
+      // Listen for the change event on the dropdown
+      $('#dropdownOptions').on('change', function() {
+        var selectedValue = $(this).val();
+        console.log('Selected value:', selectedValue);
+        currentPage = 0; // Reset current page when dropdown value changes
+        populateTable(selectedValue, currentPage);
+      });
+    });
+
+    $(document).ready(function() {
+    // Previous page button click event
+    $('#prevButton').click(function() {
+      console.log("previous clicked")
+      if (CurrentPage > 0) {
+        CurrentPage--;
+        var selectedValue = $('#dropdownOptions').val();
+        populateTable(selectedValue, CurrentPage);
+      }
+    });
+    });
+    $(document).ready(function() {
+      // Next page button click event
+      $('#nextButton').click(function() {
+        console.log("next clicked")
+        //if (CurrentPage < TotalPages) {
+          CurrentPage++;
+          var selectedValue = $('#dropdownOptions').val();
+          populateTable(selectedValue, CurrentPage);
+        //}
+      });
+    });
+  </script>
+  <script>
+    $(document).ready(function() {
+      // ...
+
+      // Open modal with image on click
+      $(document).on('click', '.product-image', function(event) {
+        console.log("Image Clicked")
+        var imageUrl = $(this).attr('src');
+        var largeImageUrl = $(this).data('large-image');
+
+        // Set the small image source initially
+        $('#modalImage').attr('src', imageUrl);
+        // Set the large image source
+        $('#modalLargeImage').attr('src', largeImageUrl);
+
+        // Show the modal
+        $('#imageModal').modal('show');
+      });
+    });
+
+  </script>
 </head>
 <body>
     {{template "navigation" .}}
     <br> 
     {{template "messagebox" .}}
+    <label for="cars">Choose a Manufacturer:</label>
 
-  <div class="accordion accordion-flush" id="accordion">
-    {{range $i, $value := .Orders}}
-    <form method="POST" action="/ordercreate">
-    <!-- Modal -->
-    <div class="modal fade" id="exampleModal{{$i}}" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
-        <div class="modal-dialog" role="document">
-        <div class="modal-content">
+    <select name="manufacturer" id="dropdownOptions">
+      {{range $i, $value := .Orders}}
+      <option value="{{.Manufacturer}}">{{.ManufacturerName}}</option>
+      {{end}}
+    </select> 
+    <!-- Image Modal -->
+      <div class="modal fade" id="imageModal" tabindex="-1" role="dialog" aria-labelledby="imageModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+          <div class="modal-content">
             <div class="modal-header">
-            <h5 class="modal-title" id="exampleModalLabel{{$i}}">Confirm Order Create</h5>
-            <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+              <h5 class="modal-title" id="imageModalLabel">Product Image</h5>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                 <span aria-hidden="true">&times;</span>
-            </button>
+              </button>
             </div>
             <div class="modal-body">
-              This will create a reorder for Manufacturer {{.ManufacturerName}}, do you want to proceed?
+              <img src="" alt="Product Image" id="modalLargeImage" class="img-fluid">
             </div>
-            <div class="modal-footer">
-              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-              <input type='submit' value='Create Order' class="btn btn-primary">
-            </div>
+          </div>
         </div>
-        </div>
-    </div>
-
-    <div class="accordion-item">
-      <div class="accordion-heading">
-          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{$i}}" aria-expanded="true" aria-controls="collapse{{$i}}">
-            <h4>{{.ManufacturerName}} - {{len .Products}} products </h4>
-          </button>
       </div>
-      <div id="collapse{{$i}}" class="panel-collapse collapse">
-        <div class="panel-body">
-          <div class="form-group">
-          <table class="table">
-            <tr>
-              <td>
-                <input type="hidden" name="manufacturer" id="manufacturer" value="{{.Manufacturer}}">
-                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal{{$i}}">Create Order</button>
-              </td>
-             </tr>
-            </table>
-            </div>
-            <table class="table table-striped table-hover">
+      <!-- Navigation -->
+            <div id="pageCounter" class="text-center mt-3">
+              <span class="badge bg-secondary"></span>
+            </div>            
+            <nav id="paginationNav" aria-label="Page navigation">
+              <ul class="pagination justify-content-center">
+                  <li class="page-item" >
+                      <a class="page-link" href="#" tabindex="-1" aria-disabled="true" id="prevButton">Previous</a>
+                  </li>
+                  <li class="page-item" id="nextButton">
+                      <a class="page-link" href="#">Next</a>
+                  </li>
+              </ul>
+          </nav>
+          <!-- Table Head -->
+            <table class="table table-striped table-hover" id="data-table">
                 <thead class="table-dark" style="position: sticky; top: 0; z-index: 1;">
                     <tr>
                         <th scope="col"></th>
@@ -91,54 +238,41 @@
                         <th></th>
                     </tr>
                 </thead>
+                <!-- Table Body -->
                 <tbody>
-                    {{range $i, $value := .Products}}
-                    <!-- Image Modal -->
-                    <div class="modal fade" id="ModalImage{{$i}}" tabindex="-1" role="dialog" aria-labelledby="ModalImageLabel" aria-hidden="true">
-                      <div class="modal-dialog" role="document">
-                      <div class="modal-content">
-                          <div class="modal-header">
-                          <h5 class="modal-title" id="ModalImageLabel{{$i}}">{{.SKU}}</h5>
-                              <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
-                              <span aria-hidden="true">&times;</span>
-                          </button>
-                          </div>
-                          <div class="modal-body">
-                            <img class="w-100" src="{{.Image.URL_Standard}}">
-                          </div>
-                          <div class="modal-footer">
-                              <form action="/productdelete" method="POST">
-                                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                              </form>
-                          </div>
-                      </div>
-                      </div>
-                  </div>
                     <tr>
                             <div class="form-group">
-                            <td><a role="button" ><img class="img-rounded" data-bs-toggle="modal" data-bs-target="#ModalImage{{$i}}" src="{{.Image.URL_Thumb}}" height="45px"></a></td>
-                            <td>{{.SKU}}</td>
-                            <td>{{.ManufacturerPart}}</td>
-                            <td>{{.Description}}</td>
-                            <td>{{.Manufacturer}}</td>
-                            <td>{{.ProcessRequest}}</td>
-                            <td>{{.Unit}}</td>
-                            <td>{{.UnitPrice}}</td>
-                            <td>{{.Currency}}</td>
-                            <td>{{.Qty}}</td>
-                            <td><input class="form-check-input" type='checkbox' name='sku' value='{{.SKU}}'></td> 
-                            <td>{{.Season}}</td>
-                            <td>{{.InventoryQTY}}</td>
+                            <td><a role="button" ><img class="img-rounded" data-bs-toggle="modal" data-bs-target="#ModalImage" src="" height="45px"></a></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td><input class="form-check-input" type='checkbox' name='sku' value=''></td> 
+                            <td></td>
+                            <td></td>
                             </div>
                     </tr>
-                    {{end}}
                   </form>
                 </tbody>
             </table>
-        </div>
-      </div>
-    </div>
-    {{end}}
-  </div>
+            <!-- Navigation -->
+            <div id="pageCounter" class="text-center mt-3">
+              <span class="badge bg-secondary"></span>
+            </div>            
+            <nav id="paginationNav" aria-label="Page navigation">
+              <ul class="pagination justify-content-center">
+                  <li class="page-item" id="prevButton">
+                      <a class="page-link" href="#" tabindex="-1" aria-disabled="true">Previous</a>
+                  </li>
+                  <li class="page-item" id="nextButton">
+                      <a class="page-link" href="#">Next</a>
+                  </li>
+              </ul>
+          </nav>
 </body>
 </html>
