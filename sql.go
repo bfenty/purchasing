@@ -1033,7 +1033,7 @@ func listsortrequests(user User, action string, r *http.Request) (message Messag
 		newquery = "SELECT requestid, sku,description,instructions,weightin,weightout,pieces,hours,checkout,checkint,COALESCE(sorter,''),status,sku_manufacturer,prty from sortrequest WHERE active=1 AND status = 'checkin' order by 1 desc"
 	}
 
-	newquery += " limit 500"
+	newquery += " limit 200"
 
 	//Run Query
 	log.WithFields(log.Fields{"username": user.Username}).Debug(i...) //debug variables map
