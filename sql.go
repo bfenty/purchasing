@@ -1340,7 +1340,7 @@ func ProductList(limit int, r *http.Request, user User) (message Message, produc
 	var i []interface{}
 	var newquery string
 
-	newquery = "SELECT `sku_internal`,`manufacturer_code`,`sku_manufacturer`,`product_option`,`processing_request`,`sorting_request`,`unit`,`unit_price`,`Currency`,`order_qty`,`modified`,`reorder`,`inventory_qty`,season,url_standard,url_thumb,url_tiny FROM `skus` WHERE 1 LIMIT 200"
+	newquery = "SELECT `sku_internal`,`manufacturer_code`,`sku_manufacturer`,`product_option`,`processing_request`,`sorting_request`,`unit`,`unit_price`,`Currency`,`order_qty`,`modified`,`reorder`,`inventory_qty`,season,url_standard,url_thumb,url_tiny FROM `skus` WHERE 1"
 
 	for param, value := range queryParams {
 		if value != "" {
