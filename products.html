@@ -170,7 +170,7 @@
                             <option value='NB' {{if eq .Manufacturer "NB"}}selected{{end}}>NB</option>
                             <option value='PG' {{if eq .Manufacturer "PG"}}selected{{end}}>PG</option>
                             <option value='VK' {{if eq .Manufacturer "VK"}}selected{{end}}>VK</option>
-                            <option value='VK' {{if eq .Manufacturer "JCM"}}selected{{end}}>JCM</option>
+                            <option value='JCM' {{if eq .Manufacturer "JCM"}}selected{{end}}>JCM</option>
                           </select>
                         </td>{{end}}
                         {{if eq $permission "admin"}}<td><input class="form-control" type='text' id="processrequest" name="processrequest" value="{{.ProcessRequest}}"></td>{{end}}
