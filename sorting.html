@@ -37,7 +37,7 @@
                 {{if or (eq $layout "full") (eq $layout "mgmt")}}<th scope="col">Check In</th>{{end}}
                 {{if or (eq $layout "full") (eq $layout "mgmt")}}<th scope="col">Sorter</th>{{end}}
                 {{if or (eq $layout "full")}}<th scope="col">Status</th>{{end}}
-                {{if or (eq $layout "full")}}<th scope="col">Priority</th>{{end}}
+                {{if or (eq $layout "full") (eq $layout "dataentry")}}<th scope="col">Priority</th>{{end}}
                 {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "dataentry") (eq $layout "mgmt")}}<th scope="col" class="btn-col"></th>{{end}}
                 {{if or (eq $layout "full") ($mgmt)}}<th scope="col" class="btn-col"></th>{{end}}
                 {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "mgmt")}}<th scope="col" class="btn-col"></th>{{end}}
@@ -85,7 +85,7 @@
                   </select>
                 </td>
                 {{end}}
-                {{if or (eq $layout "full")}}
+                {{if or (eq $layout "full") (eq $layout "dataentry")}}
                 <td>
                   <select class="form-select" name="search-priority">
                     <option value="">Priority</option>
@@ -137,7 +137,7 @@
                   </select>
                 </td>
                 {{end}}
-                {{if or (eq $layout "full")}}
+                {{if or (eq $layout "full") (eq $layout "dataentry")}}
                 <td>
                   <select class="form-select" id="prty" name="prty">
                     <option selected disabled value="">Priority</option>
@@ -193,7 +193,7 @@
                     {{end}}
                   </td>
                   {{end}}
-                  {{if or (eq $layout "full")}}
+                  {{if or (eq $layout "full") (eq $layout "dataentry")}}
                   <td>
                     <select class="form-select" id="prty" name="prty">
                       <option value="0" {{if eq .Priority 0}}selected{{end}}>Normal</option>
