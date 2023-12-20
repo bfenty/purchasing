@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/sirupsen/logrus"
@@ -158,47 +159,89 @@ func main() {
 	var message Message
 	db, message = opendb()
 	log.Info(message.Body)
-	http.HandleFunc("/", login)
-	http.HandleFunc("/login", login)
-	http.HandleFunc("/signup", signup)
-	http.HandleFunc("/logout", Logout)
-	http.HandleFunc("/signin", Signin)
-	http.HandleFunc("/usercreate", Usercreate)
-	http.HandleFunc("/products", Products)
-	http.HandleFunc("/productexist", ProductExist)
-	http.HandleFunc("/productsinsert", ProductInsertion)
-	http.HandleFunc("/productupdate", ProductUpdate)
-	http.HandleFunc("/productdelete", productdelete)
-	http.HandleFunc("/upload", uploadHandler)
-	http.HandleFunc("/export", exportHandler)
-	http.HandleFunc("/reorder", reorder)
-	http.HandleFunc("/reorderapi", ReordersListHandler)
-	http.HandleFunc("/ordercreate", ordercreate)
-	http.HandleFunc("/order", order)
-	http.HandleFunc("/orderlist", orderlist)
-	http.HandleFunc("/orderdelete", orderdelete)
-	http.HandleFunc("/orderupdate", orderupdate)
-	http.HandleFunc("/sorting", Sorting)
-	http.HandleFunc("/checkout", Checkout)
-	http.HandleFunc("/checkin", Checkin)
-	http.HandleFunc("/receiving", Receiving)
-	http.HandleFunc("/sortingupdate", Sortinginsert)
-	http.HandleFunc("/sortrequestdelete", sortrequestdelete)
-	http.HandleFunc("/userupdate", userUpdateHandler)
-	http.HandleFunc("/users", Users)
-	http.HandleFunc("/userdelete", userDeleteHandler)
-	http.HandleFunc("/lookuprequestid", LookupRequestID)
-	http.HandleFunc("/sorterror", SortError)
-	http.HandleFunc("/sorterrorlist", SortErrorList)
-	http.HandleFunc("/sorterrorupdate", sortErrorUpdate)
-	http.HandleFunc("/checkexistingerrors", checkExistingErrors)
-	http.HandleFunc("/update-user", UpdateUser)
-	http.HandleFunc("/dashboard", Dashboard)
-	http.HandleFunc("/reporting", Dashboard)
-	http.HandleFunc("/dashdata", Dashdata)
-	http.HandleFunc("/efficiencydata", Efficiency)
+	http.HandleFunc("/", PageHandler)
+	http.HandleFunc("/api/", APIHandler)
+	// http.HandleFunc("/login", login)
+	// http.HandleFunc("/signup", signup)
+	// http.HandleFunc("/logout", Logout)
+	// http.HandleFunc("/signin", Signin)
+	// http.HandleFunc("/usercreate", Usercreate)
+	// http.HandleFunc("/products", Products)
+	// http.HandleFunc("/productexist", ProductExist)
+	// http.HandleFunc("/productsinsert", ProductInsertion)
+	// http.HandleFunc("/productupdate", ProductUpdate)
+	// http.HandleFunc("/productdelete", productdelete)
+	// http.HandleFunc("/upload", uploadHandler)
+	// http.HandleFunc("/export", exportHandler)
+	// http.HandleFunc("/reorder", reorder)
+	// http.HandleFunc("/reorderapi", ReordersListHandler)
+	// http.HandleFunc("/ordercreate", ordercreate)
+	// http.HandleFunc("/order", order)
+	// http.HandleFunc("/orderlist", orderlist)
+	// http.HandleFunc("/orderdelete", orderdelete)
+	// http.HandleFunc("/orderupdate", orderupdate)
+	// http.HandleFunc("/sorting", Sorting)
+	// http.HandleFunc("/checkout", Checkout)
+	// http.HandleFunc("/checkin", Checkin)
+	// http.HandleFunc("/receiving", Receiving)
+	// http.HandleFunc("/sortingupdate", Sortinginsert)
+	// http.HandleFunc("/sortrequestdelete", sortrequestdelete)
+	// http.HandleFunc("/userupdate", userUpdateHandler)
+	// http.HandleFunc("/users", Users)
+	// http.HandleFunc("/userdelete", userDeleteHandler)
+	// http.HandleFunc("/lookuprequestid", LookupRequestID)
+	// http.HandleFunc("/sorterror", SortError)
+	// http.HandleFunc("/sorterrorlist", SortErrorList)
+	// http.HandleFunc("/sorterrorupdate", sortErrorUpdate)
+	// http.HandleFunc("/checkexistingerrors", checkExistingErrors)
+	// http.HandleFunc("/update-user", UpdateUser)
+	// http.HandleFunc("/dashboard", Dashboard)
+	// http.HandleFunc("/reporting", Dashboard)
+	// http.HandleFunc("/dashdata", Dashdata)
+	// http.HandleFunc("/efficiencydata", Efficiency)
 
 	http.ListenAndServe(":8082", nil)
+}
+
+// Generic Page Handler
+func PageHandler(w http.ResponseWriter, r *http.Request) {
+	// Extract the path component and strip the leading slash
+	path := strings.TrimPrefix(r.URL.Path, "/")
+	// Construct the template file name
+	tmplFile := fmt.Sprintf("html/%s.html", path)
+	t, _ := template.ParseFiles(tmplFile, "html/header.html", "login.js")
+	var page Page
+	page.Title = path
+	page.Message = message(r)
+	log.Debug(page)
+	t.Execute(w, page)
+}
+
+// API Call Handler
+func APIHandler(w http.ResponseWriter, r *http.Request) {
+	//Parse the API POST form
+	r.ParseForm()
+	formMap := make(map[string]string)
+	for key, values := range r.PostForm { // r.PostForm is a map of the form data
+		if len(values) > 0 {
+			formMap[key] = values[0]                        // assuming you're interested in the first value
+			log.Debug("Key: ", key, ", Value: ", values[0]) // Debug log for each key-value pair
+		}
+	}
+
+	// Additional logging to see the entire map
+	log.Debug("Parsed Form Data: ", formMap)
+	// Extract the path component and strip the leading slash
+	path := strings.TrimPrefix(r.URL.Path, "/api/")
+	log.Debug(path)
+	// Construct the template file name
+	// tmplFile := fmt.Sprintf("html/%s.html", path)
+	// t, _ := template.ParseFiles(tmplFile, "html/header.html", "login.js")
+	// var page Page
+	// page.Title = "Login"
+	// page.Message = message(r)
+	// log.Debug(page)
+	// t.Execute(w, page)
 }
 
 // Dashboard
@@ -463,16 +506,6 @@ func ProductInsertion(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Query().Get("insert") == "true" {
 		page.Message = ProductInsert(r, page.Permission)
 	}
-	t.Execute(w, page)
-}
-
-// Login page
-func login(w http.ResponseWriter, r *http.Request) {
-	t, _ := template.ParseFiles("login.html", "header.html", "login.js")
-	var page Page
-	page.Title = "Login"
-	page.Message = message(r)
-	log.Debug(page)
 	t.Execute(w, page)
 }
 

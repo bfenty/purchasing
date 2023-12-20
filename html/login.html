@@ -38,7 +38,7 @@
     $('#login-form').submit(function(e) {
       e.preventDefault(); // Prevent form from submitting via HTTP POST request
       $.ajax({
-        url: '/signin',
+        url: '/api/signin',
         method: 'POST',
         data: $('#login-form').serialize(),
         success: function(response) {
