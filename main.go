@@ -160,7 +160,7 @@ func main() {
 	db, message = opendb()
 	log.Info(message.Body)
 	http.HandleFunc("/", PageHandler)
-	http.HandleFunc("/api/", APIHandler)
+	// http.HandleFunc("/api/", APIHandler)
 	// http.HandleFunc("/login", login)
 	// http.HandleFunc("/signup", signup)
 	// http.HandleFunc("/logout", Logout)
@@ -203,45 +203,96 @@ func main() {
 	http.ListenAndServe(":8082", nil)
 }
 
-// Generic Page Handler
 func PageHandler(w http.ResponseWriter, r *http.Request) {
 	// Extract the path component and strip the leading slash
 	path := strings.TrimPrefix(r.URL.Path, "/")
+	log.WithFields(log.Fields{
+		"path": path,
+	}).Debug("PageHandler invoked")
+
+	// Delegate to APIHandler for paths starting with 'api'
+	if strings.HasPrefix(path, "api") {
+		log.Debug("Path starts with 'api', delegating to APIHandler")
+		APIHandler(w, r)
+		return
+	}
+
 	// Construct the template file name
 	tmplFile := fmt.Sprintf("html/%s.html", path)
-	t, _ := template.ParseFiles(tmplFile, "html/header.html", "login.js")
+	t, err := template.ParseFiles(tmplFile, "html/header.html", "login.js")
+	if err != nil {
+		log.WithFields(log.Fields{
+			"error": err,
+			"file":  tmplFile,
+		}).Error("Error parsing template files")
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
 	var page Page
-	page.Title = path
+	if path != "login" {
+		page.Permission = auth(w, r)
+	}
+	page.Title = strings.Title(path) // Capitalize the first letter of the title
 	page.Message = message(r)
-	log.Debug(page)
-	t.Execute(w, page)
+
+	log.WithFields(log.Fields{
+		"title":   page.Title,
+		"message": page.Message,
+	}).Debug("Executing template with page data")
+
+	if err := t.Execute(w, page); err != nil {
+		log.WithFields(log.Fields{
+			"error": err,
+		}).Error("Error executing template")
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+	}
 }
 
-// API Call Handler
 func APIHandler(w http.ResponseWriter, r *http.Request) {
-	//Parse the API POST form
+	log.Debug("APIHandler called")
+
+	// Parsing the API POST form
 	r.ParseForm()
 	formMap := make(map[string]string)
-	for key, values := range r.PostForm { // r.PostForm is a map of the form data
+
+	log.Debug("Parsing POST form data")
+	for key, values := range r.PostForm {
 		if len(values) > 0 {
-			formMap[key] = values[0]                        // assuming you're interested in the first value
-			log.Debug("Key: ", key, ", Value: ", values[0]) // Debug log for each key-value pair
+			formMap[key] = values[0]
+			log.WithFields(log.Fields{
+				"Key":   key,
+				"Value": values[0],
+			}).Debug("Parsed form data")
 		}
 	}
 
-	// Additional logging to see the entire map
-	log.Debug("Parsed Form Data: ", formMap)
-	// Extract the path component and strip the leading slash
+	// Logging the entire form data map
+	log.WithFields(log.Fields{
+		"Form Data": formMap,
+	}).Debug("Complete form data parsed")
+
+	// Extracting and logging the path component
 	path := strings.TrimPrefix(r.URL.Path, "/api/")
-	log.Debug(path)
-	// Construct the template file name
-	// tmplFile := fmt.Sprintf("html/%s.html", path)
-	// t, _ := template.ParseFiles(tmplFile, "html/header.html", "login.js")
-	// var page Page
-	// page.Title = "Login"
-	// page.Message = message(r)
-	// log.Debug(page)
-	// t.Execute(w, page)
+	log.WithFields(log.Fields{
+		"Path": path,
+	}).Debug("API path identified")
+
+	// Determining the path and calling the corresponding function
+	switch path {
+	case "signin":
+		log.Debug("Calling Signin function")
+		Signin(w, formMap)
+	case "products":
+		log.Debug("Calling ProductList function")
+		ProductList(w, formMap)
+	// Add other cases as needed
+	default:
+		log.WithFields(log.Fields{
+			"Path": path,
+		}).Warn("API path not found, returning 404")
+		http.Error(w, "Not Found", http.StatusNotFound)
+	}
 }
 
 // Dashboard
@@ -427,16 +478,16 @@ func reorder(w http.ResponseWriter, r *http.Request) {
 	t.Execute(w, page)
 }
 
-// Product List Page
-func Products(w http.ResponseWriter, r *http.Request) {
-	var page Page
-	page.Permission = auth(w, r)
-	t, _ := template.ParseFiles("products.html", "header.html", "login.js")
-	log.Debug("Loading Products...")
-	page.Title = "Products"
-	page.Message, page.ProductList = ProductList(100, r, page.Permission)
-	t.Execute(w, page)
-}
+// // Product List Page
+// func Products(w http.ResponseWriter, r *http.Request) {
+// 	var page Page
+// 	page.Permission = auth(w, r)
+// 	t, _ := template.ParseFiles("products.html", "header.html", "login.js")
+// 	log.Debug("Loading Products...")
+// 	page.Title = "Products"
+// 	page.Message, page.ProductList = ProductList(100, r, page.Permission)
+// 	t.Execute(w, page)
+// }
 
 // Handle export POST request
 func exportHandler(w http.ResponseWriter, r *http.Request) {
@@ -495,19 +546,19 @@ func ProductUpdate(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, r.Header.Get("Referer"), 302)
 }
 
-// New Products Page
-func ProductInsertion(w http.ResponseWriter, r *http.Request) {
-	var page Page
-	page.Permission = auth(w, r)
-	t, _ := template.ParseFiles("productsinsert.html", "header.html", "login.js")
-	log.Debug("Loading Products...")
-	page.Title = "New Product"
-	page.Message, page.ProductList = ProductList(5, r, page.Permission)
-	if r.URL.Query().Get("insert") == "true" {
-		page.Message = ProductInsert(r, page.Permission)
-	}
-	t.Execute(w, page)
-}
+// // New Products Page
+// func ProductInsertion(w http.ResponseWriter, r *http.Request) {
+// 	var page Page
+// 	page.Permission = auth(w, r)
+// 	t, _ := template.ParseFiles("productsinsert.html", "header.html", "login.js")
+// 	log.Debug("Loading Products...")
+// 	page.Title = "New Product"
+// 	page.Message, page.ProductList = ProductList(5, r, page.Permission)
+// 	if r.URL.Query().Get("insert") == "true" {
+// 		page.Message = ProductInsert(r, page.Permission)
+// 	}
+// 	t.Execute(w, page)
+// }
 
 // Signup Page
 func signup(w http.ResponseWriter, r *http.Request) {

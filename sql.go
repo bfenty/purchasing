@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"math"
 	"sort"
+	"strings"
 	"time"
 
 	// "log"
@@ -1405,72 +1406,132 @@ func ProductList2(Manufacturer string, page int, pageSize int) (products []Produ
 	return skus, totalPages
 }
 
-// Product List
-func ProductList(limit int, r *http.Request, user User) (message Message, products []Product) {
-	// Get a database handle.
-	var err error
+// ProductListAPI is an HTTP handler function that returns product list in JSON format
+func ProductList(w http.ResponseWriter, formMap map[string]string) {
+	log.Debug("Entering ProductListAPI")
 
-	//Test Connection
+	// Check database connection
 	pingErr := db.Ping()
 	if pingErr != nil {
-		db, message = opendb()
-		return handleerror(pingErr), products
+		log.WithFields(log.Fields{"error": pingErr}).Error("Database connection error")
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
 	}
 
-	queryParams := map[string]string{
-		"sku_internal":       r.URL.Query().Get("sku"),
-		"manufacturer_code":  r.URL.Query().Get("manufacturer"),
-		"sku_manufacturer":   r.URL.Query().Get("manufacturerpart"),
-		"processing_request": r.URL.Query().Get("processrequest"),
-		"sorting_request":    r.URL.Query().Get("sortingrequest"),
-		"unit":               r.URL.Query().Get("unit"),
-		"unit_price":         r.URL.Query().Get("unitprice"),
-		"Currency":           r.URL.Query().Get("currency"),
-		"order_qty":          r.URL.Query().Get("orderqty"),
-		"reorder":            r.URL.Query().Get("reorder"),
-		"season":             r.URL.Query().Get("season"),
-	}
+	// Prepare query parameters
+	queryParams := formMap
 
-	var i []interface{}
-	var newquery string
-
-	newquery = "SELECT `sku_internal`,`manufacturer_code`,`sku_manufacturer`,`product_option`,`processing_request`,`sorting_request`,`unit`,`unit_price`,`Currency`,`order_qty`,`modified`,`reorder`,`inventory_qty`,season,url_standard,url_thumb,url_tiny FROM `skus` WHERE 1"
+	var queryArgs []interface{}
+	var queryBuilder strings.Builder
+	queryBuilder.WriteString("SELECT `sku_internal`,`manufacturer_code`,`sku_manufacturer`,`product_option`,`processing_request`,`sorting_request`,`unit`,`unit_price`,`Currency`,`order_qty`,`modified`,`reorder`,`inventory_qty`,season,url_standard,url_thumb,url_tiny FROM `skus` WHERE 1")
 
 	for param, value := range queryParams {
 		if value != "" {
-			// if param == "sku_internal" || param == "sku_manufacturer" || param == "unit" {
-			// 	value += "%"
-			// } else if param == "processing_request" || param == "sorting_request" {
-			// 	value = "%" + value + "%"
-			// }
-			i = append(i, value)
-			newquery += fmt.Sprintf(" AND %s = ?", param)
+			queryArgs = append(queryArgs, value)
+			queryBuilder.WriteString(fmt.Sprintf(" AND %s = ?", param))
 		}
 	}
 
-	newquery += " order by 11 desc, 1 limit ?"
-	i = append(i, limit)
-	log.WithFields(log.Fields{"username": user.Username}).Debug(i...) //debug variables map
-	log.WithFields(log.Fields{"username": user.Username}).Debug("Running Product List")
-	log.WithFields(log.Fields{"username": user.Username}).Debug(newquery)
-	rows, err := db.Query(newquery, i...)
+	query := queryBuilder.String() + " order by 11 desc, 1 limit ?"
+	queryArgs = append(queryArgs, 100) // Replace 100 with your limit value
+
+	log.WithFields(log.Fields{"query": query, "args": queryArgs}).Debug("Executing query")
+
+	rows, err := db.Query(query, queryArgs...)
 	if err != nil {
-		return handleerror(err), products
+		log.WithFields(log.Fields{"error": err}).Error("Error executing query")
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
 	}
 	defer rows.Close()
 
-	//Pull Data
+	var products []Product
 	for rows.Next() {
-		var r Product
-		err := rows.Scan(&r.SKU, &r.Manufacturer, &r.ManufacturerPart, &r.Description, &r.ProcessRequest, &r.SortingRequest, &r.Unit, &r.UnitPrice, &r.Currency, &r.Qty, &r.Modified, &r.Reorder, &r.InventoryQTY, &r.Season, &r.Image.URL_Standard, &r.Image.URL_Thumb, &r.Image.URL_Tiny)
-		if err != nil {
-			return handleerror(err), products
+		var p Product
+		if err := rows.Scan(&p.SKU, &p.Manufacturer, &p.ManufacturerPart, &p.Description, &p.ProcessRequest, &p.SortingRequest, &p.Unit, &p.UnitPrice, &p.Currency, &p.Qty, &p.Modified, &p.Reorder, &p.InventoryQTY, &p.Season, &p.Image.URL_Standard, &p.Image.URL_Thumb, &p.Image.URL_Tiny); err != nil {
+			log.WithFields(log.Fields{"error": err}).Error("Error scanning row")
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			return
 		}
-		products = append(products, r)
+		products = append(products, p)
 	}
 
-	return message, products
+	// Encode and send JSON response
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(products); err != nil {
+		log.WithFields(log.Fields{"error": err}).Error("Error encoding JSON")
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+	}
+
+	log.Debug("Exiting ProductListAPI")
 }
+
+// // Product List
+// func ProductList(limit int, r *http.Request, user User) (message Message, products []Product) {
+// 	// Get a database handle.
+// 	var err error
+
+// 	//Test Connection
+// 	pingErr := db.Ping()
+// 	if pingErr != nil {
+// 		db, message = opendb()
+// 		return handleerror(pingErr), products
+// 	}
+
+// 	queryParams := map[string]string{
+// 		"sku_internal":       r.URL.Query().Get("sku"),
+// 		"manufacturer_code":  r.URL.Query().Get("manufacturer"),
+// 		"sku_manufacturer":   r.URL.Query().Get("manufacturerpart"),
+// 		"processing_request": r.URL.Query().Get("processrequest"),
+// 		"sorting_request":    r.URL.Query().Get("sortingrequest"),
+// 		"unit":               r.URL.Query().Get("unit"),
+// 		"unit_price":         r.URL.Query().Get("unitprice"),
+// 		"Currency":           r.URL.Query().Get("currency"),
+// 		"order_qty":          r.URL.Query().Get("orderqty"),
+// 		"reorder":            r.URL.Query().Get("reorder"),
+// 		"season":             r.URL.Query().Get("season"),
+// 	}
+
+// 	var i []interface{}
+// 	var newquery string
+
+// 	newquery = "SELECT `sku_internal`,`manufacturer_code`,`sku_manufacturer`,`product_option`,`processing_request`,`sorting_request`,`unit`,`unit_price`,`Currency`,`order_qty`,`modified`,`reorder`,`inventory_qty`,season,url_standard,url_thumb,url_tiny FROM `skus` WHERE 1"
+
+// 	for param, value := range queryParams {
+// 		if value != "" {
+// 			// if param == "sku_internal" || param == "sku_manufacturer" || param == "unit" {
+// 			// 	value += "%"
+// 			// } else if param == "processing_request" || param == "sorting_request" {
+// 			// 	value = "%" + value + "%"
+// 			// }
+// 			i = append(i, value)
+// 			newquery += fmt.Sprintf(" AND %s = ?", param)
+// 		}
+// 	}
+
+// 	newquery += " order by 11 desc, 1 limit ?"
+// 	i = append(i, limit)
+// 	log.WithFields(log.Fields{"username": user.Username}).Debug(i...) //debug variables map
+// 	log.WithFields(log.Fields{"username": user.Username}).Debug("Running Product List")
+// 	log.WithFields(log.Fields{"username": user.Username}).Debug(newquery)
+// 	rows, err := db.Query(newquery, i...)
+// 	if err != nil {
+// 		return handleerror(err), products
+// 	}
+// 	defer rows.Close()
+
+// 	//Pull Data
+// 	for rows.Next() {
+// 		var r Product
+// 		err := rows.Scan(&r.SKU, &r.Manufacturer, &r.ManufacturerPart, &r.Description, &r.ProcessRequest, &r.SortingRequest, &r.Unit, &r.UnitPrice, &r.Currency, &r.Qty, &r.Modified, &r.Reorder, &r.InventoryQTY, &r.Season, &r.Image.URL_Standard, &r.Image.URL_Thumb, &r.Image.URL_Tiny)
+// 		if err != nil {
+// 			return handleerror(err), products
+// 		}
+// 		products = append(products, r)
+// 	}
+
+// 	return message, products
+// }
 
 func sortrequestdeletesql(requestid int, user User) (message Message) {
 	//Debug
@@ -1612,113 +1673,6 @@ func Updatepass(user string, pass string, secret string) (message Message, succe
 	message.Body = "Success"
 	message.Success = true
 	return message, true
-}
-
-// Authenticate user from DB
-func userauth(username string, pass string) (user User, message Message) {
-	// Get a database handle.
-	var err error
-	var dbpass string
-	//Test Connection
-	pingErr := db.Ping()
-	// if pingErr != nil {
-	// 	user.Role = "notfound"
-	// 	return user, handleerror(pingErr)
-	// }
-
-	var r User
-
-	//set Variables
-	//Query
-	var newquery string = "select password, permissions, admin, management from orders.users where username = ?"
-	// log.WithFields(log.Fields{"username": user.Role}).Debug(newquery)
-	rows, err := db.Query(newquery, username)
-	if err != nil {
-		user.Role = "notfound"
-		return user, handleerror(pingErr)
-	}
-	defer rows.Close()
-	//Pull Data
-	for rows.Next() {
-		err := rows.Scan(&dbpass, &r.Role, &r.Permissions.Admin, &r.Permissions.Mgmt)
-		log.WithFields(log.Fields{"username": user.Username}).Debug("Role:", r.Role)
-		if err != nil {
-			user.Role = "notfound"
-			return user, handleerror(pingErr)
-		}
-	}
-	err = rows.Err()
-	if err != nil {
-		user.Role = "notfound"
-		return user, handleerror(pingErr)
-	}
-
-	//If Permissions do not exist for user
-	if r.Role == "" {
-		message.Title = "Permission not found"
-		message.Body = "Permissions not set for user. Please contact your system administrator."
-		user.Role = "notfound"
-		return user, message
-	}
-
-	log.WithFields(log.Fields{"username": user.Username}).Debug("Checking Permissions: ", r.Role)
-	//If user has not set a password
-	if dbpass == "" {
-		message.Title = "Set Password"
-		message.Body = "Password not set, please create password"
-		user.Role = "newuser"
-		return user, message
-	}
-
-	if comparePasswords(dbpass, []byte(pass)) {
-		message.Title = "Success"
-		message.Body = "Successfully logged in"
-		message.Success = true
-		// permission = "notfound"
-		return r, message
-	}
-	message.Title = "Login Failed"
-	message.Body = "Login Failed"
-	user.Role = "notfound"
-	return user, message
-}
-
-// Authenticate user from DB
-func userdata(username string) (user User) {
-	// user.Role = user
-	// Get a database handle.
-	var err error
-	//Test Connection
-	pingErr := db.Ping()
-	if pingErr != nil {
-		handleerror(pingErr)
-	}
-	//set Variables
-	//Query
-	var newquery string = "select username,usercode,permissions,admin,management,manager,sorting from orders.users where username = ?"
-	// log.WithFields(log.Fields{"username": user.Role}).Debug(newquery)
-	rows, err := db.Query(newquery, username)
-	if err != nil {
-		handleerror(err)
-	}
-	defer rows.Close()
-	//Pull Data
-	for rows.Next() {
-		err := rows.Scan(&user.Username, &user.Usercode, &user.Role, &user.Permissions.Admin, &user.Permissions.Mgmt, &user.Manager, &user.Permissions.Sorting)
-		if err != nil {
-			handleerror(err)
-		}
-	}
-	err = rows.Err()
-	if err != nil {
-		handleerror(err)
-	}
-	if user.Role == "" {
-		user.Role = "notfound"
-		return user
-	}
-
-	return user
 }
 
 // Update QTY and IMG for products
