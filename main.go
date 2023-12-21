@@ -286,6 +286,9 @@ func APIHandler(w http.ResponseWriter, r *http.Request) {
 	case "products":
 		log.Debug("Calling ProductList function")
 		ProductList(w, formMap)
+	case "manufacturers":
+		log.Debug("Calling ListManufacturers function")
+		ListManufacturers(w, r)
 	// Add other cases as needed
 	default:
 		log.WithFields(log.Fields{
