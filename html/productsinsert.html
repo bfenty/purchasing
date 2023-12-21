@@ -253,7 +253,7 @@ $(document).ready(function(){
                           data.forEach(function(item, index) {
                               console.log("Processing item:", index, item);
                               var row = `<tr>
-                                            <td><a role="button" ><img class="img-rounded" data-bs-toggle="modal" data-bs-target="#ModalImage0" src="${item.Image.URL_Thumb}" height="45px"></a></td>
+                                            <td><a role="button" ><img class="img-rounded" data-bs-toggle="modal" data-bs-target="#ModalImage0" src="${item.Image.url_tiny}" height="45px"></a></td>
                                             <td><input class="form-control" type='text' id="sku" name="sku" value="${item.SKU}"></td>
                                             <td><input class="form-control" type='text' id="manufacturerpart" name="manufacturerpart" value="${item.ManufacturerPart}"></td>
                                             <td><input class="form-control" type='text' id="description" name="description" value="${item.Description}"></td>

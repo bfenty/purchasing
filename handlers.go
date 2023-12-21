@@ -148,11 +148,10 @@ func auth(w http.ResponseWriter, r *http.Request) (user User) {
 		if err == http.ErrNoCookie {
 			log.Debug("No session token cookie found, redirecting to login")
 			http.Redirect(w, r, "/login", http.StatusSeeOther)
-			user.Role = "Unauthorized"
-			return user
+			return User{Role: "Unauthorized"} // Return immediately after redirect
 		}
 		log.Error("Error retrieving session token cookie:", err)
-		return user
+		return User{Role: "Unauthorized"}
 	}
 	log.Debug("Session token cookie found:", c.Value)
 	sessionToken := c.Value
@@ -161,16 +160,14 @@ func auth(w http.ResponseWriter, r *http.Request) (user User) {
 	if !exists {
 		log.Debug("Session token not found in session map, redirecting to login")
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
-		user.Role = "Unauthorized"
-		return user
+		return User{Role: "Unauthorized"} // Return immediately after redirect
 	}
 
 	if userSession.isExpired() {
 		log.Debug("Session token expired, deleting session and redirecting to login")
 		delete(sessions, sessionToken)
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
-		user.Role = "Unauthorized"
-		return user
+		return User{Role: "Unauthorized"} // Return immediately after redirect
 	}
 
 	log.Debug("User is authorized, creating new session token")
@@ -187,10 +184,10 @@ func auth(w http.ResponseWriter, r *http.Request) (user User) {
 
 	http.SetCookie(w, &http.Cookie{
 		Name:     "session_token",
-		Value:    sessionToken,
+		Value:    newSessionToken,
 		Expires:  expiresAt,
-		Path:     "/",  // Setting the path to root
-		HttpOnly: true, // Recommended to mitigate the risk of client side script accessing the protected cookie
+		Path:     "/",
+		HttpOnly: true,
 	})
 
 	userData := userdata(userSession.username)
