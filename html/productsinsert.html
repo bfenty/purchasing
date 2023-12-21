@@ -130,7 +130,7 @@ $(document).ready(function(){
                 </tr>-->
                 {{range $index, $value := .ProductList}}
                 <!-- Delete Modal -->
-                      <div class="modal fade" id="ModalDelete{{$index}}" tabindex="-1" role="dialog" aria-labelledby="ModalDeleteLabel" aria-hidden="true">
+                      <!-- <div class="modal fade" id="ModalDelete{{$index}}" tabindex="-1" role="dialog" aria-labelledby="ModalDeleteLabel" aria-hidden="true">
                         <div class="modal-dialog" role="document">
                         <div class="modal-content">
                             <div class="modal-header">
@@ -151,9 +151,9 @@ $(document).ready(function(){
                             </div>
                         </div>
                         </div>
-                    </div>
+                    </div> -->
                     <!-- Image Modal -->
-                          <div class="modal fade" id="ModalImage{{$index}}" tabindex="-1" role="dialog" aria-labelledby="ModalImageLabel" aria-hidden="true">
+                          <!-- <div class="modal fade" id="ModalImage{{$index}}" tabindex="-1" role="dialog" aria-labelledby="ModalImageLabel" aria-hidden="true">
                             <div class="modal-dialog" role="document">
                             <div class="modal-content">
                                 <div class="modal-header">
@@ -172,7 +172,7 @@ $(document).ready(function(){
                                 </div>
                             </div>
                             </div>
-                        </div>
+                        </div> -->
                 <tr>
                   <form method="GET" action="/productupdate">
                       <div class="form-group">
@@ -253,19 +253,21 @@ $(document).ready(function(){
                           data.forEach(function(item, index) {
                               console.log("Processing item:", index, item);
                               var row = `<tr>
-                                            <td><a role="button" ><img class="img-rounded" data-bs-toggle="modal" data-bs-target="#ModalImage0" src="${item.URL_Thumb}" height="45px"></a></td>
+                                            <td><a role="button" ><img class="img-rounded" data-bs-toggle="modal" data-bs-target="#ModalImage0" src="${item.Image.URL_Thumb}" height="45px"></a></td>
                                             <td><input class="form-control" type='text' id="sku" name="sku" value="${item.SKU}"></td>
                                             <td><input class="form-control" type='text' id="manufacturerpart" name="manufacturerpart" value="${item.ManufacturerPart}"></td>
                                             <td><input class="form-control" type='text' id="description" name="description" value="${item.Description}"></td>
-                                            <td><input class="form-control" type='text' id="sku" name="sku" value="${item.Manufacturer}"></td>
-                                            <td><input class="form-control" type='text' id="sku" name="sku" value="${item.ProcessRequest}"></td>
-                                            <td><input class="form-control" type='text' id="sku" name="sku" value="${item.Unit}"></td>
-                                            <td><input class="form-control" type='text' id="sku" name="sku" value="${item.UnitPrice}"></td>
-                                            <td><input class="form-control" type='text' id="sku" name="sku" value="${item.Currency}"></td>
-                                            <td><input class="form-control" type='text' id="sku" name="sku" value="${item.Qty}"></td>
-                                            <td><input class="form-control" type='text' id="sku" name="sku" value="${item.Reorder}"></td>
-                                            <td><input class="form-control" type='text' id="sku" name="sku" value="${item.Season}"></td>
-                                            <td><input class="form-control" type='text' id="sku" name="sku" value="${item.InventoryQTY}"></td>
+                                            <td><input class="form-control" type='text' id="manufacturer" name="manufacturer" value="${item.Manufacturer}"></td>
+                                            <td><input class="form-control" type='text' id="processrequest" name="processrequest" value="${item.ProcessRequest}"></td>
+                                            <td><input class="form-control" type='text' id="unit" name="unit" value="${item.Unit}"></td>
+                                            <td><input class="form-control" type='text' id="unitprice" name="unitprice" value="${item.UnitPrice}"></td>
+                                            <td><input class="form-control" type='text' id="currency" name="currency" value="${item.Currency}"></td>
+                                            <td><input class="form-control" type='text' id="orderqty" name="orderqty" value="${item.Qty}"></td>
+                                            <td><input class="form-control" type='text' id="reorder" name="reorder" value="${item.Reorder}"></td>
+                                            <td><input class="form-control" type='text' id="season" name="season" value="${item.Season}"></td>
+                                            <td><input class="form-control" type='text' id="inventoryqty" name="inventoryqty" value="${item.InventoryQTY}"></td>
+                                            <td><input type='submit' value='Update' class="btn btn-primary"></td>
+                                            <td><button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#ModalDelete">Delete</button></td>
                                          </tr>`;
                               tableBody.append(row);
                           });
