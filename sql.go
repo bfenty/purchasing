@@ -683,7 +683,7 @@ func orderlookup(ordernum int, user User) (message Message, orders []Order) {
 		defer skurows.Close()
 		for skurows.Next() {
 			var r Product
-			err := skurows.Scan(&r.SKU, &r.Manufacturer, &r.ManufacturerPart, &r.Description, &r.ProcessRequest, &r.SortingRequest, &r.Unit, &r.UnitPrice, &r.Currency, &r.Qty, &r.Modified, &r.Reorder, &r.InventoryQTY, &r.Season)
+			err := skurows.Scan(&r.SKU, &r.Manufacturer, &r.ManufacturerPart, &r.Description, &r.ProcessRequest, &r.SortingRequest, &r.Unit, &r.UnitPrice, &r.Currency, &r.OrderQty, &r.Modified, &r.Reorder, &r.InventoryQty, &r.Season)
 			if err != nil {
 				return handleerror(pingErr), orders
 			}
@@ -1348,7 +1348,7 @@ func Reorderlist(user User) (message Message, orders []Order) {
 		// defer skurows.Close()
 		// for skurows.Next() {
 		// 	var r Product
-		// 	err := skurows.Scan(&r.SKU, &r.Manufacturer, &r.ManufacturerPart, &r.Description, &r.ProcessRequest, &r.SortingRequest, &r.Unit, &r.UnitPrice, &r.Currency, &r.Qty, &r.Modified, &r.Reorder, &r.InventoryQTY, &r.Season, &r.Image.URL_Thumb, &r.Image.URL_Standard)
+		// 	err := skurows.Scan(&r.SKU, &r.Manufacturer, &r.ManufacturerPart, &r.Description, &r.ProcessRequest, &r.SortingRequest, &r.Unit, &r.UnitPrice, &r.Currency, &r.OrderQty, &r.Modified, &r.Reorder, &r.InventoryQty, &r.Season, &r.Image.URL_Thumb, &r.Image.URL_Standard)
 		// 	if err != nil {
 		// 		return handleerror(pingErr), orders
 		// 	}
@@ -1401,7 +1401,7 @@ func ProductList2(Manufacturer string, page int, pageSize int) (products []Produ
 
 	for skurows.Next() {
 		var r Product
-		err := skurows.Scan(&r.SKU, &r.Manufacturer, &r.ManufacturerPart, &r.Description, &r.ProcessRequest, &r.SortingRequest, &r.Unit, &r.UnitPrice, &r.Currency, &r.Qty, &r.Modified, &r.Reorder, &r.InventoryQTY, &r.Season, &r.Image.URL_Thumb, &r.Image.URL_Standard)
+		err := skurows.Scan(&r.SKU, &r.Manufacturer, &r.ManufacturerPart, &r.Description, &r.ProcessRequest, &r.SortingRequest, &r.Unit, &r.UnitPrice, &r.Currency, &r.OrderQty, &r.Modified, &r.Reorder, &r.InventoryQty, &r.Season, &r.Image.URL_Thumb, &r.Image.URL_Standard)
 		if err != nil {
 			log.Error(err)
 		}
@@ -1489,7 +1489,7 @@ func ProductList(w http.ResponseWriter, formMap map[string]string) {
 	var products []Product
 	for rows.Next() {
 		var p Product
-		if err := rows.Scan(&p.SKU, &p.Manufacturer, &p.ManufacturerPart, &p.Description, &p.ProcessRequest, &p.SortingRequest, &p.Unit, &p.UnitPrice, &p.Currency, &p.Qty, &p.Modified, &p.Reorder, &p.InventoryQTY, &p.Season, &p.Image.URL_Standard, &p.Image.URL_Thumb, &p.Image.URL_Tiny); err != nil {
+		if err := rows.Scan(&p.SKU, &p.Manufacturer, &p.ManufacturerPart, &p.Description, &p.ProcessRequest, &p.SortingRequest, &p.Unit, &p.UnitPrice, &p.Currency, &p.OrderQty, &p.Modified, &p.Reorder, &p.InventoryQty, &p.Season, &p.Image.URL_Standard, &p.Image.URL_Thumb, &p.Image.URL_Tiny); err != nil {
 			log.WithFields(log.Fields{"error": err}).Error("Error scanning row")
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 			return
@@ -1505,6 +1505,49 @@ func ProductList(w http.ResponseWriter, formMap map[string]string) {
 	}
 
 	log.Debug("Exiting ProductListAPI")
+}
+
+func InsertProduct(w http.ResponseWriter, r *http.Request) {
+	var p Product
+	err := json.NewDecoder(r.Body).Decode(&p)
+	if err != nil {
+		log.WithFields(log.Fields{"error": err}).Error("Error decoding product data")
+		respondWithJSON(w, http.StatusBadRequest, map[string]string{"error": "Bad Request: Invalid JSON data"})
+		return
+	}
+
+	// Validate that SKU is provided
+	if p.SKU == "" {
+		log.Error("SKU is required for product insertion")
+		respondWithJSON(w, http.StatusBadRequest, map[string]string{"error": "Bad Request: SKU is required"})
+		return
+	}
+
+	// SQL INSERT statement
+	query := `INSERT INTO skus (sku, manufacturer_part, description, manufacturer, process_request, unit, unit_price, order_qty, reorder, season, inventory_qty) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+	_, err = db.Exec(query, p.SKU, p.ManufacturerPart, p.Description, p.Manufacturer, p.ProcessRequest, p.Unit, p.UnitPrice, p.OrderQty, p.Reorder, p.Season, p.InventoryQty)
+	if err != nil {
+		log.WithFields(log.Fields{"error": err}).Error("Error executing insert query")
+		respondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Internal Server Error: Unable to insert product"})
+		return
+	}
+
+	// Respond with success message
+	respondWithJSON(w, http.StatusOK, map[string]string{"message": "Product successfully inserted"})
+}
+
+// Helper function to send a JSON response
+func respondWithJSON(w http.ResponseWriter, statusCode int, payload interface{}) {
+	response, err := json.Marshal(payload)
+	if err != nil {
+		log.WithFields(log.Fields{"error": err}).Error("Error marshalling JSON")
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("Internal Server Error"))
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(statusCode)
+	w.Write(response)
 }
 
 // // Product List
@@ -1564,7 +1607,7 @@ func ProductList(w http.ResponseWriter, formMap map[string]string) {
 // 	//Pull Data
 // 	for rows.Next() {
 // 		var r Product
-// 		err := rows.Scan(&r.SKU, &r.Manufacturer, &r.ManufacturerPart, &r.Description, &r.ProcessRequest, &r.SortingRequest, &r.Unit, &r.UnitPrice, &r.Currency, &r.Qty, &r.Modified, &r.Reorder, &r.InventoryQTY, &r.Season, &r.Image.URL_Standard, &r.Image.URL_Thumb, &r.Image.URL_Tiny)
+// 		err := rows.Scan(&r.SKU, &r.Manufacturer, &r.ManufacturerPart, &r.Description, &r.ProcessRequest, &r.SortingRequest, &r.Unit, &r.UnitPrice, &r.Currency, &r.OrderQty, &r.Modified, &r.Reorder, &r.InventoryQty, &r.Season, &r.Image.URL_Standard, &r.Image.URL_Thumb, &r.Image.URL_Tiny)
 // 		if err != nil {
 // 			return handleerror(err), products
 // 		}
@@ -1576,7 +1619,7 @@ func ProductList(w http.ResponseWriter, formMap map[string]string) {
 
 func sortrequestdeletesql(requestid int, user User) (message Message) {
 	//Debug
-	log.WithFields(log.Fields{"username": user.Username}).Info("Deleting order ", order, "...")
+	log.WithFields(log.Fields{"username": user.Username}).Info("Deleting order ", "...")
 
 	//Test Connection
 	pingErr := db.Ping()
@@ -1599,94 +1642,94 @@ func sortrequestdeletesql(requestid int, user User) (message Message) {
 	return message
 }
 
-// Product Insert
-func ProductInsert(r *http.Request, user User) (message Message) {
-	// Get a database handle.
-	var err error
+// // Product Insert
+// func ProductInsert(r *http.Request, user User) (message Message) {
+// 	// Get a database handle.
+// 	var err error
 
-	//Test Connection
-	pingErr := db.Ping()
-	if pingErr != nil {
-		db, message = opendb()
-		return handleerror(pingErr)
-	}
+// 	//Test Connection
+// 	pingErr := db.Ping()
+// 	if pingErr != nil {
+// 		db, message = opendb()
+// 		return handleerror(pingErr)
+// 	}
 
-	//Define Variables
-	var i []interface{}
-	var newquery string
+// 	//Define Variables
+// 	var i []interface{}
+// 	var newquery string
 
-	sku := r.URL.Query().Get("sku")
-	descript := r.URL.Query().Get("description")
-	manufacturer := r.URL.Query().Get("manufacturer")
-	manufacturerpart := r.URL.Query().Get("manufacturerpart")
-	processrequest := r.URL.Query().Get("processrequest")
-	sortingrequest := r.URL.Query().Get("sortingrequest")
-	unit := r.URL.Query().Get("unit")
-	unitprice := r.URL.Query().Get("unitprice")
-	currency := r.URL.Query().Get("currency")
-	orderqty := r.URL.Query().Get("orderqty")
-	reorder := r.URL.Query().Get("reorder")
-	season := r.URL.Query().Get("season")
+// 	sku := r.URL.Query().Get("sku")
+// 	descript := r.URL.Query().Get("description")
+// 	manufacturer := r.URL.Query().Get("manufacturer")
+// 	manufacturerpart := r.URL.Query().Get("manufacturerpart")
+// 	processrequest := r.URL.Query().Get("processrequest")
+// 	sortingrequest := r.URL.Query().Get("sortingrequest")
+// 	unit := r.URL.Query().Get("unit")
+// 	unitprice := r.URL.Query().Get("unitprice")
+// 	currency := r.URL.Query().Get("currency")
+// 	orderqty := r.URL.Query().Get("orderqty")
+// 	reorder := r.URL.Query().Get("reorder")
+// 	season := r.URL.Query().Get("season")
 
-	//ensure that there are no null numerical values
-	if unitprice == "" {
-		unitprice = "0"
-	}
-	if orderqty == "" {
-		orderqty = "0"
-	}
+// 	//ensure that there are no null numerical values
+// 	if unitprice == "" {
+// 		unitprice = "0"
+// 	}
+// 	if orderqty == "" {
+// 		orderqty = "0"
+// 	}
 
-	//Create the fields to insert
-	i = append(i, sku)
-	i = append(i, manufacturer)
-	i = append(i, manufacturerpart)
-	i = append(i, processrequest)
-	i = append(i, sortingrequest)
-	i = append(i, unit)
-	i = append(i, unitprice)
-	i = append(i, currency)
-	i = append(i, orderqty)
-	i = append(i, descript)
-	if reorder == "yes" {
-		i = append(i, 1)
-	} else {
-		i = append(i, 0)
-	}
-	i = append(i, season)
-	log.WithFields(log.Fields{"username": user.Username}).Debug("Reorder: ", reorder)
+// 	//Create the fields to insert
+// 	i = append(i, sku)
+// 	i = append(i, manufacturer)
+// 	i = append(i, manufacturerpart)
+// 	i = append(i, processrequest)
+// 	i = append(i, sortingrequest)
+// 	i = append(i, unit)
+// 	i = append(i, unitprice)
+// 	i = append(i, currency)
+// 	i = append(i, orderqty)
+// 	i = append(i, descript)
+// 	if reorder == "yes" {
+// 		i = append(i, 1)
+// 	} else {
+// 		i = append(i, 0)
+// 	}
+// 	i = append(i, season)
+// 	log.WithFields(log.Fields{"username": user.Username}).Debug("Reorder: ", reorder)
 
-	//Build the Query
-	newquery = "REPLACE INTO skus (`sku_internal`, `manufacturer_code`, `sku_manufacturer`, `processing_request`, `sorting_request`, `unit`, `unit_price`, `Currency`, `order_qty`,`product_option`,`reorder`,season) VALUES (REPLACE(?,' ',''),?,?,?,?,?,?,?,?,?,?,?)"
+// 	//Build the Query
+// 	newquery = "REPLACE INTO skus (`sku_internal`, `manufacturer_code`, `sku_manufacturer`, `processing_request`, `sorting_request`, `unit`, `unit_price`, `Currency`, `order_qty`,`product_option`,`reorder`,season) VALUES (REPLACE(?,' ',''),?,?,?,?,?,?,?,?,?,?,?)"
 
-	//Run Query
-	log.WithFields(log.Fields{"username": user.Username}).Debug(i...) //debug variables map
-	log.WithFields(log.Fields{"username": user.Username}).Debug("Running Product List")
-	log.WithFields(log.Fields{"username": user.Username}).Debug(newquery)
-	rows, err := db.Query(newquery, i...)
-	if err != nil {
-		return handleerror(err)
-	}
-	defer rows.Close()
+// 	//Run Query
+// 	log.WithFields(log.Fields{"username": user.Username}).Debug(i...) //debug variables map
+// 	log.WithFields(log.Fields{"username": user.Username}).Debug("Running Product List")
+// 	log.WithFields(log.Fields{"username": user.Username}).Debug(newquery)
+// 	rows, err := db.Query(newquery, i...)
+// 	if err != nil {
+// 		return handleerror(err)
+// 	}
+// 	defer rows.Close()
 
-	//Pull Data
-	for rows.Next() {
-		var r Product
-		err := rows.Scan(&r.SKU, &r.Manufacturer, &r.ManufacturerPart, &r.Description, &r.ProcessRequest, &r.SortingRequest, &r.Unit, &r.UnitPrice, &r.Currency, &r.Qty)
-		if err != nil {
-			return handleerror(err)
-		}
-	}
+// 	//Pull Data
+// 	for rows.Next() {
+// 		var r Product
+// 		err := rows.Scan(&r.SKU, &r.Manufacturer, &r.ManufacturerPart, &r.Description, &r.ProcessRequest, &r.SortingRequest, &r.Unit, &r.UnitPrice, &r.Currency, &r.OrderQty)
+// 		if err != nil {
+// 			return handleerror(err)
+// 		}
+// 	}
 
-	//add image and qty to new row
-	qty(sku)
+// 	//add image and qty to new row
+// 	qty(sku)
 
-	//Logging
-	log.WithFields(log.Fields{"username": user.Username}).Info("Inserted Product ", sku)
-	message.Title = "Success"
-	message.Body = "Successfully inserted row"
-	message.Success = true
-	return message
-}
+// 	//Logging
+// 	log.WithFields(log.Fields{"username": user.Username}).Info("Inserted Product ", sku)
+// 	message.Title = "Success"
+// 	message.Body = "Successfully inserted row"
+// 	message.Success = true
+// 	return message
+// }
 
 // Update User Password
 func Updatepass(user string, pass string, secret string) (message Message, success bool) {

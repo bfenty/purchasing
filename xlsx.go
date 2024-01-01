@@ -54,7 +54,7 @@ func excel(name string, products []Product) (message Message, filename string) {
 		cell = "I" + row
 		f.SetCellValue("Sheet1", cell, products[i].Currency)
 		cell = "J" + row
-		f.SetCellValue("Sheet1", cell, *products[i].Qty)
+		f.SetCellValue("Sheet1", cell, *products[i].OrderQty)
 	}
 	// Create a new sheet.
 	//index := f.NewSheet("Sheet2")
