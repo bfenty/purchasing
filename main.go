@@ -290,6 +290,9 @@ func APIHandler(w http.ResponseWriter, r *http.Request) {
 	case "productinsert":
 		log.Debug("Calling InsertProduct function")
 		InsertProduct(w, r)
+	case "productdelete":
+		log.Debug("Calling DeleteProduct function")
+		DeleteProduct(w, r)
 	// Add other cases as needed
 	default:
 		log.WithFields(log.Fields{

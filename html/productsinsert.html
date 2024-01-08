@@ -217,10 +217,10 @@ $(document).ready(function(){
                                             <td><input class="form-control" type='text' id="unit" name="unit" value="${item.Unit}"></td>
                                             <td><input class="form-control" type='text' id="unitprice" name="unitprice" value="${item.UnitPrice}"></td>
                                             <td><select class="form-select" id="currency" name="currency">${currencyOptions}</select></td>
-                                            <td><input class="form-control" type='text' id="orderqty" name="orderqty" value="${item.Qty}"></td>
-                                            <td><input class="form-control" type='text' id="reorder" name="reorder" value="${item.Reorder}"></td>
+                                            <td><input class="form-control" type='text' id="orderqty" name="orderqty" value="${item.OrderQty}"></td>
+                                            <td><input class="form-control" type='checkbox' id="reorder" name="reorder" ${item.Reorder ? 'checked' : ''}></td>
                                             <td><input class="form-control" type='text' id="season" name="season" value="${item.Season}"></td>
-                                            <td><input class="form-control" type='text' id="inventoryqty" name="inventoryqty" value="${item.InventoryQTY}"></td>
+                                            <td><input class="form-control" type='text' id="inventoryqty" name="inventoryqty" value="${item.InventoryQty}"></td>
                                             <td><input type='submit' value='Update' class="btn btn-primary"></td>
                                             <td><button type="button" class="btn btn-danger delete-button" data-item-id="${item.SKU}" data-bs-toggle="modal">Delete</button></td>
                                          </tr>`;
@@ -269,31 +269,33 @@ $(document).ready(function(){
 
               // Event handler for the confirm delete action
               $('#confirmDelete').click(function() {
-                  console.log("Initiating delete request for item:", currentItemToDelete);
+                    console.log("Initiating delete request for item:", currentItemToDelete);
 
-                  $.ajax({
-                      url: '/api/productdelete',
-                      type: 'POST',
-                      dataType: 'json',
-                      data: { sku: currentItemToDelete }, // Assuming the API expects the SKU as a POST parameter
-                      success: function(response) {
-                          console.log("Item deleted successfully:", response);
-                          showToast("Item deleted successfully.", "info");
-                          fetchAndUpdateTable();  // Refresh the table data
-                      },
-                      error: function(jqXHR, textStatus, errorThrown) {
-                          console.error("Error deleting item:", textStatus, errorThrown, jqXHR);
-                          showToast("Error deleting item.", "error");
-                      },
-                      beforeSend: function() {
-                          console.log("Sending delete request to /api/productdelete.");
-                      },
-                      complete: function(jqXHR, textStatus) {
-                          console.log("Delete request completed with status:", textStatus);
-                          $('#deleteModal').modal('hide'); // Hide the modal after completion
-                      }
-                  });
-              });
+                    $.ajax({
+                        url: '/api/productdelete',
+                        type: 'POST',
+                        contentType: 'application/json',  // Ensure JSON content type
+                        dataType: 'json',
+                        data: JSON.stringify({ sku: currentItemToDelete }), // Convert data to JSON string
+                        success: function(response) {
+                            console.log("Item deleted successfully:", response);
+                            showToast("Item deleted successfully.", "info");
+                            fetchAndUpdateTable();  // Refresh the table data
+                        },
+                        error: function(jqXHR, textStatus, errorThrown) {
+                            console.error("Error deleting item:", textStatus, errorThrown, jqXHR);
+                            showToast("Error deleting item.", "error");
+                        },
+                        beforeSend: function() {
+                            console.log("Sending delete request to /api/productdelete.");
+                        },
+                        complete: function(jqXHR, textStatus) {
+                            console.log("Delete request completed with status:", textStatus);
+                            $('#deleteModal').modal('hide'); // Hide the modal after completion
+                        }
+                    });
+                });
+
               $('#productTableBody').on('click', '#btnInsertNew', function() {
                   console.log("Collecting data to insert new Product");
                   // Collecting input data

@@ -1524,7 +1524,7 @@ func InsertProduct(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// SQL INSERT statement
-	query := `INSERT INTO skus (sku, manufacturer_part, description, manufacturer, process_request, unit, unit_price, order_qty, reorder, season, inventory_qty) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+	query := `INSERT INTO skus (sku_internal, sku_manufacturer, product_option, manufacturer_code, processing_request, unit, unit_price, order_qty, reorder, season, inventory_qty) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
 	_, err = db.Exec(query, p.SKU, p.ManufacturerPart, p.Description, p.Manufacturer, p.ProcessRequest, p.Unit, p.UnitPrice, p.OrderQty, p.Reorder, p.Season, p.InventoryQty)
 	if err != nil {
 		log.WithFields(log.Fields{"error": err}).Error("Error executing insert query")
@@ -1534,6 +1534,52 @@ func InsertProduct(w http.ResponseWriter, r *http.Request) {
 
 	// Respond with success message
 	respondWithJSON(w, http.StatusOK, map[string]string{"message": "Product successfully inserted"})
+}
+
+func DeleteProduct(w http.ResponseWriter, r *http.Request) {
+	log.Info("Received request to delete product")
+
+	var requestBody map[string]string
+	err := json.NewDecoder(r.Body).Decode(&requestBody)
+	if err != nil {
+		log.WithFields(log.Fields{"error": err}).Error("Error decoding request body")
+		respondWithJSON(w, http.StatusBadRequest, map[string]string{"error": "Invalid request"})
+		return
+	}
+
+	sku, ok := requestBody["sku"]
+	if !ok || sku == "" {
+		log.Error("SKU is missing in delete request")
+		respondWithJSON(w, http.StatusBadRequest, map[string]string{"error": "SKU is required"})
+		return
+	}
+
+	log.WithFields(log.Fields{"SKU": sku}).Info("Parsed delete request")
+
+	// SQL DELETE statement
+	query := `DELETE FROM skus WHERE sku_internal = ?`
+	result, err := db.Exec(query, sku)
+	if err != nil {
+		log.WithFields(log.Fields{"SKU": sku, "error": err}).Error("Error executing delete query")
+		respondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Unable to delete product"})
+		return
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		log.WithFields(log.Fields{"SKU": sku, "error": err}).Error("Error getting rows affected")
+		respondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Unable to delete product"})
+		return
+	}
+
+	if rowsAffected == 0 {
+		log.WithFields(log.Fields{"SKU": sku}).Warn("Product not found for deletion")
+		respondWithJSON(w, http.StatusNotFound, map[string]string{"error": "Product not found"})
+		return
+	}
+
+	log.WithFields(log.Fields{"SKU": sku, "rowsAffected": rowsAffected}).Info("Product deleted successfully")
+	respondWithJSON(w, http.StatusOK, map[string]string{"message": "Product successfully deleted"})
 }
 
 // Helper function to send a JSON response
