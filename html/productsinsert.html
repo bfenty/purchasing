@@ -185,7 +185,7 @@ $(document).ready(function(){
                                               <td><input class="form-control" type='text' id="new_unitprice"></td>
                                               <td><select class="form-select" id="new_currency">${currencyOptions}</select></td>
                                               <td><input class="form-control" type='text' id="new_orderqty"></td>
-                                              <td><input class="form-control" type='text' id="new_reorder"></td>
+                                              <td><input class="form-check-input" type='checkbox' id="reorder" name="reorder" checked></td>
                                               <td><input class="form-control" type='text' id="new_season"></td>
                                               <td><input class="form-control" type='text' id="new_inventoryqty"></td>
                                               <td><button class="btn btn-primary" id="btnInsertNew">Insert</button></td>
@@ -218,7 +218,7 @@ $(document).ready(function(){
                                             <td><input class="form-control" type='text' id="unitprice" name="unitprice" value="${item.UnitPrice}"></td>
                                             <td><select class="form-select" id="currency" name="currency">${currencyOptions}</select></td>
                                             <td><input class="form-control" type='text' id="orderqty" name="orderqty" value="${item.OrderQty}"></td>
-                                            <td><input class="form-control" type='checkbox' id="reorder" name="reorder" ${item.Reorder ? 'checked' : ''}></td>
+                                            <td><input class="form-check-input" type='checkbox' id="reorder" name="reorder" ${item.Reorder ? 'checked' : ''}></td>
                                             <td><input class="form-control" type='text' id="season" name="season" value="${item.Season}"></td>
                                             <td><input class="form-control" type='text' id="inventoryqty" name="inventoryqty" value="${item.InventoryQty}"></td>
                                             <td><input type='submit' value='Update' class="btn btn-primary"></td>
@@ -298,6 +298,11 @@ $(document).ready(function(){
 
               $('#productTableBody').on('click', '#btnInsertNew', function() {
                   console.log("Collecting data to insert new Product");
+                  var validationMessage = validateNewProductForm();
+                    if (validationMessage !== "") {
+                        showToast(validationMessage, "warning");
+                        return;
+                    }
                   // Collecting input data
                   var newProductData = {
                         sku: $('#new_sku').val(),
@@ -306,6 +311,7 @@ $(document).ready(function(){
                         manufacturer: $('#new_manufacturer').val() || null,
                         processRequest: $('#new_processrequest').val() || null,
                         unit: $('#new_unit').val() || null,
+                        currency: $('#currency').val() || null,
                         unitPrice: $('#new_unitprice').val() ? parseFloat($('#new_unitprice').val()) : null,
                         orderQty: $('#new_orderqty').val() ? parseInt($('#new_orderqty').val(), 10) : null,
                         reorder: $('#new_reorder').is(':checked'),
@@ -346,7 +352,58 @@ $(document).ready(function(){
                         }
                   });
               });
+              function validateNewProductForm() {
+                var missingFields = [];
 
+                // Check SKU - required
+                if ($('#new_sku').val().trim() === '') {
+                    missingFields.push("SKU");
+                }
+
+                // Check Manufacturer Part - assuming it's required
+                if ($('#new_manufacturerpart').val().trim() === '') {
+                    missingFields.push("Manufacturer Part");
+                }
+
+                // Check Manufacturer - assuming it's required
+                if ($('#new_manufacturer').val().trim() === '') {
+                    missingFields.push("Manufacturer");
+                }
+
+                // Check Currency - assuming it's required
+                if ($('#currency').val().trim() === '') {
+                    missingFields.push("Currency");
+                }
+
+                // Check Unit - assuming it's required
+                if ($('#new_unit').val().trim() === '') {
+                    missingFields.push("Unit");
+                }
+
+                // Check Unit Price - assuming it's required and must be a valid number
+                var unitPrice = $('#new_unitprice').val().trim();
+                if (unitPrice === '' || isNaN(parseFloat(unitPrice))) {
+                    missingFields.push("Unit Price");
+                }
+
+                // Check Order Qty - assuming it's required and must be a valid integer
+                var orderQty = $('#new_orderqty').val().trim();
+                if (orderQty === '' || !(/^\d+$/.test(orderQty))) {
+                    missingFields.push("Order Quantity");
+                }
+
+                // Check Inventory Qty - assuming it's required and must be a valid integer
+                var inventoryQty = $('#new_inventoryqty').val().trim();
+                if (inventoryQty === '' || !(/^\d+$/.test(inventoryQty))) {
+                    missingFields.push("Inventory Quantity");
+                }
+
+                if (missingFields.length > 0) {
+                    return "Please fill in the following required fields: " + missingFields.join(", ");
+                }
+
+                return "";
+            }
           });
       </script>
       
