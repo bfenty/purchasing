@@ -1499,7 +1499,7 @@ func ListManufacturers(w http.ResponseWriter, r *http.Request) {
 // @Failure 500 {string} string "Internal Server Error"
 // @Router /api/products [get]
 // ProductListAPI is an HTTP handler function that returns product list in JSON format
-func ProductList(w http.ResponseWriter, formMap map[string]string) {
+func ProductList(w http.ResponseWriter, r *http.Request) {
 	log.Debug("Entering ProductListAPI")
 
 	// Check database connection
@@ -1510,16 +1510,16 @@ func ProductList(w http.ResponseWriter, formMap map[string]string) {
 		return
 	}
 
-	// Prepare query parameters
-	queryParams := formMap
+	// Extract query parameters from request
+	queryParams := r.URL.Query()
 
 	var queryArgs []interface{}
 	var queryBuilder strings.Builder
 	queryBuilder.WriteString("SELECT `sku_internal`,`manufacturer_code`,`sku_manufacturer`,`product_option`,`processing_request`,`sorting_request`,`unit`,`unit_price`,`Currency`,`order_qty`,`modified`,`reorder`,`inventory_qty`,season,url_standard,url_thumb,url_tiny FROM `skus` WHERE 1")
 
-	for param, value := range queryParams {
-		if value != "" {
-			queryArgs = append(queryArgs, value)
+	for param, values := range queryParams {
+		if len(values) > 0 && values[0] != "" {
+			queryArgs = append(queryArgs, values[0])
 			queryBuilder.WriteString(fmt.Sprintf(" AND %s = ?", param))
 		}
 	}

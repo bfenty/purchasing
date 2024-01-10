@@ -269,7 +269,7 @@ func APIHandler(w http.ResponseWriter, r *http.Request) {
 		Signin(w, formMap)
 	case "products":
 		log.Debug("Calling ProductList function")
-		ProductList(w, formMap)
+		ProductList(w, r)
 	case "manufacturers":
 		log.Debug("Calling ListManufacturers function")
 		ListManufacturers(w, r)
