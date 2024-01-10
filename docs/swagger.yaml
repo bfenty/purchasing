@@ -90,62 +90,7 @@ paths:
       summary: Insert new product
       tags:
       - products
-  /api/productupdate:
-    post:
-      consumes:
-      - application/json
-      description: Updates a product in the database with the given SKU
-      parameters:
-      - description: Product information to be updated
-        in: body
-        name: product
-        required: true
-        schema:
-          $ref: '#/definitions/main.Product'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Product successfully updated
-          schema:
-            $ref: '#/definitions/main.ApiResponse'
-        "400":
-          description: 'Bad Request: SKU is required'
-          schema:
-            $ref: '#/definitions/main.ApiResponse'
-        "404":
-          description: Product not found
-          schema:
-            $ref: '#/definitions/main.ApiResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/main.ApiResponse'
-      summary: Update an existing product
-      tags:
-      - products
-  /manufacturers:
-    get:
-      consumes:
-      - application/json
-      description: Retrieves a list of manufacturers from the database
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: List of manufacturers
-          schema:
-            items:
-              $ref: '#/definitions/main.Manufacturer'
-            type: array
-        "500":
-          description: Internal Server Error
-          schema:
-            type: string
-      summary: List manufacturers
-      tags:
-      - manufacturers
-  /products:
+  /api/products:
     get:
       consumes:
       - application/json
@@ -215,4 +160,59 @@ paths:
       summary: List products
       tags:
       - products
+  /api/productupdate:
+    post:
+      consumes:
+      - application/json
+      description: Updates a product in the database with the given SKU
+      parameters:
+      - description: Product information to be updated
+        in: body
+        name: product
+        required: true
+        schema:
+          $ref: '#/definitions/main.Product'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Product successfully updated
+          schema:
+            $ref: '#/definitions/main.ApiResponse'
+        "400":
+          description: 'Bad Request: SKU is required'
+          schema:
+            $ref: '#/definitions/main.ApiResponse'
+        "404":
+          description: Product not found
+          schema:
+            $ref: '#/definitions/main.ApiResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/main.ApiResponse'
+      summary: Update an existing product
+      tags:
+      - products
+  /manufacturers:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves a list of manufacturers from the database
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of manufacturers
+          schema:
+            items:
+              $ref: '#/definitions/main.Manufacturer'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: List manufacturers
+      tags:
+      - manufacturers
 swagger: "2.0"

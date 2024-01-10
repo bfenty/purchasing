@@ -69,91 +69,7 @@ const docTemplate = `{
                 "responses": {}
             }
         },
-        "/api/productupdate": {
-            "post": {
-                "description": "Updates a product in the database with the given SKU",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "products"
-                ],
-                "summary": "Update an existing product",
-                "parameters": [
-                    {
-                        "description": "Product information to be updated",
-                        "name": "product",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/main.Product"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Product successfully updated",
-                        "schema": {
-                            "$ref": "#/definitions/main.ApiResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request: SKU is required",
-                        "schema": {
-                            "$ref": "#/definitions/main.ApiResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Product not found",
-                        "schema": {
-                            "$ref": "#/definitions/main.ApiResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/main.ApiResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/manufacturers": {
-            "get": {
-                "description": "Retrieves a list of manufacturers from the database",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "manufacturers"
-                ],
-                "summary": "List manufacturers",
-                "responses": {
-                    "200": {
-                        "description": "List of manufacturers",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/main.Manufacturer"
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/products": {
+        "/api/products": {
             "get": {
                 "description": "Retrieves a list of products, with optional filtering parameters",
                 "consumes": [
@@ -247,6 +163,90 @@ const docTemplate = `{
                             "type": "array",
                             "items": {
                                 "$ref": "#/definitions/main.Product"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/productupdate": {
+            "post": {
+                "description": "Updates a product in the database with the given SKU",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "products"
+                ],
+                "summary": "Update an existing product",
+                "parameters": [
+                    {
+                        "description": "Product information to be updated",
+                        "name": "product",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/main.Product"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Product successfully updated",
+                        "schema": {
+                            "$ref": "#/definitions/main.ApiResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request: SKU is required",
+                        "schema": {
+                            "$ref": "#/definitions/main.ApiResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Product not found",
+                        "schema": {
+                            "$ref": "#/definitions/main.ApiResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/main.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/manufacturers": {
+            "get": {
+                "description": "Retrieves a list of manufacturers from the database",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "manufacturers"
+                ],
+                "summary": "List manufacturers",
+                "responses": {
+                    "200": {
+                        "description": "List of manufacturers",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main.Manufacturer"
                             }
                         }
                     },

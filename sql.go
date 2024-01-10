@@ -1497,7 +1497,7 @@ func ListManufacturers(w http.ResponseWriter, r *http.Request) {
 // @Param limit query int false "Limit number of results"
 // @Success 200 {array} Product "List of products"
 // @Failure 500 {string} string "Internal Server Error"
-// @Router /products [get]
+// @Router /api/products [get]
 // ProductListAPI is an HTTP handler function that returns product list in JSON format
 func ProductList(w http.ResponseWriter, formMap map[string]string) {
 	log.Debug("Entering ProductListAPI")
