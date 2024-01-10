@@ -167,7 +167,7 @@ $(document).ready(function(){
                           });
 
                           // Currency dropdown options
-                          var currencies = ["USD", "CZK", "EUR", "GBP"]; // Replace with actual currencies
+                          var currencies = ["USD", "CZK", "EUR", "GBP"];
                           var currencyOptions = '<option value="" selected>Select Currency</option>';
                           currencies.forEach(function(currency) {
                               currencyOptions += `<option value="${currency}">${currency}</option>`;
@@ -196,7 +196,7 @@ $(document).ready(function(){
                           data.forEach(function(item, index) {
                               console.log("Processing item:", index, item);
                               //create a map of acceptable currencies and select the correct one
-                              var currencies = ["USD", "CZK", "EUR", "GBP"]; // Replace with your actual currencies
+                              var currencies = ["USD", "CZK", "EUR", "GBP"];
                               var currencyOptions = currencies.map(function(currency) {
                                   return `<option value="${currency}" ${currency === item.Currency ? 'selected' : ''}>${currency}</option>`;
                               }).join('');
@@ -221,7 +221,7 @@ $(document).ready(function(){
                                             <td><input class="form-check-input" type='checkbox' id="reorder" name="reorder" ${item.Reorder ? 'checked' : ''}></td>
                                             <td><input class="form-control" type='text' id="season" name="season" value="${item.Season}"></td>
                                             <td><input class="form-control" type='text' id="inventoryqty" name="inventoryqty" value="${item.InventoryQty}"></td>
-                                            <td><input type='submit' value='Update' class="btn btn-primary"></td>
+                                            <td><input type='button' value='Update' class='btn btn-primary update-button' data-item-id='${item.SKU}'></td>
                                             <td><button type="button" class="btn btn-danger delete-button" data-item-id="${item.SKU}" data-bs-toggle="modal">Delete</button></td>
                                          </tr>`;
                               tableBody.append(row);
@@ -279,7 +279,7 @@ $(document).ready(function(){
                         data: JSON.stringify({ sku: currentItemToDelete }), // Convert data to JSON string
                         success: function(response) {
                             console.log("Item deleted successfully:", response);
-                            showToast("Item deleted successfully.", "info");
+                            showToast("SKU deleted successfully.", "info");
                             fetchAndUpdateTable();  // Refresh the table data
                         },
                         error: function(jqXHR, textStatus, errorThrown) {
@@ -323,13 +323,14 @@ $(document).ready(function(){
 
                   // AJAX call to insert the new product
                   $.ajax({
-                      url: '/api/productinsert', // Your API endpoint for product insertion
+                      url: '/api/productinsert', // API endpoint for product insertion
                       type: 'POST',
                       contentType: 'application/json',
                       data: JSON.stringify(newProductData),
                       success: function(response) {
                           console.log("New product inserted successfully:", response);
-                          // Handle successful insertion, e.g., refresh the table or clear input fields
+                            showToast("SKU inserted successfully.", "info");
+                          fetchAndUpdateTable() //update the table
                       },
                       error: function(jqXHR, textStatus, errorThrown) {
                             console.error("Error inserting new product:", textStatus, errorThrown, jqXHR);
@@ -352,6 +353,8 @@ $(document).ready(function(){
                         }
                   });
               });
+
+              //Validate product insertion before submission
               function validateNewProductForm() {
                 var missingFields = [];
 
@@ -404,6 +407,45 @@ $(document).ready(function(){
 
                 return "";
             }
+            // Event listener for the update button click
+                $('#productTableBody').on('click', '.update-button', function() {
+                    var row = $(this).closest('tr');
+                    var sku = $(this).data('item-id');
+
+                    var updatedProductData = {
+                        SKU: sku,
+                        ManufacturerPart: row.find('[name="manufacturerpart"]').val(),
+                        Description: row.find('[name="description"]').val(),
+                        Manufacturer: row.find('[name="manufacturer"]').val(),
+                        ProcessRequest: row.find('[name="processrequest"]').val(),
+                        Unit: row.find('[name="unit"]').val(),
+                        UnitPrice: parseFloat(row.find('[name="unitprice"]').val()),
+                        OrderQty: parseInt(row.find('[name="orderqty"]').val(), 10),
+                        Reorder: row.find('[name="reorder"]').is(':checked'),
+                        Season: row.find('[name="season"]').val(),
+                        InventoryQty: parseInt(row.find('[name="inventoryqty"]').val(), 10),
+                        Currency: row.find('[name="currency"]').val()
+                    };
+
+                    console.log("Preparing to update product:", updatedProductData);
+
+                    // AJAX call to update the product
+                    $.ajax({
+                        url: '/api/productupdate',
+                        type: 'POST',
+                        contentType: 'application/json',
+                        data: JSON.stringify(updatedProductData),
+                        success: function(response) {
+                            console.log("Product updated successfully:", response);
+                            showToast("SKU updated successfully.", "info");
+                            fetchAndUpdateTable() //update the table
+                        },
+                        error: function(jqXHR, textStatus, errorThrown) {
+                            console.error("Error updating product:", textStatus, errorThrown, jqXHR);
+                            // Handle error
+                        }
+                    });
+                });
           });
       </script>
       

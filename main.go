@@ -8,6 +8,8 @@ import (
 	"os"
 	"strings"
 
+	_ "bfenty/scanner/docs"
+
 	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
 )
@@ -40,24 +42,6 @@ type SortRequest struct {
 	ManufacturerPart  *string
 	Priority          int
 	Warn              bool
-}
-
-type Product struct {
-	SKU              string
-	Description      *string
-	Manufacturer     string
-	ManufacturerPart *string
-	ProcessRequest   *string
-	SortingRequest   *string
-	Unit             *string
-	UnitPrice        *float64
-	Currency         string
-	OrderQty         *int
-	Modified         *string
-	Reorder          bool
-	InventoryQty     *int
-	Season           string
-	Image            Image
 }
 
 type Page struct {
@@ -157,6 +141,8 @@ func main() {
 	var message Message
 	db, message = opendb()
 	log.Info(message.Body)
+	fs := http.FileServer(http.Dir("./docs"))
+	http.Handle("/docs/", http.StripPrefix("/docs/", fs))
 	http.HandleFunc("/", PageHandler)
 	// http.HandleFunc("/api/", APIHandler)
 	// http.HandleFunc("/login", login)
@@ -293,6 +279,9 @@ func APIHandler(w http.ResponseWriter, r *http.Request) {
 	case "productdelete":
 		log.Debug("Calling DeleteProduct function")
 		DeleteProduct(w, r)
+	case "productupdate":
+		log.Debug("Calling UpdateProduct function")
+		UpdateProduct(w, r)
 	// Add other cases as needed
 	default:
 		log.WithFields(log.Fields{

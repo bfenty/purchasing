@@ -1,0 +1,122 @@
+definitions:
+  main.ApiResponse:
+    properties:
+      message:
+        type: string
+    type: object
+  main.Image:
+    properties:
+      url_standard:
+        type: string
+      url_thumbnail:
+        type: string
+      url_tiny:
+        type: string
+    type: object
+  main.Product:
+    properties:
+      currency:
+        type: string
+      description:
+        type: string
+      image:
+        $ref: '#/definitions/main.Image'
+      inventoryQty:
+        type: integer
+      manufacturer:
+        type: string
+      manufacturerPart:
+        type: string
+      modified:
+        type: string
+      orderQty:
+        type: integer
+      processRequest:
+        type: string
+      reorder:
+        type: boolean
+      season:
+        type: string
+      sku:
+        type: string
+      sortingRequest:
+        type: string
+      unit:
+        type: string
+      unitPrice:
+        type: number
+    type: object
+info:
+  contact: {}
+paths:
+  /api/productdelete:
+    post:
+      consumes:
+      - application/json
+      description: Deletes a product from the database based on its SKU
+      parameters:
+      - description: SKU of the product to delete
+        in: body
+        name: sku
+        required: true
+        schema:
+          type: string
+      produces:
+      - application/json
+      responses: {}
+      summary: Delete a product
+      tags:
+      - products
+  /api/productinsert:
+    post:
+      consumes:
+      - application/json
+      description: Adds a new product to the database
+      parameters:
+      - description: Product to add
+        in: body
+        name: product
+        required: true
+        schema:
+          $ref: '#/definitions/main.Product'
+      produces:
+      - application/json
+      responses: {}
+      summary: Insert new product
+      tags:
+      - products
+  /api/productupdate:
+    post:
+      consumes:
+      - application/json
+      description: Updates a product in the database with the given SKU
+      parameters:
+      - description: Product information to be updated
+        in: body
+        name: product
+        required: true
+        schema:
+          $ref: '#/definitions/main.Product'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Product successfully updated
+          schema:
+            $ref: '#/definitions/main.ApiResponse'
+        "400":
+          description: 'Bad Request: SKU is required'
+          schema:
+            $ref: '#/definitions/main.ApiResponse'
+        "404":
+          description: Product not found
+          schema:
+            $ref: '#/definitions/main.ApiResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/main.ApiResponse'
+      summary: Update an existing product
+      tags:
+      - products
+swagger: "2.0"

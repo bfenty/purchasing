@@ -1,0 +1,188 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "contact": {}
+    },
+    "paths": {
+        "/api/productdelete": {
+            "post": {
+                "description": "Deletes a product from the database based on its SKU",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "products"
+                ],
+                "summary": "Delete a product",
+                "parameters": [
+                    {
+                        "description": "SKU of the product to delete",
+                        "name": "sku",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {}
+            }
+        },
+        "/api/productinsert": {
+            "post": {
+                "description": "Adds a new product to the database",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "products"
+                ],
+                "summary": "Insert new product",
+                "parameters": [
+                    {
+                        "description": "Product to add",
+                        "name": "product",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/main.Product"
+                        }
+                    }
+                ],
+                "responses": {}
+            }
+        },
+        "/api/productupdate": {
+            "post": {
+                "description": "Updates a product in the database with the given SKU",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "products"
+                ],
+                "summary": "Update an existing product",
+                "parameters": [
+                    {
+                        "description": "Product information to be updated",
+                        "name": "product",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/main.Product"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Product successfully updated",
+                        "schema": {
+                            "$ref": "#/definitions/main.ApiResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request: SKU is required",
+                        "schema": {
+                            "$ref": "#/definitions/main.ApiResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Product not found",
+                        "schema": {
+                            "$ref": "#/definitions/main.ApiResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/main.ApiResponse"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "main.ApiResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "main.Image": {
+            "type": "object",
+            "properties": {
+                "url_standard": {
+                    "type": "string"
+                },
+                "url_thumbnail": {
+                    "type": "string"
+                },
+                "url_tiny": {
+                    "type": "string"
+                }
+            }
+        },
+        "main.Product": {
+            "type": "object",
+            "properties": {
+                "currency": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "image": {
+                    "$ref": "#/definitions/main.Image"
+                },
+                "inventoryQty": {
+                    "type": "integer"
+                },
+                "manufacturer": {
+                    "type": "string"
+                },
+                "manufacturerPart": {
+                    "type": "string"
+                },
+                "modified": {
+                    "type": "string"
+                },
+                "orderQty": {
+                    "type": "integer"
+                },
+                "processRequest": {
+                    "type": "string"
+                },
+                "reorder": {
+                    "type": "boolean"
+                },
+                "season": {
+                    "type": "string"
+                },
+                "sku": {
+                    "type": "string"
+                },
+                "sortingRequest": {
+                    "type": "string"
+                },
+                "unit": {
+                    "type": "string"
+                },
+                "unitPrice": {
+                    "type": "number"
+                }
+            }
+        }
+    }
+}

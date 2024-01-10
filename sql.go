@@ -23,8 +23,30 @@ type Request struct {
 	Description string `json:"description"`
 }
 
+type ApiResponse struct {
+	Message string `json:"message"`
+}
+
 type Manufacturer struct {
 	Name string `json:"name"`
+}
+
+type Product struct {
+	SKU              string
+	Description      *string
+	Manufacturer     string
+	ManufacturerPart *string
+	ProcessRequest   *string
+	SortingRequest   *string
+	Unit             *string
+	UnitPrice        *float64
+	Currency         string
+	OrderQty         *int
+	Modified         *string
+	Reorder          bool
+	InventoryQty     *int
+	Season           string
+	Image            Image
 }
 
 var db *sql.DB
@@ -1507,12 +1529,21 @@ func ProductList(w http.ResponseWriter, formMap map[string]string) {
 	log.Debug("Exiting ProductListAPI")
 }
 
+// InsertProduct godoc
+// @Summary Insert new product
+// @Description Adds a new product to the database
+// @Tags products
+// @Accept  json
+// @Produce  json
+// @Param product body Product true "Product to add"
+// @Router /api/productinsert [post]
 func InsertProduct(w http.ResponseWriter, r *http.Request) {
 	var p Product
 	err := json.NewDecoder(r.Body).Decode(&p)
 	if err != nil {
 		log.WithFields(log.Fields{"error": err}).Error("Error decoding product data")
-		respondWithJSON(w, http.StatusBadRequest, map[string]string{"error": "Bad Request: Invalid JSON data"})
+		errMsg := fmt.Sprintf("Internal Server Error: %v", err)
+		respondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": errMsg})
 		return
 	}
 
@@ -1524,11 +1555,12 @@ func InsertProduct(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// SQL INSERT statement
-	query := `INSERT INTO skus (sku_internal, sku_manufacturer, product_option, manufacturer_code, processing_request, unit, unit_price, order_qty, reorder, season, inventory_qty) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
-	_, err = db.Exec(query, p.SKU, p.ManufacturerPart, p.Description, p.Manufacturer, p.ProcessRequest, p.Unit, p.UnitPrice, p.OrderQty, p.Reorder, p.Season, p.InventoryQty)
+	query := `INSERT INTO skus (sku_internal, sku_manufacturer, product_option, manufacturer_code, processing_request, unit, unit_price, order_qty, reorder, season, inventory_qty, Currency) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?)`
+	_, err = db.Exec(query, p.SKU, p.ManufacturerPart, p.Description, p.Manufacturer, p.ProcessRequest, p.Unit, p.UnitPrice, p.OrderQty, p.Reorder, p.Season, p.InventoryQty, p.Currency)
 	if err != nil {
 		log.WithFields(log.Fields{"error": err}).Error("Error executing insert query")
-		respondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Internal Server Error: Unable to insert product"})
+		errMsg := fmt.Sprintf("Internal Server Error: %v", err)
+		respondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": errMsg})
 		return
 	}
 
@@ -1536,6 +1568,14 @@ func InsertProduct(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, http.StatusOK, map[string]string{"message": "Product successfully inserted"})
 }
 
+// DeleteProduct godoc
+// @Summary Delete a product
+// @Description Deletes a product from the database based on its SKU
+// @Tags products
+// @Accept  json
+// @Produce  json
+// @Param sku body string true "SKU of the product to delete"
+// @Router /api/productdelete [post]
 func DeleteProduct(w http.ResponseWriter, r *http.Request) {
 	log.Info("Received request to delete product")
 
@@ -1543,7 +1583,8 @@ func DeleteProduct(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(&requestBody)
 	if err != nil {
 		log.WithFields(log.Fields{"error": err}).Error("Error decoding request body")
-		respondWithJSON(w, http.StatusBadRequest, map[string]string{"error": "Invalid request"})
+		errMsg := fmt.Sprintf("Internal Server Error: %v", err)
+		respondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": errMsg})
 		return
 	}
 
@@ -1561,14 +1602,16 @@ func DeleteProduct(w http.ResponseWriter, r *http.Request) {
 	result, err := db.Exec(query, sku)
 	if err != nil {
 		log.WithFields(log.Fields{"SKU": sku, "error": err}).Error("Error executing delete query")
-		respondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Unable to delete product"})
+		errMsg := fmt.Sprintf("Internal Server Error: %v", err)
+		respondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": errMsg})
 		return
 	}
 
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
 		log.WithFields(log.Fields{"SKU": sku, "error": err}).Error("Error getting rows affected")
-		respondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Unable to delete product"})
+		errMsg := fmt.Sprintf("Internal Server Error: %v", err)
+		respondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": errMsg})
 		return
 	}
 
@@ -1580,6 +1623,47 @@ func DeleteProduct(w http.ResponseWriter, r *http.Request) {
 
 	log.WithFields(log.Fields{"SKU": sku, "rowsAffected": rowsAffected}).Info("Product deleted successfully")
 	respondWithJSON(w, http.StatusOK, map[string]string{"message": "Product successfully deleted"})
+}
+
+// UpdateProduct godoc
+// @Summary Update an existing product
+// @Description Updates a product in the database with the given SKU
+// @Tags products
+// @Accept  json
+// @Produce  json
+// @Param product body Product true "Product information to be updated"
+// @Success 200 {object} ApiResponse "Product successfully updated"
+// @Failure 400 {object} ApiResponse "Bad Request: SKU is required"
+// @Failure 404 {object} ApiResponse "Product not found"
+// @Failure 500 {object} ApiResponse "Internal Server Error"
+// @Router /api/productupdate [post]
+func UpdateProduct(w http.ResponseWriter, r *http.Request) {
+	var p Product
+	err := json.NewDecoder(r.Body).Decode(&p)
+	if err != nil {
+		log.WithFields(log.Fields{"error": err}).Error("Error decoding product data")
+		respondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": fmt.Sprintf("Internal Server Error: %v", err)})
+		return
+	}
+
+	// Validate that SKU is provided
+	if p.SKU == "" {
+		log.Error("SKU is required for product update")
+		respondWithJSON(w, http.StatusBadRequest, map[string]string{"error": "Bad Request: SKU is required"})
+		return
+	}
+
+	// SQL UPDATE statement
+	query := `UPDATE skus SET sku_manufacturer=?, product_option=?, manufacturer_code=?, processing_request=?, unit=?, unit_price=?, order_qty=?, reorder=?, season=?, inventory_qty=?, Currency=? WHERE sku_internal=?`
+	_, err = db.Exec(query, p.ManufacturerPart, p.Description, p.Manufacturer, p.ProcessRequest, p.Unit, p.UnitPrice, p.OrderQty, p.Reorder, p.Season, p.InventoryQty, p.Currency, p.SKU)
+	if err != nil {
+		log.WithFields(log.Fields{"SKU": p.SKU, "error": err}).Error("Error executing update query")
+		respondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": fmt.Sprintf("Internal Server Error: %v", err)})
+		return
+	}
+
+	// Respond with success message
+	respondWithJSON(w, http.StatusOK, map[string]string{"message": "Product successfully updated"})
 }
 
 // Helper function to send a JSON response
