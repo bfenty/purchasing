@@ -34,18 +34,18 @@ type Manufacturer struct {
 type Product struct {
 	SKU              string
 	Description      *string
-	Manufacturer     string
+	Manufacturer     *string
 	ManufacturerPart *string
 	ProcessRequest   *string
 	SortingRequest   *string
 	Unit             *string
 	UnitPrice        *float64
-	Currency         string
+	Currency         *string
 	OrderQty         *int
 	Modified         *string
-	Reorder          bool
+	Reorder          *bool
 	InventoryQty     *int
-	Season           string
+	Season           *string
 	Image            Image
 }
 
@@ -1440,7 +1440,7 @@ func ProductList2(Manufacturer string, page int, pageSize int) (products []Produ
 // @Produce  json
 // @Success 200 {array} Manufacturer "List of manufacturers"
 // @Failure 500 {string} string "Internal Server Error"
-// @Router /manufacturers [get]
+// @Router /api/manufacturers [get]
 // Manufacturer List API
 func ListManufacturers(w http.ResponseWriter, r *http.Request) {
 	rows, err := db.Query("SELECT name FROM purchasing.manufacturers WHERE 1")
@@ -1517,15 +1517,25 @@ func ProductList(w http.ResponseWriter, r *http.Request) {
 	var queryBuilder strings.Builder
 	queryBuilder.WriteString("SELECT `sku_internal`,`manufacturer_code`,`sku_manufacturer`,`product_option`,`processing_request`,`sorting_request`,`unit`,`unit_price`,`Currency`,`order_qty`,`modified`,`reorder`,`inventory_qty`,season,url_standard,url_thumb,url_tiny FROM `skus` WHERE 1")
 
+	// Default limit
+	limit := 100
+
 	for param, values := range queryParams {
-		if len(values) > 0 && values[0] != "" {
-			queryArgs = append(queryArgs, values[0])
-			queryBuilder.WriteString(fmt.Sprintf(" AND %s = ?", param))
+		if len(values) > 0 {
+			if param == "limit" {
+				// Parse limit value
+				if newLimit, err := strconv.Atoi(values[0]); err == nil {
+					limit = newLimit
+				}
+			} else {
+				queryArgs = append(queryArgs, values[0])
+				queryBuilder.WriteString(fmt.Sprintf(" AND %s = ?", param))
+			}
 		}
 	}
 
 	query := queryBuilder.String() + " order by 11 desc, 1 limit ?"
-	queryArgs = append(queryArgs, 100) // Replace 100 with your limit value
+	queryArgs = append(queryArgs, limit) // Replace 100 with your limit value
 
 	log.WithFields(log.Fields{"query": query, "args": queryArgs}).Debug("Executing query")
 
@@ -1584,7 +1594,7 @@ func InsertProduct(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// SQL INSERT statement
-	query := `INSERT INTO skus (sku_internal, sku_manufacturer, product_option, manufacturer_code, processing_request, unit, unit_price, order_qty, reorder, season, inventory_qty, Currency) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?)`
+	query := `INSERT INTO skus (sku_internal, sku_manufacturer,  product_option, manufacturer_code, processing_request, unit, unit_price, order_qty, reorder, season, inventory_qty, Currency) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?)`
 	_, err = db.Exec(query, p.SKU, p.ManufacturerPart, p.Description, p.Manufacturer, p.ProcessRequest, p.Unit, p.UnitPrice, p.OrderQty, p.Reorder, p.Season, p.InventoryQty, p.Currency)
 	if err != nil {
 		log.WithFields(log.Fields{"error": err}).Error("Error executing insert query")
@@ -1592,6 +1602,9 @@ func InsertProduct(w http.ResponseWriter, r *http.Request) {
 		respondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": errMsg})
 		return
 	}
+
+	//update quantity and image urls
+	qty(p.SKU)
 
 	// Respond with success message
 	respondWithJSON(w, http.StatusOK, map[string]string{"message": "Product successfully inserted"})
@@ -1656,11 +1669,21 @@ func DeleteProduct(w http.ResponseWriter, r *http.Request) {
 
 // UpdateProduct godoc
 // @Summary Update an existing product
-// @Description Updates a product in the database with the given SKU
+// @Description Updates fields of a product in the database with the given SKU; only provided fields are updated
 // @Tags products
 // @Accept  json
 // @Produce  json
-// @Param product body Product true "Product information to be updated"
+// @Param sku path string true "SKU of the product"
+// @Param manufacturer_part body string false "Manufacturer Part of the product"
+// @Param description body string false "Description of the product"
+// @Param manufacturer body string false "Manufacturer of the product"
+// @Param process_request body string false "Processing request of the product"
+// @Param unit body string false "Unit of the product"
+// @Param unit_price body number false "Unit Price of the product"
+// @Param order_qty body integer false "Order Quantity of the product"
+// @Param season body string false "Season of the product"
+// @Param inventory_qty body integer false "Inventory Quantity of the product"
+// @Param currency body string false "Currency of the product"
 // @Success 200 {object} ApiResponse "Product successfully updated"
 // @Failure 400 {object} ApiResponse "Bad Request: SKU is required"
 // @Failure 404 {object} ApiResponse "Product not found"
@@ -1675,23 +1698,82 @@ func UpdateProduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Validate that SKU is provided
 	if p.SKU == "" {
 		log.Error("SKU is required for product update")
 		respondWithJSON(w, http.StatusBadRequest, map[string]string{"error": "Bad Request: SKU is required"})
 		return
 	}
 
-	// SQL UPDATE statement
-	query := `UPDATE skus SET sku_manufacturer=?, product_option=?, manufacturer_code=?, processing_request=?, unit=?, unit_price=?, order_qty=?, reorder=?, season=?, inventory_qty=?, Currency=? WHERE sku_internal=?`
-	_, err = db.Exec(query, p.ManufacturerPart, p.Description, p.Manufacturer, p.ProcessRequest, p.Unit, p.UnitPrice, p.OrderQty, p.Reorder, p.Season, p.InventoryQty, p.Currency, p.SKU)
+	var queryArgs []interface{}
+	var queryBuilder strings.Builder
+	queryBuilder.WriteString("UPDATE skus SET ")
+
+	// Dynamically build query based on provided fields
+	if p.ManufacturerPart != nil {
+		queryBuilder.WriteString("sku_manufacturer=?, ")
+		queryArgs = append(queryArgs, *p.ManufacturerPart)
+	}
+	if p.Description != nil {
+		queryBuilder.WriteString("product_option=?, ")
+		queryArgs = append(queryArgs, *p.Description)
+	}
+	if p.Manufacturer != nil {
+		queryBuilder.WriteString("manufacturer_code=?, ")
+		queryArgs = append(queryArgs, *p.Manufacturer)
+	}
+	if p.ProcessRequest != nil {
+		queryBuilder.WriteString("processing_request=?, ")
+		queryArgs = append(queryArgs, *p.ProcessRequest)
+	}
+	if p.SortingRequest != nil {
+		queryBuilder.WriteString("sorting_request=?, ")
+		queryArgs = append(queryArgs, *p.SortingRequest)
+	}
+	if p.Unit != nil {
+		queryBuilder.WriteString("unit=?, ")
+		queryArgs = append(queryArgs, *p.Unit)
+	}
+	if p.UnitPrice != nil {
+		queryBuilder.WriteString("unit_price=?, ")
+		queryArgs = append(queryArgs, *p.UnitPrice)
+	}
+	if p.OrderQty != nil {
+		queryBuilder.WriteString("order_qty=?, ")
+		queryArgs = append(queryArgs, *p.OrderQty)
+	}
+	if p.Reorder != nil {
+		queryBuilder.WriteString("reorder=?, ")
+		queryArgs = append(queryArgs, *p.Reorder)
+	}
+	if p.Season != nil {
+		queryBuilder.WriteString("season=?, ")
+		queryArgs = append(queryArgs, *p.Season)
+	}
+	if p.InventoryQty != nil {
+		queryBuilder.WriteString("inventory_qty=?, ")
+		queryArgs = append(queryArgs, *p.InventoryQty)
+	}
+	if p.Currency != nil {
+		queryBuilder.WriteString("Currency=?, ")
+		queryArgs = append(queryArgs, *p.Currency)
+	}
+
+	// Remove trailing comma and space
+	query := strings.TrimSuffix(queryBuilder.String(), ", ")
+	query += " WHERE sku_internal=?"
+	queryArgs = append(queryArgs, p.SKU)
+
+	_, err = db.Exec(query, queryArgs...)
 	if err != nil {
 		log.WithFields(log.Fields{"SKU": p.SKU, "error": err}).Error("Error executing update query")
 		respondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": fmt.Sprintf("Internal Server Error: %v", err)})
 		return
 	}
 
-	// Respond with success message
+	//update quantity and image urls
+	qty(p.SKU)
+
+	//return JSON response
 	respondWithJSON(w, http.StatusOK, map[string]string{"message": "Product successfully updated"})
 }
 
@@ -1916,24 +1998,4 @@ func Updatepass(user string, pass string, secret string) (message Message, succe
 	message.Body = "Success"
 	message.Success = true
 	return message, true
-}
-
-// Update QTY and IMG for products
-func QTYUpdate(skus []sku) {
-
-	for i := range skus {
-		var newquery string = "UPDATE `skus` SET `inventory_qty`=?,url_thumb=?,url_standard=?,url_tiny=? WHERE sku_internal=REPLACE(?,' ','')"
-		rows, err := db.Query(newquery, skus[i].Qty, skus[i].Skuimage.URL_Thumb, skus[i].Skuimage.URL_Standard, skus[i].Skuimage.URL_Tiny, skus[i].SKU)
-		defer rows.Close()
-		if err != nil {
-			log.Error("Message: ", err.Error())
-			rows.Close()
-		}
-		err = rows.Err()
-		if err != nil {
-			log.Error("Message: ", err.Error())
-			rows.Close()
-		}
-		rows.Close()
-	}
 }

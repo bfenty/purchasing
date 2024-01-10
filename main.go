@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"html/template"
+	"io"
 	"net/http"
 	"os"
 	"strings"
@@ -144,7 +145,6 @@ func main() {
 	fs := http.FileServer(http.Dir("./docs"))
 	http.Handle("/docs/", http.StripPrefix("/docs/", fs))
 	http.HandleFunc("/", PageHandler)
-	// http.HandleFunc("/api/", APIHandler)
 	// http.HandleFunc("/login", login)
 	// http.HandleFunc("/signup", signup)
 	// http.HandleFunc("/logout", Logout)
@@ -194,6 +194,13 @@ func PageHandler(w http.ResponseWriter, r *http.Request) {
 		"path": path,
 	}).Debug("PageHandler invoked")
 
+	// Delegate to Generic APIHandler for paths starting with 'api-handler'
+	if strings.HasPrefix(path, "api-handler") {
+		log.Debug("Path starts with 'api-handler', delegating to Generic APIHandler")
+		GenericAPIHandler(w, r)
+		return
+	}
+
 	// Delegate to APIHandler for paths starting with 'api'
 	if strings.HasPrefix(path, "api") {
 		log.Debug("Path starts with 'api', delegating to APIHandler")
@@ -236,37 +243,27 @@ func PageHandler(w http.ResponseWriter, r *http.Request) {
 func APIHandler(w http.ResponseWriter, r *http.Request) {
 	log.Debug("APIHandler called")
 
-	// Parsing the API POST form
-	r.ParseForm()
-	formMap := make(map[string]string)
-
-	log.Debug("Parsing POST form data")
-	for key, values := range r.PostForm {
-		if len(values) > 0 {
-			formMap[key] = values[0]
-			log.WithFields(log.Fields{
-				"Key":   key,
-				"Value": values[0],
-			}).Debug("Parsed form data")
-		}
-	}
-
-	// Logging the entire form data map
-	log.WithFields(log.Fields{
-		"Form Data": formMap,
-	}).Debug("Complete form data parsed")
-
 	// Extracting and logging the path component
 	path := strings.TrimPrefix(r.URL.Path, "/api/")
 	log.WithFields(log.Fields{
 		"Path": path,
 	}).Debug("API path identified")
 
+	// API Key validation
+	apiKey := r.Header.Get("X-API-Key") // You can also use r.URL.Query().Get("api_key") if the key is in query params
+	if !validateAPIKey(apiKey) && path != "signin" {
+		log.WithFields(log.Fields{
+			"API Key": apiKey,
+		}).Warn("Invalid or missing API Key")
+		http.Error(w, "Unauthorized: Invalid API Key", http.StatusUnauthorized)
+		return
+	}
+
 	// Determining the path and calling the corresponding function
 	switch path {
 	case "signin":
 		log.Debug("Calling Signin function")
-		Signin(w, formMap)
+		Signin(w, r)
 	case "products":
 		log.Debug("Calling ProductList function")
 		ProductList(w, r)
@@ -288,6 +285,93 @@ func APIHandler(w http.ResponseWriter, r *http.Request) {
 			"Path": path,
 		}).Warn("API path not found, returning 404")
 		http.Error(w, "Not Found", http.StatusNotFound)
+	}
+}
+
+func validateAPIKey(key string) bool {
+	var exists bool
+	query := "SELECT EXISTS(SELECT 1 FROM apikeys WHERE apikey = ?)"
+
+	// Query the database to check if the key exists
+	err := db.QueryRow(query, key).Scan(&exists)
+	if err != nil {
+		log.WithFields(log.Fields{"error": err}).Error("Failed to query database for API key")
+		return false
+	}
+
+	return exists
+}
+
+func GenericAPIHandler(w http.ResponseWriter, r *http.Request) {
+	log.Debug("GenericAPIHandler called")
+
+	// Validate user session or permissions
+	if auth(w, r).Role == "Unauthorized" {
+		log.Warn("Unauthorized access attempt to GenericAPIHandler")
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	// Extract target API endpoint
+	targetAPI := r.URL.Query().Get("targetAPI")
+	if targetAPI == "" {
+		log.Warn("Bad Request: Missing targetAPI parameter")
+		http.Error(w, "Bad Request: targetAPI parameter is required", http.StatusBadRequest)
+		return
+	}
+
+	// Construct the full URL if targetAPI is a relative path
+	// Assuming you have a base URL for the API
+	baseURL := "http://127.0.0.1:8082" // Replace with the actual base URL
+	fullURL := baseURL + targetAPI
+
+	// Retrieve the API Key for the target API
+	// The API key is stored in an environment variable
+	apiKey := os.Getenv("APP_API_KEY")
+	log.WithFields(log.Fields{
+		"API-KEY": apiKey,
+	}).Debug("API Key")
+	if apiKey == "" {
+		log.Error("API Key for the target API is not set")
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	// Forwarding the request
+	proxyReq, err := http.NewRequest(r.Method, fullURL, r.Body)
+	if err != nil {
+		log.WithFields(log.Fields{"error": err}).Error("Failed to create new request for proxy")
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+	// Copy headers from the original request to the proxy request
+	copyHeader(r.Header, proxyReq.Header)
+
+	// Set the API key in the request header
+	proxyReq.Header.Set("X-API-Key", apiKey)
+
+	client := &http.Client{}
+	resp, err := client.Do(proxyReq)
+	if err != nil {
+		log.WithFields(log.Fields{"error": err}).Error("Failed to forward request to target API")
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+	defer resp.Body.Close()
+
+	copyHeader(resp.Header, w.Header())
+	w.WriteHeader(resp.StatusCode)
+	_, err = io.Copy(w, resp.Body)
+	if err != nil {
+		log.WithFields(log.Fields{"error": err}).Error("Failed to copy response body to client")
+	}
+}
+
+func copyHeader(src, dest http.Header) {
+	for key, values := range src {
+		for _, value := range values {
+			dest.Add(key, value)
+		}
 	}
 }
 

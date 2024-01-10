@@ -55,13 +55,19 @@ func Usercreate(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-func Signin(w http.ResponseWriter, formMap map[string]string) {
+func Signin(w http.ResponseWriter, r *http.Request) {
 	log.Debug("Entering Signin function")
 
-	// Extract credentials from formMap
+	// Parse form values directly from the HTTP request
+	if err := r.ParseForm(); err != nil {
+		log.WithFields(log.Fields{"error": err}).Error("Error parsing form")
+		http.Error(w, "Bad Request", http.StatusBadRequest)
+		return
+	}
+
 	var creds Credentials
-	creds.Username = formMap["username"]
-	creds.Password = formMap["password"]
+	creds.Username = r.FormValue("username")
+	creds.Password = r.FormValue("password")
 
 	// Debugging credentials (avoid logging sensitive data like passwords in production)
 	log.WithFields(log.Fields{

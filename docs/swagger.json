@@ -4,6 +4,38 @@
         "contact": {}
     },
     "paths": {
+        "/api/manufacturers": {
+            "get": {
+                "description": "Retrieves a list of manufacturers from the database",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "manufacturers"
+                ],
+                "summary": "List manufacturers",
+                "responses": {
+                    "200": {
+                        "description": "List of manufacturers",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main.Manufacturer"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/api/productdelete": {
             "post": {
                 "description": "Deletes a product from the database based on its SKU",
@@ -166,7 +198,7 @@
         },
         "/api/productupdate": {
             "post": {
-                "description": "Updates a product in the database with the given SKU",
+                "description": "Updates fields of a product in the database with the given SKU; only provided fields are updated",
                 "consumes": [
                     "application/json"
                 ],
@@ -179,12 +211,90 @@
                 "summary": "Update an existing product",
                 "parameters": [
                     {
-                        "description": "Product information to be updated",
-                        "name": "product",
+                        "type": "string",
+                        "description": "SKU of the product",
+                        "name": "sku",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Manufacturer Part of the product",
+                        "name": "manufacturer_part",
                         "in": "body",
-                        "required": true,
                         "schema": {
-                            "$ref": "#/definitions/main.Product"
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Description of the product",
+                        "name": "description",
+                        "in": "body",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Manufacturer of the product",
+                        "name": "manufacturer",
+                        "in": "body",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Processing request of the product",
+                        "name": "process_request",
+                        "in": "body",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Unit of the product",
+                        "name": "unit",
+                        "in": "body",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Unit Price of the product",
+                        "name": "unit_price",
+                        "in": "body",
+                        "schema": {
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "description": "Order Quantity of the product",
+                        "name": "order_qty",
+                        "in": "body",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "description": "Season of the product",
+                        "name": "season",
+                        "in": "body",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "description": "Inventory Quantity of the product",
+                        "name": "inventory_qty",
+                        "in": "body",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "description": "Currency of the product",
+                        "name": "currency",
+                        "in": "body",
+                        "schema": {
+                            "type": "string"
                         }
                     }
                 ],
@@ -211,38 +321,6 @@
                         "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/main.ApiResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/manufacturers": {
-            "get": {
-                "description": "Retrieves a list of manufacturers from the database",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "manufacturers"
-                ],
-                "summary": "List manufacturers",
-                "responses": {
-                    "200": {
-                        "description": "List of manufacturers",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/main.Manufacturer"
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "type": "string"
                         }
                     }
                 }

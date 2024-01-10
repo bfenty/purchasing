@@ -54,6 +54,27 @@ definitions:
 info:
   contact: {}
 paths:
+  /api/manufacturers:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves a list of manufacturers from the database
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of manufacturers
+          schema:
+            items:
+              $ref: '#/definitions/main.Manufacturer'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: List manufacturers
+      tags:
+      - manufacturers
   /api/productdelete:
     post:
       consumes:
@@ -164,14 +185,64 @@ paths:
     post:
       consumes:
       - application/json
-      description: Updates a product in the database with the given SKU
+      description: Updates fields of a product in the database with the given SKU;
+        only provided fields are updated
       parameters:
-      - description: Product information to be updated
-        in: body
-        name: product
+      - description: SKU of the product
+        in: path
+        name: sku
         required: true
+        type: string
+      - description: Manufacturer Part of the product
+        in: body
+        name: manufacturer_part
         schema:
-          $ref: '#/definitions/main.Product'
+          type: string
+      - description: Description of the product
+        in: body
+        name: description
+        schema:
+          type: string
+      - description: Manufacturer of the product
+        in: body
+        name: manufacturer
+        schema:
+          type: string
+      - description: Processing request of the product
+        in: body
+        name: process_request
+        schema:
+          type: string
+      - description: Unit of the product
+        in: body
+        name: unit
+        schema:
+          type: string
+      - description: Unit Price of the product
+        in: body
+        name: unit_price
+        schema:
+          type: number
+      - description: Order Quantity of the product
+        in: body
+        name: order_qty
+        schema:
+          type: integer
+      - description: Season of the product
+        in: body
+        name: season
+        schema:
+          type: string
+      - description: Inventory Quantity of the product
+        in: body
+        name: inventory_qty
+        schema:
+          type: integer
+      - description: Currency of the product
+        in: body
+        name: currency
+        schema:
+          type: string
       produces:
       - application/json
       responses:
@@ -194,25 +265,4 @@ paths:
       summary: Update an existing product
       tags:
       - products
-  /manufacturers:
-    get:
-      consumes:
-      - application/json
-      description: Retrieves a list of manufacturers from the database
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: List of manufacturers
-          schema:
-            items:
-              $ref: '#/definitions/main.Manufacturer'
-            type: array
-        "500":
-          description: Internal Server Error
-          schema:
-            type: string
-      summary: List manufacturers
-      tags:
-      - manufacturers
 swagger: "2.0"

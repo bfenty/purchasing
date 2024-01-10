@@ -125,7 +125,7 @@ $(document).ready(function(){
               // Fetch manufacturers
               var manufacturers = [];
               $.ajax({
-                  url: '/api/manufacturers',
+                  url: '/api-handler?targetAPI=/api/manufacturers',
                   type: 'GET',
                   dataType: 'json',
                   success: function(data) {
@@ -151,7 +151,7 @@ $(document).ready(function(){
                   console.log("Fetching data from /api/products.");
       
                   $.ajax({
-                      url: '/api/products',
+                      url: '/api-handler?targetAPI=/api/products?limit=10',
                       type: 'GET',
                       dataType: 'json',
                       success: function(data) {
@@ -272,7 +272,7 @@ $(document).ready(function(){
                     console.log("Initiating delete request for item:", currentItemToDelete);
 
                     $.ajax({
-                        url: '/api/productdelete',
+                        url: '/api-handler?targetAPI=/api/productdelete',
                         type: 'POST',
                         contentType: 'application/json',  // Ensure JSON content type
                         dataType: 'json',
@@ -323,7 +323,7 @@ $(document).ready(function(){
 
                   // AJAX call to insert the new product
                   $.ajax({
-                      url: '/api/productinsert', // API endpoint for product insertion
+                      url: '/api-handler?targetAPI=/api/productinsert', // API endpoint for product insertion
                       type: 'POST',
                       contentType: 'application/json',
                       data: JSON.stringify(newProductData),
@@ -395,12 +395,6 @@ $(document).ready(function(){
                     missingFields.push("Order Quantity");
                 }
 
-                // Check Inventory Qty - assuming it's required and must be a valid integer
-                var inventoryQty = $('#new_inventoryqty').val().trim();
-                if (inventoryQty === '' || !(/^\d+$/.test(inventoryQty))) {
-                    missingFields.push("Inventory Quantity");
-                }
-
                 if (missingFields.length > 0) {
                     return "Please fill in the following required fields: " + missingFields.join(", ");
                 }
@@ -431,7 +425,7 @@ $(document).ready(function(){
 
                     // AJAX call to update the product
                     $.ajax({
-                        url: '/api/productupdate',
+                        url: '/api-handler?targetAPI=/api/productupdate',
                         type: 'POST',
                         contentType: 'application/json',
                         data: JSON.stringify(updatedProductData),
