@@ -109,6 +109,144 @@
                     }
                 }
             }
+        },
+        "/manufacturers": {
+            "get": {
+                "description": "Retrieves a list of manufacturers from the database",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "manufacturers"
+                ],
+                "summary": "List manufacturers",
+                "responses": {
+                    "200": {
+                        "description": "List of manufacturers",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main.Manufacturer"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/products": {
+            "get": {
+                "description": "Retrieves a list of products, with optional filtering parameters",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "products"
+                ],
+                "summary": "List products",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter by internal SKU",
+                        "name": "sku_internal",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by manufacturer code",
+                        "name": "manufacturer_code",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by manufacturer SKU",
+                        "name": "sku_manufacturer",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by processing request",
+                        "name": "processing_request",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by sorting request",
+                        "name": "sorting_request",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by unit",
+                        "name": "unit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by unit price",
+                        "name": "unit_price",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by currency",
+                        "name": "Currency",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by order quantity",
+                        "name": "order_qty",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by reorder status",
+                        "name": "reorder",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by season",
+                        "name": "season",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Limit number of results",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of products",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/main.Product"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -130,6 +268,14 @@
                     "type": "string"
                 },
                 "url_tiny": {
+                    "type": "string"
+                }
+            }
+        },
+        "main.Manufacturer": {
+            "type": "object",
+            "properties": {
+                "name": {
                     "type": "string"
                 }
             }

@@ -13,6 +13,11 @@ definitions:
       url_tiny:
         type: string
     type: object
+  main.Manufacturer:
+    properties:
+      name:
+        type: string
+    type: object
   main.Product:
     properties:
       currency:
@@ -117,6 +122,97 @@ paths:
           schema:
             $ref: '#/definitions/main.ApiResponse'
       summary: Update an existing product
+      tags:
+      - products
+  /manufacturers:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves a list of manufacturers from the database
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of manufacturers
+          schema:
+            items:
+              $ref: '#/definitions/main.Manufacturer'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: List manufacturers
+      tags:
+      - manufacturers
+  /products:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves a list of products, with optional filtering parameters
+      parameters:
+      - description: Filter by internal SKU
+        in: query
+        name: sku_internal
+        type: string
+      - description: Filter by manufacturer code
+        in: query
+        name: manufacturer_code
+        type: string
+      - description: Filter by manufacturer SKU
+        in: query
+        name: sku_manufacturer
+        type: string
+      - description: Filter by processing request
+        in: query
+        name: processing_request
+        type: string
+      - description: Filter by sorting request
+        in: query
+        name: sorting_request
+        type: string
+      - description: Filter by unit
+        in: query
+        name: unit
+        type: string
+      - description: Filter by unit price
+        in: query
+        name: unit_price
+        type: string
+      - description: Filter by currency
+        in: query
+        name: Currency
+        type: string
+      - description: Filter by order quantity
+        in: query
+        name: order_qty
+        type: string
+      - description: Filter by reorder status
+        in: query
+        name: reorder
+        type: string
+      - description: Filter by season
+        in: query
+        name: season
+        type: string
+      - description: Limit number of results
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of products
+          schema:
+            items:
+              $ref: '#/definitions/main.Product'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: List products
       tags:
       - products
 swagger: "2.0"

@@ -1432,9 +1432,17 @@ func ProductList2(Manufacturer string, page int, pageSize int) (products []Produ
 	return skus, totalPages
 }
 
+// ListManufacturers godoc
+// @Summary List manufacturers
+// @Description Retrieves a list of manufacturers from the database
+// @Tags manufacturers
+// @Accept  json
+// @Produce  json
+// @Success 200 {array} Manufacturer "List of manufacturers"
+// @Failure 500 {string} string "Internal Server Error"
+// @Router /manufacturers [get]
 // Manufacturer List API
 func ListManufacturers(w http.ResponseWriter, r *http.Request) {
-	// Assuming 'db' is your database connection
 	rows, err := db.Query("SELECT name FROM purchasing.manufacturers WHERE 1")
 	if err != nil {
 		log.WithFields(log.Fields{"error": err}).Error("Error executing query")
@@ -1469,6 +1477,27 @@ func ListManufacturers(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// ProductList godoc
+// @Summary List products
+// @Description Retrieves a list of products, with optional filtering parameters
+// @Tags products
+// @Accept  json
+// @Produce  json
+// @Param sku_internal query string false "Filter by internal SKU"
+// @Param manufacturer_code query string false "Filter by manufacturer code"
+// @Param sku_manufacturer query string false "Filter by manufacturer SKU"
+// @Param processing_request query string false "Filter by processing request"
+// @Param sorting_request query string false "Filter by sorting request"
+// @Param unit query string false "Filter by unit"
+// @Param unit_price query string false "Filter by unit price"
+// @Param Currency query string false "Filter by currency"
+// @Param order_qty query string false "Filter by order quantity"
+// @Param reorder query string false "Filter by reorder status"
+// @Param season query string false "Filter by season"
+// @Param limit query int false "Limit number of results"
+// @Success 200 {array} Product "List of products"
+// @Failure 500 {string} string "Internal Server Error"
+// @Router /products [get]
 // ProductListAPI is an HTTP handler function that returns product list in JSON format
 func ProductList(w http.ResponseWriter, formMap map[string]string) {
 	log.Debug("Entering ProductListAPI")
