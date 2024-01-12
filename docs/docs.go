@@ -17,6 +17,11 @@ const docTemplate = `{
     "paths": {
         "/api/manufacturers": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "Retrieves a list of manufacturers from the database",
                 "consumes": [
                     "application/json"
@@ -28,6 +33,15 @@ const docTemplate = `{
                     "manufacturers"
                 ],
                 "summary": "List manufacturers",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Authorization",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "List of manufacturers",
@@ -49,6 +63,11 @@ const docTemplate = `{
         },
         "/api/productdelete": {
             "post": {
+                "security": [
+                    {
+                        "X-API-Key": []
+                    }
+                ],
                 "description": "Deletes a product from the database based on its SKU",
                 "consumes": [
                     "application/json"
@@ -76,6 +95,11 @@ const docTemplate = `{
         },
         "/api/productinsert": {
             "post": {
+                "security": [
+                    {
+                        "X-API-Key": []
+                    }
+                ],
                 "description": "Adds a new product to the database",
                 "consumes": [
                     "application/json"
@@ -103,6 +127,11 @@ const docTemplate = `{
         },
         "/api/products": {
             "get": {
+                "security": [
+                    {
+                        "X-API-Key": []
+                    }
+                ],
                 "description": "Retrieves a list of products, with optional filtering parameters",
                 "consumes": [
                     "application/json"
@@ -209,6 +238,11 @@ const docTemplate = `{
         },
         "/api/productupdate": {
             "post": {
+                "security": [
+                    {
+                        "X-API-Key": []
+                    }
+                ],
                 "description": "Updates fields of a product in the database with the given SKU; only provided fields are updated",
                 "consumes": [
                     "application/json"
@@ -419,17 +453,24 @@ const docTemplate = `{
                 }
             }
         }
+    },
+    "securityDefinitions": {
+        "ApiKeyAuth": {
+            "type": "apiKey",
+            "name": "X-API-Key",
+            "in": "header"
+        }
     }
 }`
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
-	Version:          "",
-	Host:             "",
-	BasePath:         "",
-	Schemes:          []string{},
-	Title:            "",
-	Description:      "",
+	Version:          "1.0",
+	Host:             "127.0.0.1:8082",
+	BasePath:         "/api/",
+	Schemes:          []string{"http", "https"},
+	Title:            "Purchasing System API",
+	Description:      "Generic Description",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

@@ -1,0 +1,54 @@
+{{define "toast"}}
+<script>
+//Show messages to the user
+function showToast(message, type) {
+    var toastTypeClass = '';
+    switch (type) {
+        case 'error': toastTypeClass = 'bg-danger'; break;
+        case 'warning': toastTypeClass = 'bg-warning text-dark'; break;
+        case 'info': toastTypeClass = 'bg-success'; break;
+        default: toastTypeClass = 'bg-secondary';
+    }
+
+    var toastId = 'toast' + Date.now(); // Unique ID for each toast
+    var toastHtml = `
+        <div class="toast ${toastTypeClass}" id="${toastId}" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="5000">
+            <div class="toast-body">
+                ${message}
+            </div>
+        </div>`;
+
+    $('#toastContainer').append(toastHtml);
+    var toast = new bootstrap.Toast($('#' + toastId));
+    toast.show();
+    }
+</script>
+{{end}}
+
+{{define "fetchmanufacturers"}}
+<script>
+// Fetch manufacturers
+var manufacturers = [];
+              $.ajax({
+                  url: '/api-handler?targetAPI=/api/manufacturers',
+                  type: 'GET',
+                  dataType: 'json',
+                  success: function(data) {
+                      console.log("Manufacturers fetched successfully. Data:", data);
+                      manufacturers = data;
+                      // After manufacturers are loaded, fetch and display the products
+                      //fetchAndUpdateTable();
+                  },
+                  error: function(jqXHR, textStatus, errorThrown) {
+                      console.error("Error fetching manufacturers:", textStatus, errorThrown, jqXHR);
+                      showToast("Error fetching manufacturers.", "error");
+                  },
+                  beforeSend: function() {
+                      console.log("Sending request to fetch manufacturers.");
+                  },
+                  complete: function(jqXHR, textStatus) {
+                      console.log("Request to fetch manufacturers completed with status:", textStatus);
+                  }
+              });
+            </script>
+{{end}}

@@ -1438,6 +1438,8 @@ func ProductList2(Manufacturer string, page int, pageSize int) (products []Produ
 // @Tags manufacturers
 // @Accept  json
 // @Produce  json
+// @Security ApiKeyAuth
+// @param Authorization header string true "Authorization"
 // @Success 200 {array} Manufacturer "List of manufacturers"
 // @Failure 500 {string} string "Internal Server Error"
 // @Router /api/manufacturers [get]
@@ -1483,6 +1485,7 @@ func ListManufacturers(w http.ResponseWriter, r *http.Request) {
 // @Tags products
 // @Accept  json
 // @Produce  json
+// @Security X-API-Key
 // @Param sku_internal query string false "Filter by internal SKU"
 // @Param manufacturer_code query string false "Filter by manufacturer code"
 // @Param sku_manufacturer query string false "Filter by manufacturer SKU"
@@ -1525,7 +1528,12 @@ func ProductList(w http.ResponseWriter, r *http.Request) {
 			if param == "limit" {
 				// Parse limit value
 				if newLimit, err := strconv.Atoi(values[0]); err == nil {
-					limit = newLimit
+					// Check if the parsed limit exceeds 100
+					if newLimit > 100 {
+						limit = 100 // Reset limit to 100 if it exceeds 100
+					} else {
+						limit = newLimit
+					}
 				}
 			} else {
 				queryArgs = append(queryArgs, values[0])
@@ -1534,7 +1542,7 @@ func ProductList(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	query := queryBuilder.String() + " order by 11 desc, 1 limit ?"
+	query := queryBuilder.String() + " order by modified desc, 1 limit ?"
 	queryArgs = append(queryArgs, limit) // Replace 100 with your limit value
 
 	log.WithFields(log.Fields{"query": query, "args": queryArgs}).Debug("Executing query")
@@ -1574,6 +1582,7 @@ func ProductList(w http.ResponseWriter, r *http.Request) {
 // @Tags products
 // @Accept  json
 // @Produce  json
+// @Security X-API-Key
 // @Param product body Product true "Product to add"
 // @Router /api/productinsert [post]
 func InsertProduct(w http.ResponseWriter, r *http.Request) {
@@ -1616,6 +1625,7 @@ func InsertProduct(w http.ResponseWriter, r *http.Request) {
 // @Tags products
 // @Accept  json
 // @Produce  json
+// @Security X-API-Key
 // @Param sku body string true "SKU of the product to delete"
 // @Router /api/productdelete [post]
 func DeleteProduct(w http.ResponseWriter, r *http.Request) {
@@ -1673,6 +1683,7 @@ func DeleteProduct(w http.ResponseWriter, r *http.Request) {
 // @Tags products
 // @Accept  json
 // @Produce  json
+// @Security X-API-Key
 // @Param sku path string true "SKU of the product"
 // @Param manufacturer_part body string false "Manufacturer Part of the product"
 // @Param description body string false "Description of the product"
@@ -1769,9 +1780,6 @@ func UpdateProduct(w http.ResponseWriter, r *http.Request) {
 		respondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": fmt.Sprintf("Internal Server Error: %v", err)})
 		return
 	}
-
-	//update quantity and image urls
-	qty(p.SKU)
 
 	//return JSON response
 	respondWithJSON(w, http.StatusOK, map[string]string{"message": "Product successfully updated"})

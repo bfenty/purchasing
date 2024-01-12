@@ -1,3 +1,15 @@
+// @title Purchasing System API
+// @description Generic Description
+// @version 1.0
+// @host 127.0.0.1:8082
+// @BasePath /api/
+// @schemes http https
+
+// Security Definitions
+// @securityDefinitions.apikey ApiKeyAuth
+// @in header
+// @name X-API-Key
+
 package main
 
 import (
@@ -208,9 +220,14 @@ func PageHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	//if path is blank, redirect to login
+	if path == "" {
+		path = "login"
+	}
+
 	// Construct the template file name
 	tmplFile := fmt.Sprintf("html/%s.html", path)
-	t, err := template.ParseFiles(tmplFile, "html/header.html", "login.js")
+	t, err := template.ParseFiles(tmplFile, "html/header.html", "js/login.js", "js/scripts.html")
 	if err != nil {
 		log.WithFields(log.Fields{
 			"error": err,

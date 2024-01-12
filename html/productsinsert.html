@@ -1,26 +1,6 @@
 <html>
 <head>
 {{template "header"}}
-<script>
-$(document).ready(function(){
-  $(document).on('click', '#btnInsert', function(){ 
-      const Http = new XMLHttpRequest();
-      const url='/productexist?sku='+document.getElementById('insertform').elements[0].value;
-      Http.open("GET", url);
-      Http.send();
-      Http.onreadystatechange=(e)=>{
-      if (Http.responseText=="FALSE") {
-        document.getElementById("insertform").submit(); 
-      } else if (Http.responseText=="TRUE") {
-        $('#ModalInsert').modal('toggle');
-      }
-      }
-  });
-  $(document).on('click', '#btnOverwrite', function(){
-        document.getElementById("insertform").submit(); 
-  });
-});
-</script>
 </head>
 <body>
   {{template "navigation" .}}
@@ -99,29 +79,6 @@ $(document).ready(function(){
           $(document).ready(function() {
               console.log("Document ready. Initializing table data fetch.");
 
-              //Show messages to the user
-              function showToast(message, type) {
-              var toastTypeClass = '';
-              switch (type) {
-                  case 'error': toastTypeClass = 'bg-danger'; break;
-                  case 'warning': toastTypeClass = 'bg-warning text-dark'; break;
-                  case 'info': toastTypeClass = 'bg-success'; break;
-                  default: toastTypeClass = 'bg-secondary';
-              }
-
-              var toastId = 'toast' + Date.now(); // Unique ID for each toast
-              var toastHtml = `
-                  <div class="toast ${toastTypeClass}" id="${toastId}" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="5000">
-                      <div class="toast-body">
-                          ${message}
-                      </div>
-                  </div>`;
-
-              $('#toastContainer').append(toastHtml);
-              var toast = new bootstrap.Toast($('#' + toastId));
-              toast.show();
-              }
-
               // Fetch manufacturers
               var manufacturers = [];
               $.ajax({
@@ -145,6 +102,9 @@ $(document).ready(function(){
                       console.log("Request to fetch manufacturers completed with status:", textStatus);
                   }
               });
+      
+      // Call the function to update the table when the page loads
+      fetchAndUpdateTable();
       
               // Function to fetch and update table data
               function fetchAndUpdateTable() {
@@ -172,6 +132,14 @@ $(document).ready(function(){
                           currencies.forEach(function(currency) {
                               currencyOptions += `<option value="${currency}">${currency}</option>`;
                           });
+                              
+                              // Season dropdown options
+                              var seasons = ['None', 'Christmas', 'Fall', 'Halloween'];
+                              var seasonOptions = '<option value="None" selected>None</option>';
+                              seasons.forEach(function(season) {
+                                seasonOptions += `<option value="${season}">${season}</option>`;
+                              });
+                              
 
                           // Add the insert row at the beginning
                           var insertRow = `<tr class="table-info">
@@ -186,7 +154,7 @@ $(document).ready(function(){
                                               <td><select class="form-select" id="new_currency">${currencyOptions}</select></td>
                                               <td><input class="form-control" type='text' id="new_orderqty"></td>
                                               <td><input class="form-check-input" type='checkbox' id="reorder" name="reorder" checked></td>
-                                              <td><input class="form-control" type='text' id="new_season"></td>
+                                              <td><select class="form-select" id="new_season">${seasonOptions}</select></td>
                                               <td><input class="form-control" type='text' id="new_inventoryqty"></td>
                                               <td><button class="btn btn-primary" id="btnInsertNew">Insert</button></td>
                                               <td></td>
@@ -205,6 +173,13 @@ $(document).ready(function(){
                               var manufacturerOptions = manufacturers.map(function(manufacturer) {
                                   return `<option value="${manufacturer.name}" ${manufacturer.name === item.Manufacturer ? 'selected' : ''}>${manufacturer.name}</option>`;
                               }).join('');
+                              
+                              // Season dropdown options
+                              const seasons = ['None', 'Christmas', 'Fall', 'Halloween'];
+                                let seasonOptions = `<option value="" ${!seasons.includes(item.Season) ? 'selected' : ''}></option>` +
+                                    seasons.map(season => {
+                                        return `<option value="${season}" ${item.Season === season ? 'selected' : ''}>${season}</option>`;
+                                    }).join('');
 
 
                               var row = `<tr>
@@ -219,7 +194,7 @@ $(document).ready(function(){
                                             <td><select class="form-select" id="currency" name="currency">${currencyOptions}</select></td>
                                             <td><input class="form-control" type='text' id="orderqty" name="orderqty" value="${item.OrderQty}"></td>
                                             <td><input class="form-check-input" type='checkbox' id="reorder" name="reorder" ${item.Reorder ? 'checked' : ''}></td>
-                                            <td><input class="form-control" type='text' id="season" name="season" value="${item.Season}"></td>
+                                            <td><select class="form-select" id="season" name="season">${seasonOptions}</select></td>
                                             <td><input class="form-control" type='text' id="inventoryqty" name="inventoryqty" value="${item.InventoryQty}"></td>
                                             <td><input type='button' value='Update' class='btn btn-primary update-button' data-item-id='${item.SKU}'></td>
                                             <td><button type="button" class="btn btn-danger delete-button" data-item-id="${item.SKU}" data-bs-toggle="modal">Delete</button></td>
@@ -240,9 +215,6 @@ $(document).ready(function(){
                       }
                   });
               }
-      
-              // Call the function to update the table when the page loads
-              fetchAndUpdateTable();
 
               // Event handler for image clicks
               $(document).on('click', '.image-link', function() {
@@ -442,6 +414,7 @@ $(document).ready(function(){
                 });
           });
       </script>
+      {{template "toast" .}}
       
   {{template "footer" .}}
 </body>

@@ -1,3 +1,4 @@
+basePath: /api/
 definitions:
   main.ApiResponse:
     properties:
@@ -51,14 +52,24 @@ definitions:
       unitPrice:
         type: number
     type: object
+host: 127.0.0.1:8082
 info:
   contact: {}
+  description: Generic Description
+  title: Purchasing System API
+  version: "1.0"
 paths:
   /api/manufacturers:
     get:
       consumes:
       - application/json
       description: Retrieves a list of manufacturers from the database
+      parameters:
+      - description: Authorization
+        in: header
+        name: Authorization
+        required: true
+        type: string
       produces:
       - application/json
       responses:
@@ -72,6 +83,8 @@ paths:
           description: Internal Server Error
           schema:
             type: string
+      security:
+      - ApiKeyAuth: []
       summary: List manufacturers
       tags:
       - manufacturers
@@ -90,6 +103,8 @@ paths:
       produces:
       - application/json
       responses: {}
+      security:
+      - X-API-Key: []
       summary: Delete a product
       tags:
       - products
@@ -108,6 +123,8 @@ paths:
       produces:
       - application/json
       responses: {}
+      security:
+      - X-API-Key: []
       summary: Insert new product
       tags:
       - products
@@ -178,6 +195,8 @@ paths:
           description: Internal Server Error
           schema:
             type: string
+      security:
+      - X-API-Key: []
       summary: List products
       tags:
       - products
@@ -262,7 +281,17 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/main.ApiResponse'
+      security:
+      - X-API-Key: []
       summary: Update an existing product
       tags:
       - products
+schemes:
+- http
+- https
+securityDefinitions:
+  ApiKeyAuth:
+    in: header
+    name: X-API-Key
+    type: apiKey
 swagger: "2.0"
