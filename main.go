@@ -341,6 +341,7 @@ func GenericAPIHandler(w http.ResponseWriter, r *http.Request) {
 	// Assuming you have a base URL for the API
 	baseURL := "http://127.0.0.1:8082" // Replace with the actual base URL
 	fullURL := baseURL + targetAPI
+	log.Debug("API Url being accessed: ", fullURL)
 
 	// Retrieve the API Key for the target API
 	// The API key is stored in an environment variable

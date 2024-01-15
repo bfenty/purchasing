@@ -4,6 +4,7 @@
 </head>
 <body>
   {{template "navigation" .}}
+  {{$permission := .Permission.Role}}
   <br> 
   <!-- Message Box -->
   <div aria-live="polite" aria-atomic="true" class="position-relative">
@@ -58,13 +59,13 @@
                     <th scope="col">SKU</th>
                     <th scope="col">Manufacturer Part #</th>
                     <th scope="col">Product Option</th>
-                    <th scope="col">Manufacturer</th>
-                    <th scope="col">Processing Request</th>
+                    {{if eq $permission "admin"}}<th scope="col">Manufacturer</th>{{end}}
+                    {{if eq $permission "admin"}}<th scope="col">Processing Request</th>{{end}}
                     <th scope="col">Unit</th>
-                    <th scope="col">Unit Price</th>
-                    <th scope="col">Currency</th>
-                    <th scope="col">Order Qty</th>
-                    <th scope="col">Reorder</th>
+                    {{if eq $permission "admin"}}<th scope="col">Unit Price</th>{{end}}
+                    {{if eq $permission "admin"}}<th scope="col">Currency</th>{{end}}
+                    {{if eq $permission "admin"}}<th scope="col">Order Qty</th>{{end}}
+                    {{if eq $permission "admin"}}<th scope="col">Reorder</th>{{end}}
                     <th scope="col">Season</th>
                     <th scope="col">Inventory</th>
                     <th></th>
@@ -78,36 +79,23 @@
         <script>
           $(document).ready(function() {
               console.log("Document ready. Initializing table data fetch.");
+              f()
+
 
               // Fetch manufacturers
-              var manufacturers = [];
-              $.ajax({
-                  url: '/api-handler?targetAPI=/api/manufacturers',
-                  type: 'GET',
-                  dataType: 'json',
-                  success: function(data) {
-                      console.log("Manufacturers fetched successfully. Data:", data);
-                      manufacturers = data;
-                      // After manufacturers are loaded, fetch and display the products
-                      fetchAndUpdateTable();
-                  },
-                  error: function(jqXHR, textStatus, errorThrown) {
-                      console.error("Error fetching manufacturers:", textStatus, errorThrown, jqXHR);
-                      showToast("Error fetching manufacturers.", "error");
-                  },
-                  beforeSend: function() {
-                      console.log("Sending request to fetch manufacturers.");
-                  },
-                  complete: function(jqXHR, textStatus) {
-                      console.log("Request to fetch manufacturers completed with status:", textStatus);
-                  }
-              });
-      
-      // Call the function to update the table when the page loads
-      fetchAndUpdateTable();
+              async function f() {
+                    try {
+                        let manufacturers = await fetchManufacturers();
+                        // Call the function to update the table when the page loads
+                        fetchAndUpdateTable(manufacturers);
+                    } catch (error) {
+                        console.error("Error while fetching manufacturers:", error);
+                        // Handle error scenario
+                    }
+                }
       
               // Function to fetch and update table data
-              function fetchAndUpdateTable() {
+              function fetchAndUpdateTable(manufacturers) {
                   console.log("Fetching data from /api/products.");
       
                   $.ajax({
@@ -120,85 +108,18 @@
                           var tableBody = $('#productTableBody');
                           tableBody.empty(); // Clear existing data
 
-                          // Manufacturer dropdown options
-                          var manufacturerOptions = '<option value="" selected>Select Manufacturer</option>';
-                          manufacturers.forEach(function(manufacturer) {
-                              manufacturerOptions += `<option value="${manufacturer.name}">${manufacturer.name}</option>`;
-                          });
-
                           // Currency dropdown options
                           var currencies = ["USD", "CZK", "EUR", "GBP"];
-                          var currencyOptions = '<option value="" selected>Select Currency</option>';
-                          currencies.forEach(function(currency) {
-                              currencyOptions += `<option value="${currency}">${currency}</option>`;
-                          });
                               
-                              // Season dropdown options
-                              var seasons = ['None', 'Christmas', 'Fall', 'Halloween'];
-                              var seasonOptions = '<option value="None" selected>None</option>';
-                              seasons.forEach(function(season) {
-                                seasonOptions += `<option value="${season}">${season}</option>`;
-                              });
-                              
+                          // Season dropdown options
+                          var seasons = ['None', 'Christmas', 'Fall', 'Halloween'];                              
 
                           // Add the insert row at the beginning
-                          var insertRow = `<tr class="table-info">
-                                              <td></td>
-                                              <td><input class="form-control" type='text' id="new_sku"></td>
-                                              <td><input class="form-control" type='text' id="new_manufacturerpart"></td>
-                                              <td><input class="form-control" type='text' id="new_description"></td>
-                                              <td><select class="form-select" id="new_manufacturer">${manufacturerOptions}</select></td>
-                                              <td><input class="form-control" type='text' id="new_processrequest"></td>
-                                              <td><input class="form-control" type='text' id="new_unit"></td>
-                                              <td><input class="form-control" type='text' id="new_unitprice"></td>
-                                              <td><select class="form-select" id="new_currency">${currencyOptions}</select></td>
-                                              <td><input class="form-control" type='text' id="new_orderqty"></td>
-                                              <td><input class="form-check-input" type='checkbox' id="reorder" name="reorder" checked></td>
-                                              <td><select class="form-select" id="new_season">${seasonOptions}</select></td>
-                                              <td><input class="form-control" type='text' id="new_inventoryqty"></td>
-                                              <td><button class="btn btn-primary" id="btnInsertNew">Insert</button></td>
-                                              <td></td>
-                                          </tr>`;
+                          var insertRow = generateInsertRow(manufacturers, currencies, seasons);
                           tableBody.append(insertRow);
       
                           data.forEach(function(item, index) {
-                              console.log("Processing item:", index, item);
-                              //create a map of acceptable currencies and select the correct one
-                              var currencies = ["USD", "CZK", "EUR", "GBP"];
-                              var currencyOptions = currencies.map(function(currency) {
-                                  return `<option value="${currency}" ${currency === item.Currency ? 'selected' : ''}>${currency}</option>`;
-                              }).join('');
-
-                              //Create a map of all manufacturers
-                              var manufacturerOptions = manufacturers.map(function(manufacturer) {
-                                  return `<option value="${manufacturer.name}" ${manufacturer.name === item.Manufacturer ? 'selected' : ''}>${manufacturer.name}</option>`;
-                              }).join('');
-                              
-                              // Season dropdown options
-                              const seasons = ['None', 'Christmas', 'Fall', 'Halloween'];
-                                let seasonOptions = `<option value="" ${!seasons.includes(item.Season) ? 'selected' : ''}></option>` +
-                                    seasons.map(season => {
-                                        return `<option value="${season}" ${item.Season === season ? 'selected' : ''}>${season}</option>`;
-                                    }).join('');
-
-
-                              var row = `<tr>
-                                            <td><a role="button" class="image-link" data-standard-url="${item.Image.url_standard}" data-sku="${item.SKU}"><img class="img-rounded" data-bs-toggle="modal" data-bs-target="#ModalImage0" src="${item.Image.url_tiny}" height="45px"></a></td>
-                                            <td><input class="form-control" type='text' id="sku" name="sku" value="${item.SKU}"></td>
-                                            <td><input class="form-control" type='text' id="manufacturerpart" name="manufacturerpart" value="${item.ManufacturerPart}"></td>
-                                            <td><input class="form-control" type='text' id="description" name="description" value="${item.Description}"></td>
-                                            <td><select class="form-select" id="manufacturer" name="manufacturer">${manufacturerOptions}</select></td>
-                                            <td><input class="form-control" type='text' id="processrequest" name="processrequest" value="${item.ProcessRequest}"></td>
-                                            <td><input class="form-control" type='text' id="unit" name="unit" value="${item.Unit}"></td>
-                                            <td><input class="form-control" type='text' id="unitprice" name="unitprice" value="${item.UnitPrice}"></td>
-                                            <td><select class="form-select" id="currency" name="currency">${currencyOptions}</select></td>
-                                            <td><input class="form-control" type='text' id="orderqty" name="orderqty" value="${item.OrderQty}"></td>
-                                            <td><input class="form-check-input" type='checkbox' id="reorder" name="reorder" ${item.Reorder ? 'checked' : ''}></td>
-                                            <td><select class="form-select" id="season" name="season">${seasonOptions}</select></td>
-                                            <td><input class="form-control" type='text' id="inventoryqty" name="inventoryqty" value="${item.InventoryQty}"></td>
-                                            <td><input type='button' value='Update' class='btn btn-primary update-button' data-item-id='${item.SKU}'></td>
-                                            <td><button type="button" class="btn btn-danger delete-button" data-item-id="${item.SKU}" data-bs-toggle="modal">Delete</button></td>
-                                         </tr>`;
+                              var row = generateTableRow(item, index, manufacturers, currencies, seasons);
                               tableBody.append(row);
                           });
       
@@ -268,153 +189,15 @@
                     });
                 });
 
-              $('#productTableBody').on('click', '#btnInsertNew', function() {
-                  console.log("Collecting data to insert new Product");
-                  var validationMessage = validateNewProductForm();
-                    if (validationMessage !== "") {
-                        showToast(validationMessage, "warning");
-                        return;
-                    }
-                  // Collecting input data
-                  var newProductData = {
-                        sku: $('#new_sku').val(),
-                        manufacturerPart: $('#new_manufacturerpart').val() || null,
-                        description: $('#new_description').val() || null,
-                        manufacturer: $('#new_manufacturer').val() || null,
-                        processRequest: $('#new_processrequest').val() || null,
-                        unit: $('#new_unit').val() || null,
-                        currency: $('#currency').val() || null,
-                        unitPrice: $('#new_unitprice').val() ? parseFloat($('#new_unitprice').val()) : null,
-                        orderQty: $('#new_orderqty').val() ? parseInt($('#new_orderqty').val(), 10) : null,
-                        reorder: $('#new_reorder').is(':checked'),
-                        season: $('#new_season').val() || null,
-                        inventoryQty: $('#new_inventoryqty').val() ? parseInt($('#new_inventoryqty').val(), 10) : null
-                    };
-
-                  console.log("Preparing to insert new product:", newProductData);
-
-                  // AJAX call to insert the new product
-                  $.ajax({
-                      url: '/api-handler?targetAPI=/api/productinsert', // API endpoint for product insertion
-                      type: 'POST',
-                      contentType: 'application/json',
-                      data: JSON.stringify(newProductData),
-                      success: function(response) {
-                          console.log("New product inserted successfully:", response);
-                            showToast("SKU inserted successfully.", "info");
-                          fetchAndUpdateTable() //update the table
-                      },
-                      error: function(jqXHR, textStatus, errorThrown) {
-                            console.error("Error inserting new product:", textStatus, errorThrown, jqXHR);
-                            if(jqXHR.responseText) {
-                                try {
-                                    var resp = JSON.parse(jqXHR.responseText);
-                                    showToast(resp.error, "error");
-                                } catch(e) {
-                                    showToast("Error inserting new product.", "error");
-                                }
-                            } else {
-                                showToast("Error inserting new product.", "error");
-                            }
-                        },
-                        beforeSend: function() {
-                            console.log("Sending request to insert new product.");
-                        },
-                        complete: function(jqXHR, textStatus) {
-                            console.log("Request to insert new product completed with status:", textStatus);
-                        }
-                  });
-              });
-
-              //Validate product insertion before submission
-              function validateNewProductForm() {
-                var missingFields = [];
-
-                // Check SKU - required
-                if ($('#new_sku').val().trim() === '') {
-                    missingFields.push("SKU");
-                }
-
-                // Check Manufacturer Part - assuming it's required
-                if ($('#new_manufacturerpart').val().trim() === '') {
-                    missingFields.push("Manufacturer Part");
-                }
-
-                // Check Manufacturer - assuming it's required
-                if ($('#new_manufacturer').val().trim() === '') {
-                    missingFields.push("Manufacturer");
-                }
-
-                // Check Currency - assuming it's required
-                if ($('#currency').val().trim() === '') {
-                    missingFields.push("Currency");
-                }
-
-                // Check Unit - assuming it's required
-                if ($('#new_unit').val().trim() === '') {
-                    missingFields.push("Unit");
-                }
-
-                // Check Unit Price - assuming it's required and must be a valid number
-                var unitPrice = $('#new_unitprice').val().trim();
-                if (unitPrice === '' || isNaN(parseFloat(unitPrice))) {
-                    missingFields.push("Unit Price");
-                }
-
-                // Check Order Qty - assuming it's required and must be a valid integer
-                var orderQty = $('#new_orderqty').val().trim();
-                if (orderQty === '' || !(/^\d+$/.test(orderQty))) {
-                    missingFields.push("Order Quantity");
-                }
-
-                if (missingFields.length > 0) {
-                    return "Please fill in the following required fields: " + missingFields.join(", ");
-                }
-
-                return "";
-            }
-            // Event listener for the update button click
-                $('#productTableBody').on('click', '.update-button', function() {
-                    var row = $(this).closest('tr');
-                    var sku = $(this).data('item-id');
-
-                    var updatedProductData = {
-                        SKU: sku,
-                        ManufacturerPart: row.find('[name="manufacturerpart"]').val(),
-                        Description: row.find('[name="description"]').val(),
-                        Manufacturer: row.find('[name="manufacturer"]').val(),
-                        ProcessRequest: row.find('[name="processrequest"]').val(),
-                        Unit: row.find('[name="unit"]').val(),
-                        UnitPrice: parseFloat(row.find('[name="unitprice"]').val()),
-                        OrderQty: parseInt(row.find('[name="orderqty"]').val(), 10),
-                        Reorder: row.find('[name="reorder"]').is(':checked'),
-                        Season: row.find('[name="season"]').val(),
-                        InventoryQty: parseInt(row.find('[name="inventoryqty"]').val(), 10),
-                        Currency: row.find('[name="currency"]').val()
-                    };
-
-                    console.log("Preparing to update product:", updatedProductData);
-
-                    // AJAX call to update the product
-                    $.ajax({
-                        url: '/api-handler?targetAPI=/api/productupdate',
-                        type: 'POST',
-                        contentType: 'application/json',
-                        data: JSON.stringify(updatedProductData),
-                        success: function(response) {
-                            console.log("Product updated successfully:", response);
-                            showToast("SKU updated successfully.", "info");
-                            fetchAndUpdateTable() //update the table
-                        },
-                        error: function(jqXHR, textStatus, errorThrown) {
-                            console.error("Error updating product:", textStatus, errorThrown, jqXHR);
-                            // Handle error
-                        }
-                    });
-                });
+            
           });
       </script>
       {{template "toast" .}}
+      {{template "fetchmanufacturers" .}}
+      {{template "insertProductRow" .}}
+      {{template "tableProductRow" .}}
+      {{template "insertProductButton" .}}
+      {{template "updateProductButton" .}}
       
   {{template "footer" .}}
 </body>

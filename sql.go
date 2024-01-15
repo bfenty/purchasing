@@ -1514,40 +1514,51 @@ func ProductList(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Extract query parameters from request
-	queryParams := r.URL.Query()
+	queryParams := map[string]string{
+		"sku_internal":       r.URL.Query().Get("sku"),
+		"manufacturer_code":  r.URL.Query().Get("manufacturer"),
+		"sku_manufacturer":   r.URL.Query().Get("manufacturerpart"),
+		"product_option":     r.URL.Query().Get("description"),
+		"processing_request": r.URL.Query().Get("processrequest"),
+		"unit":               r.URL.Query().Get("unit"),
+		"unit_price":         r.URL.Query().Get("unitprice"),
+		"currency":           r.URL.Query().Get("currency"),
+		"order_qty":          r.URL.Query().Get("orderqty"),
+		"reorder":            r.URL.Query().Get("reorder"),
+		"season":             r.URL.Query().Get("season"),
+	}
 
-	var queryArgs []interface{}
-	var queryBuilder strings.Builder
-	queryBuilder.WriteString("SELECT `sku_internal`,`manufacturer_code`,`sku_manufacturer`,`product_option`,`processing_request`,`sorting_request`,`unit`,`unit_price`,`Currency`,`order_qty`,`modified`,`reorder`,`inventory_qty`,season,url_standard,url_thumb,url_tiny FROM `skus` WHERE 1")
+	// Debug
+	log.Debug("Search Params: ", queryParams)
 
 	// Default limit
 	limit := 100
-
-	for param, values := range queryParams {
-		if len(values) > 0 {
-			if param == "limit" {
-				// Parse limit value
-				if newLimit, err := strconv.Atoi(values[0]); err == nil {
-					// Check if the parsed limit exceeds 100
-					if newLimit > 100 {
-						limit = 100 // Reset limit to 100 if it exceeds 100
-					} else {
-						limit = newLimit
-					}
-				}
-			} else {
-				queryArgs = append(queryArgs, values[0])
-				queryBuilder.WriteString(fmt.Sprintf(" AND %s = ?", param))
-			}
+	if limitParam := r.URL.Query().Get("limit"); limitParam != "" {
+		if newLimit, err := strconv.Atoi(limitParam); err == nil && newLimit > 0 {
+			limit = newLimit
 		}
 	}
 
-	query := queryBuilder.String() + " order by modified desc, 1 limit ?"
-	queryArgs = append(queryArgs, limit) // Replace 100 with your limit value
+	// Build the SQL query dynamically
+	var queryArgs []interface{}
+	var queryBuilder strings.Builder
 
-	log.WithFields(log.Fields{"query": query, "args": queryArgs}).Debug("Executing query")
+	queryBuilder.WriteString("SELECT `sku_internal`,`manufacturer_code`,`sku_manufacturer`,`product_option`,`processing_request`,`sorting_request`,`unit`,`unit_price`,`Currency`,`order_qty`,`modified`,`reorder`,`inventory_qty`,season,url_standard,url_thumb,url_tiny FROM `skus` WHERE 1")
 
-	rows, err := db.Query(query, queryArgs...)
+	for param, value := range queryParams {
+		if value != "" && param != "limit" { // Exclude 'limit' from filtering
+			queryBuilder.WriteString(fmt.Sprintf(" AND %s LIKE ?", param))
+			queryArgs = append(queryArgs, "%"+value+"%")
+		}
+	}
+
+	// Append order by and limit
+	queryBuilder.WriteString(" ORDER BY modified DESC, sku_internal LIMIT ?")
+	queryArgs = append(queryArgs, limit)
+
+	log.WithFields(log.Fields{"query": queryBuilder.String(), "args": queryArgs}).Debug("Executing query")
+
+	rows, err := db.Query(queryBuilder.String(), queryArgs...)
 	if err != nil {
 		log.WithFields(log.Fields{"error": err}).Error("Error executing query")
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
