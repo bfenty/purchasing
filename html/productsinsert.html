@@ -79,63 +79,7 @@
         <script>
           $(document).ready(function() {
               console.log("Document ready. Initializing table data fetch.");
-              f()
-
-
-              // Fetch manufacturers
-              async function f() {
-                    try {
-                        let manufacturers = await fetchManufacturers();
-                        // Call the function to update the table when the page loads
-                        fetchAndUpdateTable(manufacturers);
-                    } catch (error) {
-                        console.error("Error while fetching manufacturers:", error);
-                        // Handle error scenario
-                    }
-                }
-      
-              // Function to fetch and update table data
-              function fetchAndUpdateTable(manufacturers) {
-                  console.log("Fetching data from /api/products.");
-      
-                  $.ajax({
-                      url: '/api-handler?targetAPI=/api/products?limit=10',
-                      type: 'GET',
-                      dataType: 'json',
-                      success: function(data) {
-                          console.log("Data fetched successfully. Number of records:", data.length);
-      
-                          var tableBody = $('#productTableBody');
-                          tableBody.empty(); // Clear existing data
-
-                          // Currency dropdown options
-                          var currencies = ["USD", "CZK", "EUR", "GBP"];
-                              
-                          // Season dropdown options
-                          var seasons = ['None', 'Christmas', 'Fall', 'Halloween'];                              
-
-                          // Add the insert row at the beginning
-                          var insertRow = generateInsertRow(manufacturers, currencies, seasons);
-                          tableBody.append(insertRow);
-      
-                          data.forEach(function(item, index) {
-                              var row = generateTableRow(item, index, manufacturers, currencies, seasons);
-                              tableBody.append(row);
-                          });
-      
-                          console.log("Table updated successfully.");
-                      },
-                      error: function(jqXHR, textStatus, errorThrown) {
-                          console.error("Error fetching data:", textStatus, errorThrown, jqXHR);
-                      },
-                      beforeSend: function() {
-                          console.log("Preparing to send AJAX request to /api/products.");
-                      },
-                      complete: function(jqXHR, textStatus) {
-                          console.log("AJAX request completed with status:", textStatus);
-                      }
-                  });
-              }
+              fetchAndUpdateTable();
 
               // Event handler for image clicks
               $(document).on('click', '.image-link', function() {
@@ -146,58 +90,17 @@
                   $('#modalImage').attr('src', standardUrl);
                   $('#imageModal').modal('show');
               });
-
-              var currentItemToDelete; // Global variable to store the current item to delete
-
-              // Event handler for delete button clicks
-              $(document).on('click', '.delete-button', function() {
-                  var itemId = $(this).data('item-id');
-                  currentItemToDelete = itemId;
-
-                  // Show the delete modal
-                  var deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
-                  $('#deleteItemSku').text(itemId);
-                  deleteModal.show();
-              });
-
-              // Event handler for the confirm delete action
-              $('#confirmDelete').click(function() {
-                    console.log("Initiating delete request for item:", currentItemToDelete);
-
-                    $.ajax({
-                        url: '/api-handler?targetAPI=/api/productdelete',
-                        type: 'POST',
-                        contentType: 'application/json',  // Ensure JSON content type
-                        dataType: 'json',
-                        data: JSON.stringify({ sku: currentItemToDelete }), // Convert data to JSON string
-                        success: function(response) {
-                            console.log("Item deleted successfully:", response);
-                            showToast("SKU deleted successfully.", "info");
-                            fetchAndUpdateTable();  // Refresh the table data
-                        },
-                        error: function(jqXHR, textStatus, errorThrown) {
-                            console.error("Error deleting item:", textStatus, errorThrown, jqXHR);
-                            showToast("Error deleting item.", "error");
-                        },
-                        beforeSend: function() {
-                            console.log("Sending delete request to /api/productdelete.");
-                        },
-                        complete: function(jqXHR, textStatus) {
-                            console.log("Delete request completed with status:", textStatus);
-                            $('#deleteModal').modal('hide'); // Hide the modal after completion
-                        }
-                    });
-                });
-
-            
-          });
+            });
       </script>
+      
       {{template "toast" .}}
       {{template "fetchmanufacturers" .}}
+      {{template "updateTable" .}}
       {{template "insertProductRow" .}}
       {{template "tableProductRow" .}}
-      {{template "insertProductButton" .}}
-      {{template "updateProductButton" .}}
+      {{template "btninsertProduct" .}}
+      {{template "btnupdateProduct" .}}
+      {{template "btnDelete" .}}
       
   {{template "footer" .}}
 </body>

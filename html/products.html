@@ -81,108 +81,6 @@
               console.log("Document ready. Initializing table data fetch.");
             fetchAndUpdateTable();
 
-
-              // Fetch manufacturers
-              async function fetchManufacturers() {
-                    return new Promise((resolve, reject) => {
-                        $.ajax({
-                            url: '/api-handler?targetAPI=/api/manufacturers',
-                            type: 'GET',
-                            dataType: 'json',
-                            success: function(data) {
-                                console.log("Manufacturers fetched successfully. Data:", data);
-                                resolve(data); // Resolve the promise with the data
-                            },
-                            error: function(jqXHR, textStatus, errorThrown) {
-                                console.error("Error fetching manufacturers:", textStatus, errorThrown, jqXHR);
-                                reject(jqXHR); // Reject the promise
-                            }
-                        });
-                    });
-                }
-      
-              // Function to fetch and update table data
-              async function fetchAndUpdateTable(searchParams = {}) {
-                // Get manufacturers data
-                try {
-                    console.log("Fetching manufacturers...");
-                    const manufacturers = await fetchManufacturers(); // Wait for manufacturers to be fetched
-                    console.log("Manufacturers fetched:", manufacturers);
-                // Construct the query string from search parameters
-                var queryString = Object.entries(searchParams).map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`).join('&');
-                console.log("Query String: ",queryString);
-
-                console.log("Fetching data with search parameters:", searchParams);
-                $.ajax({
-                      url: '/api-handler?targetAPI=/api/products?limit=10' + (queryString ? '&' + queryString : ''),
-                      type: 'GET',
-                      dataType: 'json',
-                      success: function(data) {
-                          console.log("Data fetched successfully. Number of records:", data.length);
-      
-                          var tableBody = $('#productTableBody');
-                          tableBody.empty(); // Clear existing data
-
-                          // Currency dropdown options
-                          var currencies = ["USD", "CZK", "EUR", "GBP"];
-                              
-                          // Season dropdown options
-                          var seasons = ['None', 'Christmas', 'Fall', 'Halloween'];                              
-
-                          // Add the insert row at the beginning
-                          var insertRow = generateInsertRow(manufacturers, currencies, seasons);
-                          tableBody.append(insertRow);
-      
-                          data.forEach(function(item, index) {
-                              var row = generateTableRow(item, index, manufacturers, currencies, seasons);
-                              tableBody.append(row);
-                          });
-      
-                          console.log("Table updated successfully.");
-                      },
-                      error: function(jqXHR, textStatus, errorThrown) {
-                          console.error("Error fetching data:", textStatus, errorThrown, jqXHR);
-                      },
-                      beforeSend: function() {
-                          console.log("Preparing to send AJAX request to /api/products.");
-                      },
-                      complete: function(jqXHR, textStatus) {
-                          console.log("AJAX request completed with status:", textStatus);
-                      }
-                  });
-              } catch (error) {
-                    console.error("Error in fetching manufacturers:", error);
-                    // Handle the error
-                }
-            }
-            
-              // Event listener for the search button
-                $(document).on('click', '#btnSearch', function() {
-                    console.log("Search button clicked");
-
-                    var searchParams = {
-                        sku: $('#new_sku').val(),
-                        manufacturerpart: $('#new_manufacturerpart').val(),
-                        description: $('#new_description').val(),
-                        manufacturer: $('#new_manufacturer').val(),
-                        processrequest: $('#new_processrequest').val(),
-                        unit: $('#new_unit').val(),
-                        unitprice: $('#new_unitprice').val(),
-                        currency: $('#new_currency').val(),
-                        orderqty: $('#new_orderqty').val(),
-                        season: $('#new_season').val(),
-                        inventoryqty: $('#new_inventoryqty').val()
-                    };
-
-                    console.log("Search Parameters:", searchParams);
-
-                    // Remove empty parameters
-                    Object.keys(searchParams).forEach(key => {
-                        if (!searchParams[key]) delete searchParams[key];
-                    });
-                    fetchAndUpdateTable(searchParams);
-                });
-
               // Event handler for image clicks
               $(document).on('click', '.image-link', function() {
                   var standardUrl = $(this).data('standard-url');
@@ -192,58 +90,17 @@
                   $('#modalImage').attr('src', standardUrl);
                   $('#imageModal').modal('show');
               });
-
-              var currentItemToDelete; // Global variable to store the current item to delete
-
-              // Event handler for delete button clicks
-              $(document).on('click', '.delete-button', function() {
-                  var itemId = $(this).data('item-id');
-                  currentItemToDelete = itemId;
-
-                  // Show the delete modal
-                  var deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
-                  $('#deleteItemSku').text(itemId);
-                  deleteModal.show();
-              });
-
-              // Event handler for the confirm delete action
-              $('#confirmDelete').click(function() {
-                    console.log("Initiating delete request for item:", currentItemToDelete);
-
-                    $.ajax({
-                        url: '/api-handler?targetAPI=/api/productdelete',
-                        type: 'POST',
-                        contentType: 'application/json',  // Ensure JSON content type
-                        dataType: 'json',
-                        data: JSON.stringify({ sku: currentItemToDelete }), // Convert data to JSON string
-                        success: function(response) {
-                            console.log("Item deleted successfully:", response);
-                            showToast("SKU deleted successfully.", "info");
-                            fetchAndUpdateTable();  // Refresh the table data
-                        },
-                        error: function(jqXHR, textStatus, errorThrown) {
-                            console.error("Error deleting item:", textStatus, errorThrown, jqXHR);
-                            showToast("Error deleting item.", "error");
-                        },
-                        beforeSend: function() {
-                            console.log("Sending delete request to /api/productdelete.");
-                        },
-                        complete: function(jqXHR, textStatus) {
-                            console.log("Delete request completed with status:", textStatus);
-                            $('#deleteModal').modal('hide'); // Hide the modal after completion
-                        }
-                    });
-                });
-
-            
           });
       </script>
       {{template "toast" .}}
       {{template "fetchmanufacturers" .}}
+      {{template "updateTable" .}}
       {{template "searchProductRow" .}}
       {{template "tableProductRow" .}}
-      {{template "insertProductButton" .}}
-      {{template "updateProductButton" .}}
+      {{template "btninsertProduct" .}}
+      {{template "btnupdateProduct" .}}
+      {{template "btnDelete" .}}
+      {{template "btnSearch" .}}
       
   {{template "footer" .}}
 </body>

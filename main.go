@@ -322,6 +322,9 @@ func validateAPIKey(key string) bool {
 func GenericAPIHandler(w http.ResponseWriter, r *http.Request) {
 	log.Debug("GenericAPIHandler called")
 
+	// Extract the entire query string
+	queryString := r.URL.RawQuery
+
 	// Validate user session or permissions
 	if auth(w, r).Role == "Unauthorized" {
 		log.Warn("Unauthorized access attempt to GenericAPIHandler")
@@ -341,6 +344,9 @@ func GenericAPIHandler(w http.ResponseWriter, r *http.Request) {
 	// Assuming you have a base URL for the API
 	baseURL := "http://127.0.0.1:8082" // Replace with the actual base URL
 	fullURL := baseURL + targetAPI
+	if queryString != "" {
+		fullURL += "?" + queryString
+	}
 	log.Debug("API Url being accessed: ", fullURL)
 
 	// Retrieve the API Key for the target API

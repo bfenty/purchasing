@@ -170,37 +170,60 @@ func printProducts(products product) (page int, link string) {
 // qty fetches product quantities for the given SKU(s) by making API requests to a specified endpoint.
 // It iteratively fetches data for each page of products and processes the retrieved data.
 func qty(sku string) {
-	log.Debug("Fetching quantity for SKU: ", sku)
+	// Log the start of the process for the given SKU
+	log.Debugf("Starting quantity fetch process for SKU: %s", sku)
 
+	// Retrieve the store ID from the environment variable
 	storeid := os.Getenv("BIGCOMMERCE_STOREID")
 	if storeid == "" {
 		log.Fatal("BIGCOMMERCE_STOREID environment variable is not set")
 	}
+
+	// Set the limit for the number of records per API call
 	limit := 250
+	baseURL := "https://api.bigcommerce.com/stores/" + storeid + "/v3/catalog/products"
 
-	// Construct the initial request URL with query parameters
+	// Construct the initial part of the API URL
 	link := "?sku:in=" + sku + "&include=images&include_fields=sku,inventory_level,inventory_warning_level,mpn,brand_id&limit=" + strconv.Itoa(limit)
-	url := "https://api.bigcommerce.com/stores/" + storeid + "/v3/catalog/products" + link
 
-	// Fetch the first page to get the total number of pages
-	initialProducts := jsonLoad(urlmake(url, link))
-	if len(initialProducts.Data) == 0 {
-		log.WithFields(log.Fields{"SKU": sku}).Error("No records found for the given SKU")
-		return // Exit the function as no data to process
-	}
-	totalpages := initialProducts.Meta.Pagination.TotalPages
-	log.WithFields(log.Fields{"TotalPages": totalpages, "InitialURL": url}).Debug("Initial products fetch")
+	// Initialize the page counter
+	page := 1
 
-	// Loop through all pages
-	for page := 1; page <= totalpages; page++ {
-		currentPage, newLink := printProducts(jsonLoad(urlmake(url, link)))
-		log.WithFields(log.Fields{"CurrentPage": currentPage, "NextPageLink": newLink}).Debug("Processed page")
+	// Loop through the pages of API results
+	for {
+		// Combine the base URL and additional parameters to form the full API URL
+		fullURL := urlmake(baseURL, link)
+		log.Debugf("Fetching data from URL: %s", fullURL)
 
-		// Update the link for the next iteration
+		// Load the JSON data from the API
+		products := jsonLoad(fullURL)
+		if len(products.Data) == 0 {
+			// Log and break the loop if no records are found, especially on the first page
+			if page == 1 {
+				log.WithFields(log.Fields{"SKU": sku}).Error("No records found for the given SKU")
+			} else {
+				log.Debug("No more records to process")
+			}
+			break
+		}
+
+		// Print the products and get the link to the next page
+		_, newLink := printProducts(products)
+		log.WithFields(log.Fields{"CurrentPage": page, "NextPageLink": newLink}).Debug("Processed page")
+
+		// Break the loop if there is no next page link or the last page has been reached
+		if newLink == "" || page >= products.Meta.Pagination.TotalPages {
+			log.Debug("Processed all pages")
+			break
+		}
+
+		// Update the link for the next iteration and increment the page counter
 		link = newLink
+		page++
 	}
 
-	log.Debug("Completed fetching and processing quantities for SKU: ", sku)
+	// Log the completion of the process for the given SKU
+	log.Debugf("Completed processing for SKU: %s", sku)
 }
 
 // Update QTY and IMG for products

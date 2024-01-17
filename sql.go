@@ -1614,7 +1614,7 @@ func InsertProduct(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// SQL INSERT statement
-	query := `INSERT INTO skus (sku_internal, sku_manufacturer,  product_option, manufacturer_code, processing_request, unit, unit_price, order_qty, reorder, season, inventory_qty, Currency) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?)`
+	query := `REPLACE INTO skus (sku_internal, sku_manufacturer,  product_option, manufacturer_code, processing_request, unit, unit_price, order_qty, reorder, season, inventory_qty, Currency) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?)`
 	_, err = db.Exec(query, p.SKU, p.ManufacturerPart, p.Description, p.Manufacturer, p.ProcessRequest, p.Unit, p.UnitPrice, p.OrderQty, p.Reorder, p.Season, p.InventoryQty, p.Currency)
 	if err != nil {
 		log.WithFields(log.Fields{"error": err}).Error("Error executing insert query")

@@ -27,31 +27,24 @@ function showToast(message, type) {
 
 {{define "fetchmanufacturers"}}
 <script>
-    function fetchManufacturers() {
-        return new Promise((resolve, reject) => {
-              $.ajax({
-                  url: '/api-handler?targetAPI=/api/manufacturers',
-                  type: 'GET',
-                  dataType: 'json',
-                  success: function(data) {
-                      console.log("Manufacturers fetched successfully. Data:", data);
-                      manufacturers = data;
-                      resolve(data);
-                  },
-                  error: function(jqXHR, textStatus, errorThrown) {
-                      console.error("Error fetching manufacturers:", textStatus, errorThrown, jqXHR);
-                      showToast("Error fetching manufacturers.", "error");
-                      reject(errorThrown);
-                  },
-                  beforeSend: function() {
-                      console.log("Sending request to fetch manufacturers.");
-                  },
-                  complete: function(jqXHR, textStatus) {
-                      console.log("Request to fetch manufacturers completed with status:", textStatus);
-                  }
-              });
-        });
-    }
+    // Fetch manufacturers
+    async function fetchManufacturers() {
+                    return new Promise((resolve, reject) => {
+                        $.ajax({
+                            url: '/api-handler?targetAPI=/api/manufacturers',
+                            type: 'GET',
+                            dataType: 'json',
+                            success: function(data) {
+                                console.log("Manufacturers fetched successfully. Data:", data);
+                                resolve(data); // Resolve the promise with the data
+                            },
+                            error: function(jqXHR, textStatus, errorThrown) {
+                                console.error("Error fetching manufacturers:", textStatus, errorThrown, jqXHR);
+                                reject(jqXHR); // Reject the promise
+                            }
+                        });
+                    });
+                }
 </script>
 {{end}}
 
@@ -74,7 +67,7 @@ function showToast(message, type) {
         });
 
         // Generate Seasons Options
-        var seasonOptions = '<option value="None" selected>None</option>';
+        var seasonOptions = '<option value="" selected>None</option>';
         seasons.forEach(function(season) {
             seasonOptions += `<option value="${season}">${season}</option>`;
         });
@@ -94,7 +87,7 @@ function showToast(message, type) {
             {{if eq $permission "admin"}}<td><input class="form-check-input" type='checkbox' id="reorder" name="reorder" checked></td>{{end}}
             <td><select class="form-select" id="new_season">${seasonOptions}</select></td>
             <td><input class="form-control" type='text' id="new_inventoryqty"></td>
-            <td><button class="btn btn-primary" id="btnSearch" name="btnSearch">Search</button></td>
+            <td><button class="btn btn-primary" id="btnSearch">Search</button></td>
             <td></td>
         </tr>`;
         return insertRow
@@ -193,7 +186,7 @@ function showToast(message, type) {
 </script>
 {{end}}
 
-{{define "insertProductButton"}}
+{{define "btninsertProduct"}}
 <script>
     $('#productTableBody').on('click', '#btnInsertNew', function() {
         console.log("Collecting data to insert new Product");
@@ -229,7 +222,7 @@ function showToast(message, type) {
             success: function(response) {
                 console.log("New product inserted successfully:", response);
                 showToast("SKU inserted successfully.", "info");
-                fetchAndUpdateTable() //update the table
+                updateTable() //update the table
             },
             error: function(jqXHR, textStatus, errorThrown) {
                 console.error("Error inserting new product:", textStatus, errorThrown, jqXHR);
@@ -303,7 +296,7 @@ function showToast(message, type) {
 </script>
 {{end}}
 
-{{define "updateProductButton"}}
+{{define "btnupdateProduct"}}
 <script>
     // Event listener for the update button click
     $('#productTableBody').on('click', '.update-button', function() {
@@ -336,7 +329,7 @@ function showToast(message, type) {
             success: function(response) {
                 console.log("Product updated successfully:", response);
                 showToast("SKU updated successfully.", "info");
-                fetchAndUpdateTable() //update the table
+                updateTable() //update the table
             },
             error: function(jqXHR, textStatus, errorThrown) {
                 console.error("Error updating product:", textStatus, errorThrown, jqXHR);
@@ -350,7 +343,7 @@ function showToast(message, type) {
 {{define "btnSearch"}}
 <script>
     // Event listener for the search button
-    $(document).on('click', '#btnSearch', function() {
+    $('#productTableBody').on('click', '#btnSearch', function() {
         console.log("Search button clicked");
 
         var searchParams = {
@@ -376,4 +369,109 @@ function showToast(message, type) {
         fetchAndUpdateTable(searchParams);
     });
 </script>
+{{end}}
+
+{{define "btnDelete"}}
+<script>
+    var currentItemToDelete; // Global variable to store the current item to delete
+
+// Event handler for delete button clicks
+$(document).on('click', '.delete-button', function() {
+    var itemId = $(this).data('item-id');
+    currentItemToDelete = itemId;
+
+    // Show the delete modal
+    var deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    $('#deleteItemSku').text(itemId);
+        deleteModal.show();
+    });
+
+    // Event handler for the confirm delete action
+    $('#confirmDelete').click(function() {
+        console.log("Initiating delete request for item:", currentItemToDelete);
+
+        $.ajax({
+            url: '/api-handler?targetAPI=/api/productdelete',
+            type: 'POST',
+            contentType: 'application/json',  // Ensure JSON content type
+            dataType: 'json',
+            data: JSON.stringify({ sku: currentItemToDelete }), // Convert data to JSON string
+            success: function(response) {
+                console.log("Item deleted successfully:", response);
+                showToast("SKU deleted successfully.", "info");
+                updateTable();  // Refresh the table data
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                console.error("Error deleting item:", textStatus, errorThrown, jqXHR);
+                showToast("Error deleting item.", "error");
+            },
+            beforeSend: function() {
+                console.log("Sending delete request to /api/productdelete.");
+            },
+            complete: function(jqXHR, textStatus) {
+                console.log("Delete request completed with status:", textStatus);
+                $('#deleteModal').modal('hide'); // Hide the modal after completion
+            }
+        });
+    });
+</script>
+{{end}}
+
+{{define "updateTable"}}
+<script>
+     // Function to fetch and update table data
+     async function fetchAndUpdateTable(searchParams = {}) {
+                // Get manufacturers data
+                try {
+                    console.log("Fetching manufacturers...");
+                    const manufacturers = await fetchManufacturers(); // Wait for manufacturers to be fetched
+                    console.log("Manufacturers fetched:", manufacturers);
+                // Construct the query string from search parameters
+                var queryString = Object.entries(searchParams).map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`).join('&');
+                console.log("Query String: ",queryString);
+
+                console.log("Fetching data with search parameters:", searchParams);
+                $.ajax({
+                      url: '/api-handler?targetAPI=/api/products?limit=100' + (queryString ? '&' + queryString : ''),
+                      type: 'GET',
+                      dataType: 'json',
+                      success: function(data) {
+                          console.log("Data fetched successfully. Number of records:", data.length);
+      
+                          var tableBody = $('#productTableBody');
+                          tableBody.empty(); // Clear existing data
+
+                          // Currency dropdown options
+                          var currencies = ["USD", "CZK", "EUR", "GBP"];
+                              
+                          // Season dropdown options
+                          var seasons = ['None', 'Christmas', 'Fall', 'Halloween'];                              
+
+                          // Add the insert row at the beginning
+                          var insertRow = generateInsertRow(manufacturers, currencies, seasons);
+                          tableBody.append(insertRow);
+      
+                          data.forEach(function(item, index) {
+                              var row = generateTableRow(item, index, manufacturers, currencies, seasons);
+                              tableBody.append(row);
+                          });
+      
+                          console.log("Table updated successfully.");
+                      },
+                      error: function(jqXHR, textStatus, errorThrown) {
+                          console.error("Error fetching data:", textStatus, errorThrown, jqXHR);
+                      },
+                      beforeSend: function() {
+                          console.log("Preparing to send AJAX request to /api/products.");
+                      },
+                      complete: function(jqXHR, textStatus) {
+                          console.log("AJAX request completed with status:", textStatus);
+                      }
+                  });
+              } catch (error) {
+                    console.error("Error in fetching manufacturers:", error);
+                    // Handle the error
+                }
+            }
+  </script>
 {{end}}
