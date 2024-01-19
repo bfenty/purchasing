@@ -296,6 +296,12 @@ func APIHandler(w http.ResponseWriter, r *http.Request) {
 	case "productupdate":
 		log.Debug("Calling UpdateProduct function")
 		UpdateProduct(w, r)
+	case "users":
+		log.Debug("Calling ListUsersAPI function")
+		ListUsersAPI(w, r)
+	case "userdelete":
+		log.Debug("Calling UserDeleteAPI function")
+		UserDeleteAPI(w, r)
 	// Add other cases as needed
 	default:
 		log.WithFields(log.Fields{

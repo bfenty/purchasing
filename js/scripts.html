@@ -2,6 +2,7 @@
 <script>
 //Show messages to the user
 function showToast(message, type) {
+    console.log("Displaying Toast.",message,type)
     var toastTypeClass = '';
     switch (type) {
         case 'error': toastTypeClass = 'bg-danger'; break;
@@ -25,6 +26,13 @@ function showToast(message, type) {
 </script>
 {{end}}
 
+{{define "toastBox"}}
+<!-- Message Box -->
+  <div id="toastContainer" class="toast-container position-fixed top-0 end-0 p-3">
+      <!-- Toasts will be added here dynamically -->
+    </div>
+{{end}}
+
 {{define "fetchmanufacturers"}}
 <script>
     // Fetch manufacturers
@@ -39,8 +47,21 @@ function showToast(message, type) {
                                 resolve(data); // Resolve the promise with the data
                             },
                             error: function(jqXHR, textStatus, errorThrown) {
-                                console.error("Error fetching manufacturers:", textStatus, errorThrown, jqXHR);
-                                reject(jqXHR); // Reject the promise
+                                console.error("Error during the request:", textStatus, errorThrown, jqXHR);
+                                var errorMessage = "Error during the request.";
+                                
+                                // Try to parse and use the custom error message from the server if available
+                                if (jqXHR.responseText) {
+                                    try {
+                                        var resp = JSON.parse(jqXHR.responseText);
+                                        if (resp && resp.error) {
+                                            errorMessage = resp.error;
+                                        }
+                                    } catch (e) {
+                                        console.error("Error parsing server response:", e);
+                                    }
+                                }
+                                showToast(errorMessage, "error");  // Show the custom error message
                             }
                         });
                     });
@@ -51,7 +72,7 @@ function showToast(message, type) {
 {{define "searchProductRow"}}
 {{$permission := .Permission.Role}}
 <script>
-    function generateInsertRow(manufacturers, currencies, seasons) {
+    function generateInputRow(manufacturers, currencies, seasons) {
         console.log("Generating Search Row")
         
         // Manufacturer dropdown options
@@ -98,7 +119,7 @@ function showToast(message, type) {
 {{define "insertProductRow"}}
 {{$permission := .Permission.Role}}
 <script>
-    function generateInsertRow(manufacturers, currencies, seasons) {
+    function generateInputRow(manufacturers, currencies, seasons) {
         console.log("Generating Insert Row")
         
         // Manufacturer dropdown options
@@ -186,6 +207,35 @@ function showToast(message, type) {
 </script>
 {{end}}
 
+{{define "insertUserRow"}}
+<script>
+    function generateUserTableRow(user, index) {
+        // Constructing the row HTML
+        var rowHtml = `
+        <tr>
+            <td data-username="${user.Username}"><input class="form-control" type="text" value="${user.Username}" readonly></td>
+            <td data-username="${user.Usercode}"><input class="form-control" type="text" value="${user.Usercode}" readonly></td>
+            <td data-username="${user.Role}"><input class="form-control" type="text" value="${user.Role}" readonly></td>
+            <td data-username="${user.Manager}">
+                <select class="form-select">
+                    <option value="${user.Manager}" selected>${user.Manager}</option>
+                    <option value="johale">johale</option>
+                    <option value="adicke">adicke</option>
+                    <option value="cmcclu">cmcclu</option>
+                </select>
+            </td>
+            <td data-username="${user.Sorting}"><input class="form-check-input" type="checkbox" ${user.Sorting ? 'checked' : ''}></td>
+            <td><button class="btn btn-primary update-button" data-user-id="${user.Usercode}">Update</button></td>
+            <td><button class="btn btn-danger delete-button" data-item-id="${user.Usercode}" data-bs-toggle="modal">Archive</button></td>
+        </tr>
+        `;
+
+        // Returning the row HTML
+        return rowHtml;
+    }
+</script>
+{{end}}
+
 {{define "btninsertProduct"}}
 <script>
     $('#productTableBody').on('click', '#btnInsertNew', function() {
@@ -222,20 +272,24 @@ function showToast(message, type) {
             success: function(response) {
                 console.log("New product inserted successfully:", response);
                 showToast("SKU inserted successfully.", "info");
-                updateTable() //update the table
+                fetchAndUpdateTable(); //update the table
             },
             error: function(jqXHR, textStatus, errorThrown) {
-                console.error("Error inserting new product:", textStatus, errorThrown, jqXHR);
-                if(jqXHR.responseText) {
+                console.error("Error during the request:", textStatus, errorThrown, jqXHR);
+                var errorMessage = "Error during the request.";
+                
+                // Try to parse and use the custom error message from the server if available
+                if (jqXHR.responseText) {
                     try {
                         var resp = JSON.parse(jqXHR.responseText);
-                        showToast(resp.error, "error");
-                    } catch(e) {
-                        showToast("Error inserting new product.", "error");
+                        if (resp && resp.error) {
+                            errorMessage = resp.error;
+                        }
+                    } catch (e) {
+                        console.error("Error parsing server response:", e);
                     }
-                } else {
-                    showToast("Error inserting new product.", "error");
                 }
+                showToast(errorMessage, "error");  // Show the custom error message
             },
             beforeSend: function() {
                 console.log("Sending request to insert new product.");
@@ -329,11 +383,24 @@ function showToast(message, type) {
             success: function(response) {
                 console.log("Product updated successfully:", response);
                 showToast("SKU updated successfully.", "info");
-                updateTable() //update the table
+                fetchAndUpdateTable(); //update the table
             },
             error: function(jqXHR, textStatus, errorThrown) {
-                console.error("Error updating product:", textStatus, errorThrown, jqXHR);
-                // Handle error
+                console.error("Error during the request:", textStatus, errorThrown, jqXHR);
+                var errorMessage = "Error during the request.";
+                
+                // Try to parse and use the custom error message from the server if available
+                if (jqXHR.responseText) {
+                    try {
+                        var resp = JSON.parse(jqXHR.responseText);
+                        if (resp && resp.error) {
+                            errorMessage = resp.error;
+                        }
+                    } catch (e) {
+                        console.error("Error parsing server response:", e);
+                    }
+                }
+                showToast(errorMessage, "error");  // Show the custom error message
             }
         });
     });
@@ -371,19 +438,21 @@ function showToast(message, type) {
 </script>
 {{end}}
 
-{{define "btnDelete"}}
+{{define "btnDeleteSKU"}}
 <script>
     var currentItemToDelete; // Global variable to store the current item to delete
 
-// Event handler for delete button clicks
-$(document).on('click', '.delete-button', function() {
-    var itemId = $(this).data('item-id');
-    currentItemToDelete = itemId;
+    // Event handler for delete button clicks
+    $(document).on('click', '.delete-button', function() {
+        var itemId = $(this).data('item-id');
+        currentItemToDelete = itemId;
 
-    // Show the delete modal
-    var deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
-    $('#deleteItemSku').text(itemId);
-        deleteModal.show();
+        // Show the delete modal
+        var deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+        $('#deleteItemID').text(itemId);
+        $('#deleteModalLabel').text("Confirm Delete");
+        $('#deleteModalText').text("Are you sure you want to delete the item with SKU: ");
+            deleteModal.show();
     });
 
     // Event handler for the confirm delete action
@@ -399,14 +468,88 @@ $(document).on('click', '.delete-button', function() {
             success: function(response) {
                 console.log("Item deleted successfully:", response);
                 showToast("SKU deleted successfully.", "info");
-                updateTable();  // Refresh the table data
+                fetchAndUpdateTable();  // Refresh the table data
             },
             error: function(jqXHR, textStatus, errorThrown) {
-                console.error("Error deleting item:", textStatus, errorThrown, jqXHR);
-                showToast("Error deleting item.", "error");
+                console.error("Error during the request:", textStatus, errorThrown, jqXHR);
+                var errorMessage = "Error during the request.";
+                
+                // Try to parse and use the custom error message from the server if available
+                if (jqXHR.responseText) {
+                    try {
+                        var resp = JSON.parse(jqXHR.responseText);
+                        if (resp && resp.error) {
+                            errorMessage = resp.error;
+                        }
+                    } catch (e) {
+                        console.error("Error parsing server response:", e);
+                    }
+                }
+                showToast(errorMessage, "error");  // Show the custom error message
             },
             beforeSend: function() {
                 console.log("Sending delete request to /api/productdelete.");
+            },
+            complete: function(jqXHR, textStatus) {
+                console.log("Delete request completed with status:", textStatus);
+                $('#deleteModal').modal('hide'); // Hide the modal after completion
+            }
+        });
+    });
+</script>
+{{end}}
+
+{{define "btnDeleteUser"}}
+<script>
+    var currentItemToDelete; // Global variable to store the current item to delete
+
+    // Event handler for delete button clicks
+    $(document).on('click', '.delete-button', function() {
+        var itemId = $(this).data('item-id');
+        currentItemToDelete = itemId;
+
+        // Show the delete modal
+        var deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+        $('#deleteItemID').text(itemId);
+        $('#deleteModalLabel').text("Confirm User Delete");
+        $('#deleteModalText').text("Are you sure you want to delete User: ");
+            deleteModal.show();
+    });
+
+    // Event handler for the confirm delete action
+    $('#confirmDelete').click(function() {
+        console.log("Initiating delete request for user:", currentItemToDelete);
+
+        $.ajax({
+            url: '/api-handler?targetAPI=/api/userdelete',
+            type: 'POST',
+            contentType: 'application/json',  // Ensure JSON content type
+            dataType: 'json',
+            data: JSON.stringify({ usercode: currentItemToDelete }), // Send usercode for deletion
+            success: function(response) {
+                console.log("User deleted successfully:", response);
+                showToast("User deleted successfully.", "info");
+                fetchAndUpdateUserTable();  // Refresh the user table
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                console.error("Error during the request:", textStatus, errorThrown, jqXHR);
+                var errorMessage = "Error during the request.";
+                
+                // Try to parse and use the custom error message from the server if available
+                if (jqXHR.responseText) {
+                    try {
+                        var resp = JSON.parse(jqXHR.responseText);
+                        if (resp && resp.error) {
+                            errorMessage = resp.error;
+                        }
+                    } catch (e) {
+                        console.error("Error parsing server response:", e);
+                    }
+                }
+                showToast(errorMessage, "error");  // Show the custom error message
+            },
+            beforeSend: function() {
+                console.log("Sending delete request to /api/userdelete.");
             },
             complete: function(jqXHR, textStatus) {
                 console.log("Delete request completed with status:", textStatus);
@@ -448,7 +591,7 @@ $(document).on('click', '.delete-button', function() {
                           var seasons = ['None', 'Christmas', 'Fall', 'Halloween'];                              
 
                           // Add the insert row at the beginning
-                          var insertRow = generateInsertRow(manufacturers, currencies, seasons);
+                          var insertRow = generateInputRow(manufacturers, currencies, seasons);
                           tableBody.append(insertRow);
       
                           data.forEach(function(item, index) {
@@ -459,8 +602,22 @@ $(document).on('click', '.delete-button', function() {
                           console.log("Table updated successfully.");
                       },
                       error: function(jqXHR, textStatus, errorThrown) {
-                          console.error("Error fetching data:", textStatus, errorThrown, jqXHR);
-                      },
+                            console.error("Error during the request:", textStatus, errorThrown, jqXHR);
+                            var errorMessage = "Error during the request.";
+                            
+                            // Try to parse and use the custom error message from the server if available
+                            if (jqXHR.responseText) {
+                                try {
+                                    var resp = JSON.parse(jqXHR.responseText);
+                                    if (resp && resp.error) {
+                                        errorMessage = resp.error;
+                                    }
+                                } catch (e) {
+                                    console.error("Error parsing server response:", e);
+                                }
+                            }
+                            showToast(errorMessage, "error");  // Show the custom error message
+                        },
                       beforeSend: function() {
                           console.log("Preparing to send AJAX request to /api/products.");
                       },
@@ -474,4 +631,163 @@ $(document).on('click', '.delete-button', function() {
                 }
             }
   </script>
+{{end}}
+
+{{define "updateUserTable"}}
+<script>
+    function updateUserTable(users) {
+        var tableBody = $('#userTableBody');
+        tableBody.empty(); // Clear existing data
+
+        users.forEach(function(user, index) {
+            var row = generateUserTableRow(user, index);
+            tableBody.append(row);
+        });
+
+        console.log("User table updated successfully.");
+    }
+
+    function fetchAndUpdateUserTable() {
+        console.log("Fetching data from /api/users");
+
+        $.ajax({
+            url: '/api-handler?targetAPI=/api/users',
+            type: 'GET',
+            dataType: 'json',
+            success: function(data) {
+                console.log("Received data:", data); // Debug the data received
+                console.log("Data fetched successfully. Number of records:", data.users.length);
+                updateUserTable(data.users);
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                console.error("Error during the request:", textStatus, errorThrown, jqXHR);
+                var errorMessage = "Error during the request.";
+                
+                // Try to parse and use the custom error message from the server if available
+                if (jqXHR.responseText) {
+                    try {
+                        var resp = JSON.parse(jqXHR.responseText);
+                        if (resp && resp.error) {
+                            errorMessage = resp.error;
+                        }
+                    } catch (e) {
+                        console.error("Error parsing server response:", e);
+                    }
+                }
+                showToast(errorMessage, "error");  // Show the custom error message
+            },
+            beforeSend: function() {
+                console.log("Preparing to send AJAX request to /api/users.");
+            },
+            complete: function(jqXHR, textStatus) {
+                console.log("AJAX request completed with status:", textStatus);
+            }
+        });
+    }
+</script>
+{{end}}
+
+{{define "sortTable"}}
+<script>
+    $(document).ready(function() {
+        // Attach click event listener to all th elements with data-column attribute
+        $('#userTable thead th[data-column]').on('click', function() {
+            var column = $(this).index(); // Index of the th within its row
+            var type = $(this).data('type');
+            sortTable(column, type);
+        });
+
+        function sortTable(column, type) {
+            console.log(`Sorting by column index ${column} as a ${type}`); // Debugging line
+
+            var rows, switching, i, x, y, shouldSwitch;
+            rows = $("#userTableBody tr");
+            switching = true;
+            
+            // Loop until no switching has been done
+            while (switching) {
+                switching = false;
+                
+                // Loop through all table rows
+                for (i = 0; i < (rows.length - 1); i++) {
+                    shouldSwitch = false;
+
+                    // Get the two elements you want to compare
+                    x = rows[i].getElementsByTagName("TD")[column];
+                    y = rows[i + 1].getElementsByTagName("TD")[column];
+
+                    // Check if the two rows should switch place
+                    if (type === "number") {
+                        if (Number(x.innerHTML) > Number(y.innerHTML)) {
+                            shouldSwitch = true;
+                            break;
+                        }
+                    } else if (type === "string") {
+                        if (x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase()) {
+                            shouldSwitch = true;
+                            break;
+                        }
+                    } else if (type === "boolean") {
+                        var xChecked = x.getElementsByTagName("input")[0].checked;
+                        var yChecked = y.getElementsByTagName("input")[0].checked;
+                        if (!xChecked && yChecked) {
+                            shouldSwitch = true;
+                            break;
+                        }
+                    }
+                }
+                if (shouldSwitch) {
+                    // If a switch has been marked, make the switch and mark that a switch has been done
+                    rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+                    switching = true;
+                }
+            }
+        }
+    });
+</script>
+{{end}}
+
+{{define "modalDelete"}}
+<!-- Delete Confirmation Modal -->
+    <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteModalLabel"></h5>
+                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <span id="deleteModalText"></span><span id="deleteItemID"></span>?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger" id="confirmDelete">Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+{{end}}
+
+{{define "modalImage"}}
+<!-- Image Modal -->
+    <div class="modal fade" id="imageModal" tabindex="-1" role="dialog" aria-labelledby="imageModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="imageModalLabel">Image Title</h5>
+                    <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <img class="w-100" id="modalImage" src="">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
 {{end}}

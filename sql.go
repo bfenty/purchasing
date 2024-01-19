@@ -1432,6 +1432,108 @@ func ProductList2(Manufacturer string, page int, pageSize int) (products []Produ
 	return skus, totalPages
 }
 
+// ListUsersAPI godoc
+// @Summary List users
+// @Description Get a list of users with optional role filtering
+// @Tags users
+// @Accept  json
+// @Produce  json
+// @Param role query string false "Filter users by role (sorting/manager)"
+// @Success 200 {object} map[string][]User "List of users"
+// @Failure 400 {object} map[string]string "Invalid request parameters"
+// @Failure 500 {object} map[string]string "Internal Server Error"
+// @Router /users [get]
+// ListUsersAPI is an HTTP handler function that returns a list of users in JSON format
+func ListUsersAPI(w http.ResponseWriter, r *http.Request) {
+	// Extract role from query parameter if needed
+	role := r.URL.Query().Get("role")
+
+	// Test database connection
+	pingErr := db.Ping()
+	if pingErr != nil {
+		log.Debug(pingErr)
+		respondWithJSON(w, http.StatusInternalServerError, map[string]string{"message": "Database connection error"})
+		return
+	}
+
+	// Build the query based on the role
+	var newquery string
+	if role == "sorting" {
+		newquery = "SELECT username,usercode,permissions,sorting,manager,management FROM orders.users WHERE sorting=1 AND active=1"
+	} else if role == "manager" {
+		newquery = "SELECT username,usercode,permissions,sorting,manager,management FROM orders.users WHERE management=1 AND active=1"
+	} else {
+		newquery = "SELECT username,usercode,permissions,sorting,manager,management FROM orders.users WHERE active=1"
+	}
+
+	// Execute the query
+	rows, err := db.Query(newquery)
+	if err != nil {
+		log.Debug(err)
+		respondWithJSON(w, http.StatusInternalServerError, map[string]string{"message": "Error executing query"})
+		return
+	}
+	defer rows.Close()
+
+	var users []User
+	// Fetch rows
+	for rows.Next() {
+		var user User
+		err := rows.Scan(&user.Username, &user.Usercode, &user.Role, &user.Sorting, &user.Manager, &user.Management)
+		if err != nil {
+			log.Debug(err)
+			respondWithJSON(w, http.StatusInternalServerError, map[string]string{"message": "Error scanning row"})
+			return
+		}
+		users = append(users, user)
+	}
+
+	// Handle any errors encountered during iteration
+	if err = rows.Err(); err != nil {
+		log.Debug(err)
+		respondWithJSON(w, http.StatusInternalServerError, map[string]string{"message": "Error iterating over rows"})
+		return
+	}
+
+	// Respond with the user list
+	respondWithJSON(w, http.StatusOK, map[string]interface{}{"users": users})
+}
+
+// UserDeleteAPI godoc
+// @Summary Delete a user
+// @Description Deletes a user with the given usercode
+// @Tags users
+// @Accept  json
+// @Produce  json
+// @Param usercode body string true "Usercode of the user to delete"
+// @Success 200 {object} map[string]string{"message": "User successfully deleted"}
+// @Failure 400 {object} map[string]string{"error": "Bad Request: Usercode is required"}
+// @Failure 404 {object} map[string]string{"error": "User not found"}
+// @Failure 500 {object} map[string]string{"error": "Internal Server Error"}
+// @Router /api/userdelete [post]
+// UserDeleteAPI handles the deletion of a user
+func UserDeleteAPI(w http.ResponseWriter, r *http.Request) {
+	var user User
+	err := json.NewDecoder(r.Body).Decode(&user)
+	if err != nil {
+		log.WithFields(log.Fields{"error": err}).Error("Error decoding user data")
+		respondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": fmt.Sprintf("Internal Server Error: %v", err)})
+		return
+	}
+
+	// SQL DELETE statement
+	query := `UPDATE users SET active=0 WHERE usercode=?`
+	_, err = db.Exec(query, user.Usercode)
+	if err != nil {
+		log.WithFields(log.Fields{"usercode": user.Usercode, "error": err}).Error("Error executing delete query")
+		respondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": fmt.Sprintf("Internal Server Error: %v", err)})
+		return
+	}
+
+	// Respond with success message
+	respondWithJSON(w, http.StatusOK, map[string]string{"message": "User successfully deleted"})
+}
+
 // ListManufacturers godoc
 // @Summary List manufacturers
 // @Description Retrieves a list of manufacturers from the database
@@ -1796,18 +1898,45 @@ func UpdateProduct(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, http.StatusOK, map[string]string{"message": "Product successfully updated"})
 }
 
-// Helper function to send a JSON response
+// respondWithJSON sends a JSON response to the client.
+// It logs and handles errors that occur during JSON marshaling or writing to the response.
 func respondWithJSON(w http.ResponseWriter, statusCode int, payload interface{}) {
+	// Convert the payload to a JSON string
 	response, err := json.Marshal(payload)
 	if err != nil {
-		log.WithFields(log.Fields{"error": err}).Error("Error marshalling JSON")
+		// Log the error with the payload that caused it
+		log.WithFields(log.Fields{
+			"error":   err,
+			"payload": payload,
+		}).Error("Error marshalling JSON")
+
+		// Respond with an Internal Server Error status and message
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte("Internal Server Error"))
+		w.Write([]byte("Internal Server Error: Error marshalling JSON"))
 		return
 	}
+
+	// Set the Content-Type of the response to application/json
 	w.Header().Set("Content-Type", "application/json")
+
+	// Write the status code to the response
 	w.WriteHeader(statusCode)
-	w.Write(response)
+
+	// Write the JSON response
+	_, writeErr := w.Write(response)
+	if writeErr != nil {
+		// Log the error that occurred while writing the response
+		log.WithFields(log.Fields{
+			"error":   writeErr,
+			"payload": payload,
+		}).Error("Error writing JSON response")
+	}
+
+	// Log the successful response
+	log.WithFields(log.Fields{
+		"statusCode": statusCode,
+		"response":   string(response),
+	}).Debug("JSON response sent successfully")
 }
 
 // // Product List

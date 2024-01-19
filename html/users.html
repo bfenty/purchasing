@@ -4,93 +4,39 @@
 </head>
 <body>
   {{template "navigation" .}}
-  <br>
-  {{template "messagebox" .}}
   {{$permission := .Permission.Role}}
+  <br>
+  {{template "toastBox" .}}
+  {{template "modalDelete" .}}
   {{$manage := .Permission.Permissions.Mgmt}}
   {{$admin  := .Permission.Permissions.Admin}}
   <table class="table table-striped table-hover .table-sm" style="max-width: none">
     <thead class="table-dark" style="position: sticky; top: 0; z-index: 1;">
       <tr>
-          <th scope="col">Username</th>
-          <th scope="col">User ID</th>
-          <th scope="col">Role</th>
-          <th scope="col">Manager</th>
-          <th scope="col">Sorting</th>
-          <th width=80px></th>
-          <th width=80px></th>
-      </tr>
-  <tbody>
-    <tr>
-      <form method="GET" action="/userupdate">
-      <td><input class="form-control" type="text" id="username" name="username"></td>
-      <td><input class="form-control" type="text" id="usercode" name="usercode" readonly></td>
-      <td><input class="form-control" type="text" id="role" name="role" ></td>
-      <td>
-      <select class="form-select" id="manager" name="manager">
-        <option value="" selected></option>
-        <option value="johale">johale</option>
-        <option value="adicke">adicke</option>
-        <option value="cmcclu">cmcclu</option>
-      </select>
-    </td>
-      <td><input class="form-check-input" type="checkbox" id="sorting" name="sorting" value="true"></td>
-      <td><input type='submit' value='Insert' class="btn btn-primary"></td>
-      <td></td>
-    </form>
+        <th data-column="username" data-type="string" scope="col" class="sortable">Username</th>
+        <th data-column="usercode" data-type="number" scope="col" class="sortable">User ID</th>
+        <th data-column="role" data-type="string" scope="col" class="sortable">Role</th>
+        <th data-column="manager" data-type="string" scope="col" class="sortable">Manager</th>
+        <th data-column="sorting" data-type="boolean" scope="col" class="sortable">Sorting</th>
+        <th width=80px></th>
+        <th width=80px></th>
     </tr>    
-    {{range $index, $value := .Users}}
-    <!-- Delete Modal -->
-          <div class="modal fade" id="ModalDelete{{$index}}" tabindex="-1" role="dialog" aria-labelledby="ModalDeleteLabel" aria-hidden="true">
-            <div class="modal-dialog" role="document">
-              <div class="modal-content">
-                  <div class="modal-header">
-                  <h5 class="modal-title" id="ModalDeleteLabel{{$index}}">Confirm User Delete</h5>
-                      <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
-                      <span aria-hidden="true">&times;</span>
-                  </button>
-                  </div>
-                  <div class="modal-body">
-                    This will permanently delete User {{.Username}}, are you sure you want to proceed?
-                  </div>
-                  <div class="modal-footer">
-                      <form action="/userdelete" method="POST">
-                          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                          <input type="hidden" value="{{.Usercode}}" id="usercode" name="usercode">
-                          <button type="submit" class="btn btn-danger">Yes, Delete</button>
-                      </form>
-                  </div>
-              </div>
-            </div>
-        </div>
-    <tr>
-      <form method="GET" action="/userupdate">
-      <td><input class="form-control" type="text" id="username" name="username" value="{{.Username}}" readonly></td>
-      <td><input class="form-control" type="text" id="usercode" name="usercode" value="{{.Usercode}}" readonly></td>
-      <td><input class="form-control" type="text" id="role" name="role" value="{{.Role}}" readonly></td>
-      <td>
-      <select class="form-select" id="manager" name="manager">
-        <option value="{{.Manager}}">{{.Manager}}</option>
-        <option value="johale">johale</option>
-        <option value="adicke">adicke</option>
-        <option value="cmcclu">cmcclu</option>
-      </select>
-      </td>
-      <td><input class="form-check-input" type="checkbox" id="sorting" name="sorting" value="true" {{if .Sorting}}checked{{end}}></td>
-      <td><input type='submit' value='Update' class="btn btn-primary"></td>
-      {{if eq $permission "admin"}}<td><button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#ModalDelete{{$index}}">Delete</button></td>{{else}}<td></td>{{end}}
-    </form>
-    </tr>
-      
-    {{end}}
-    <tr>
-        <td></td>
-    </tr>
-    <tr>
-        <td></td>
-    </tr>
+  <tbody id="userTableBody">
   </tbody>
   </table>
+  <br><br>
+  <script>
+    $(document).ready(function() {
+        fetchAndUpdateUserTable();
+        
+        showToast("Testing the Toast system.", "info");
+    });
+  </script>
+  {{template "toast" .}}
+  {{template "sortTable" .}}
+  {{template "insertUserRow" .}}
+  {{template "updateUserTable" .}}
   {{template "footer" .}}
+  {{template "btnDeleteUser" .}}
 </body>
 </html>

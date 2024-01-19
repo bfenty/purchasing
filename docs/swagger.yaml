@@ -19,6 +19,17 @@ definitions:
       name:
         type: string
     type: object
+  main.Permissions:
+    properties:
+      admin:
+        type: boolean
+      mgmt:
+        type: boolean
+      receiving:
+        type: boolean
+      sorting:
+        type: boolean
+    type: object
   main.Product:
     properties:
       currency:
@@ -51,6 +62,23 @@ definitions:
         type: string
       unitPrice:
         type: number
+    type: object
+  main.User:
+    properties:
+      management:
+        type: boolean
+      manager:
+        type: string
+      permissions:
+        $ref: '#/definitions/main.Permissions'
+      role:
+        type: string
+      sorting:
+        type: boolean
+      usercode:
+        type: integer
+      username:
+        type: string
     type: object
 host: 127.0.0.1:8082
 info:
@@ -286,6 +314,42 @@ paths:
       summary: Update an existing product
       tags:
       - products
+  /users:
+    get:
+      consumes:
+      - application/json
+      description: Get a list of users with optional role filtering
+      parameters:
+      - description: Filter users by role (sorting/manager)
+        in: query
+        name: role
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of users
+          schema:
+            additionalProperties:
+              items:
+                $ref: '#/definitions/main.User'
+              type: array
+            type: object
+        "400":
+          description: Invalid request parameters
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: List users
+      tags:
+      - users
 schemes:
 - http
 - https

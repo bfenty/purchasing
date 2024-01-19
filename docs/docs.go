@@ -370,6 +370,61 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/users": {
+            "get": {
+                "description": "Get a list of users with optional role filtering",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "List users",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Filter users by role (sorting/manager)",
+                        "name": "role",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of users",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/definitions/main.User"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request parameters",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -400,6 +455,23 @@ const docTemplate = `{
             "properties": {
                 "name": {
                     "type": "string"
+                }
+            }
+        },
+        "main.Permissions": {
+            "type": "object",
+            "properties": {
+                "admin": {
+                    "type": "boolean"
+                },
+                "mgmt": {
+                    "type": "boolean"
+                },
+                "receiving": {
+                    "type": "boolean"
+                },
+                "sorting": {
+                    "type": "boolean"
                 }
             }
         },
@@ -450,6 +522,32 @@ const docTemplate = `{
                 },
                 "unitPrice": {
                     "type": "number"
+                }
+            }
+        },
+        "main.User": {
+            "type": "object",
+            "properties": {
+                "management": {
+                    "type": "boolean"
+                },
+                "manager": {
+                    "type": "string"
+                },
+                "permissions": {
+                    "$ref": "#/definitions/main.Permissions"
+                },
+                "role": {
+                    "type": "string"
+                },
+                "sorting": {
+                    "type": "boolean"
+                },
+                "usercode": {
+                    "type": "integer"
+                },
+                "username": {
+                    "type": "string"
                 }
             }
         }
