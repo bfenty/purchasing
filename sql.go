@@ -49,6 +49,20 @@ type Product struct {
 	Image            Image
 }
 
+type Customer struct {
+	CustomerEmail   string `json:"customer_email"`
+	FirstName       string `json:"first_name"`
+	LastName        string `json:"last_name"`
+	Country         string `json:"country"`
+	RebillDay       int    `json:"rebill_day"`
+	RebillMonths    int    `json:"rebill_months"`
+	AutoRenew       bool   `json:"autorenew"`
+	CratejoyStatus  string `json:"cratejoy_status"`
+	StartDate       string `json:"start_date"` // Assuming dates are in string format, change to time.Time if using date objects
+	EndDate         string `json:"end_date"`
+	MailchimpStatus string `json:"mailchimp_status"`
+}
+
 var db *sql.DB
 
 func opendb() (db *sql.DB, messagebox Message) {
@@ -1497,6 +1511,83 @@ func ListUsersAPI(w http.ResponseWriter, r *http.Request) {
 
 	// Respond with the user list
 	respondWithJSON(w, http.StatusOK, map[string]interface{}{"users": users})
+}
+
+// ListCustomersAPI godoc
+// @Summary List customers
+// @Description List customers with optional search filters
+// @Tags customers
+// @Accept  json
+// @Produce  json
+// @Param customer_email query string false "Customer Email"
+// @Param first_name query string false "First Name"
+// @Param last_name query string false "Last Name"
+// @Param country query string false "Country"
+// @Success 200 {object} map[string]interface{} "Customers listed successfully"
+// @Failure 500 {object} map[string]string "Internal Server Error"
+// @Router /api/customers [get]
+func ListCustomersAPI(w http.ResponseWriter, r *http.Request) {
+	// Test database connection
+	pingErr := db.Ping()
+	if pingErr != nil {
+		log.Debug(pingErr)
+		respondWithJSON(w, http.StatusInternalServerError, map[string]string{"message": "Database connection error"})
+		return
+	}
+
+	// Prepare query parameters from URL query
+	queryParams := map[string]string{
+		"customer_email": r.URL.Query().Get("customer_email"),
+		"first_name":     r.URL.Query().Get("first_name"),
+		"last_name":      r.URL.Query().Get("last_name"),
+		"country":        r.URL.Query().Get("country"),
+		// Add other query parameters as needed
+	}
+
+	var queryArgs []interface{}
+	var queryBuilder strings.Builder
+	queryBuilder.WriteString("SELECT customer_email, first_name, last_name, country, rebill_day, rebill_months, autorenew, a.status as cratejoy_status, start_date, end_date, b.status as mailchimp_status FROM `customers.cratejoy_subscriptions` a LEFT JOIN `customers.mailchimp` b on a.customer_email = b.email WHERE 1")
+
+	for param, value := range queryParams {
+		if value != "" {
+			queryArgs = append(queryArgs, value)
+			queryBuilder.WriteString(fmt.Sprintf(" AND %s = ?", param))
+		}
+	}
+
+	query := queryBuilder.String()
+	log.WithFields(log.Fields{"query": query, "args": queryArgs}).Debug("Executing query")
+
+	rows, err := db.Query(query, queryArgs...)
+	if err != nil {
+		log.Debug(err)
+		respondWithJSON(w, http.StatusInternalServerError, map[string]string{"message": "Error executing query"})
+		return
+	}
+	defer rows.Close()
+
+	var customers []Customer
+	// Fetch rows
+	for rows.Next() {
+		var customer Customer
+		err := rows.Scan(&customer.CustomerEmail, &customer.FirstName, &customer.LastName, &customer.Country, &customer.RebillDay, &customer.RebillMonths, &customer.AutoRenew, &customer.CratejoyStatus, &customer.StartDate, &customer.EndDate, &customer.MailchimpStatus)
+		if err != nil {
+			log.Debug(err)
+			respondWithJSON(w, http.StatusInternalServerError, map[string]string{"message": "Error scanning row"})
+			return
+		}
+		customers = append(customers, customer)
+	}
+
+	// Handle any errors encountered during iteration
+	if err = rows.Err(); err != nil {
+		log.Debug(err)
+		respondWithJSON(w, http.StatusInternalServerError, map[string]string{"message": "Error iterating over rows"})
+		return
+	}
+
+	// Respond with the customer list
+	respondWithJSON(w, http.StatusOK, map[string]interface{}{"customers": customers})
 }
 
 // UserDeleteAPI godoc
