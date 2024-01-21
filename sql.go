@@ -65,6 +65,7 @@ type Customer struct {
 
 var db *sql.DB
 
+// Opens the databse connection for the application
 func opendb() (db *sql.DB, messagebox Message) {
 	var err error
 	user := os.Getenv("USER")
@@ -631,33 +632,6 @@ func orderdeletesql(order int, user User) (message Message) {
 	return message
 }
 
-func productdeletesql(sku string, user User) (message Message) {
-	//Debug
-	log.WithFields(log.Fields{"username": user.Username}).Info("Deleting SKU ", sku, "...")
-
-	//Test Connection
-	pingErr := db.Ping()
-	if pingErr != nil {
-		db, message = opendb()
-		return handleerror(pingErr)
-	}
-
-	//Build the Query
-	newquery := "DELETE FROM `skus` WHERE sku_internal = ?"
-	rows, err := db.Query(newquery, sku)
-	rows.Close()
-	if err != nil {
-		return handleerror(err)
-	}
-
-	message.Success = true
-	message.Title = "Success"
-	message.Body = "Successfully deleted sku " + sku
-	//Logging
-	log.WithFields(log.Fields{"username": user.Username}).Info("Deleted Product ", sku)
-	return message
-}
-
 func orderskuadd(order int, sku string, user User) (message Message) {
 	//Debug
 	log.WithFields(log.Fields{"username": user.Username}).Info("Inserting SKU/Order: ", sku, "/", order)
@@ -757,49 +731,6 @@ func orderupdatesql(order int, tracking string, comment string, status string, u
 	//Logging
 	log.WithFields(log.Fields{"username": user.Username}).Info("Updated Order ", strconv.Itoa(order))
 	return message
-}
-
-func listusers(role string, user User) (message Message, users []User) {
-	//Debug
-	log.WithFields(log.Fields{"username": user.Username}).Debug("Getting users with role ", role, "...")
-
-	//Test Connection
-	pingErr := db.Ping()
-	if pingErr != nil {
-		db, message = opendb()
-		log.WithFields(log.Fields{"username": user.Username}).Debug(pingErr)
-		return handleerror(pingErr), users
-	}
-
-	var newquery string
-	//Build the Query
-	if role == "sorting" {
-		newquery = "SELECT username,usercode,permissions,sorting,manager,management from orders.users where sorting=1 and active=1"
-	} else if role == "manager" {
-		newquery = "SELECT username,usercode,permissions,sorting,manager,management from orders.users where management=1 and active=1"
-	} else {
-		newquery = "SELECT username,usercode,permissions,sorting,manager,management from orders.users where active=1"
-	}
-
-	//Run Query
-	rows, err := db.Query(newquery)
-	defer rows.Close()
-	if err != nil {
-		log.WithFields(log.Fields{"username": user.Username}).Debug(err)
-		return handleerror(err), users
-	}
-
-	//Pull Data
-	for rows.Next() {
-		var r User
-		err := rows.Scan(&r.Username, &r.Usercode, &r.Role, &r.Sorting, &r.Manager, &r.Management)
-		if err != nil {
-			log.WithFields(log.Fields{"username": user.Username}).Debug(err)
-			return handleerror(err), users
-		}
-		users = append(users, r)
-	}
-	return message, users
 }
 
 func UpdateUser(w http.ResponseWriter, r *http.Request) {
@@ -1301,52 +1232,52 @@ func nextorder(manufacturer string, user User) (message Message, order Order) {
 }
 
 // ReordersListHandler handles the API endpoint for retrieving reordered lists with pagination
-func ReordersListHandler(w http.ResponseWriter, r *http.Request) {
-	// Parse the request parameters
-	Manufacturer := r.URL.Query().Get("manufacturer")
-	pageStr := r.URL.Query().Get("page")
-	pageSizeStr := r.URL.Query().Get("pageSize")
+// func ReordersListHandler(w http.ResponseWriter, r *http.Request) {
+// 	// Parse the request parameters
+// 	Manufacturer := r.URL.Query().Get("manufacturer")
+// 	pageStr := r.URL.Query().Get("page")
+// 	pageSizeStr := r.URL.Query().Get("pageSize")
 
-	// Convert the parameters to integers
-	page, err := strconv.Atoi(pageStr)
-	if err != nil {
-		http.Error(w, "Invalid page number", http.StatusBadRequest)
-		return
-	}
+// 	// Convert the parameters to integers
+// 	page, err := strconv.Atoi(pageStr)
+// 	if err != nil {
+// 		http.Error(w, "Invalid page number", http.StatusBadRequest)
+// 		return
+// 	}
 
-	pageSize, err := strconv.Atoi(pageSizeStr)
-	if err != nil {
-		http.Error(w, "Invalid pageSize", http.StatusBadRequest)
-		return
-	}
+// 	pageSize, err := strconv.Atoi(pageSizeStr)
+// 	if err != nil {
+// 		http.Error(w, "Invalid pageSize", http.StatusBadRequest)
+// 		return
+// 	}
 
-	// Call the Reorderlist function with the provided parameters
-	products, totalPages := ProductList2(Manufacturer, page, pageSize)
+// 	// Call the Reorderlist function with the provided parameters
+// 	//products, totalPages := ProductList2(Manufacturer, page, pageSize)
 
-	// Convert the orders to JSON
-	response := struct {
-		Products    []Product
-		TotalPages  int
-		CurrentPage int
-	}{
-		Products:    products,
-		TotalPages:  totalPages,
-		CurrentPage: page,
-	}
+// 	// Convert the orders to JSON
+// 	response := struct {
+// 		Products    []Product
+// 		TotalPages  int
+// 		CurrentPage int
+// 	}{
+// 		Products:    products,
+// 		TotalPages:  totalPages,
+// 		CurrentPage: page,
+// 	}
 
-	// log.Debug("JSON:", response)
+// 	// log.Debug("JSON:", response)
 
-	jsonResponse, err := json.Marshal(response)
-	if err != nil {
-		http.Error(w, "Error encoding JSON response", http.StatusInternalServerError)
-		return
-	}
+// 	jsonResponse, err := json.Marshal(response)
+// 	if err != nil {
+// 		http.Error(w, "Error encoding JSON response", http.StatusInternalServerError)
+// 		return
+// 	}
 
-	// Set the appropriate headers and write the JSON response
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	w.Write(jsonResponse)
-}
+// 	// Set the appropriate headers and write the JSON response
+// 	w.Header().Set("Content-Type", "application/json")
+// 	w.WriteHeader(http.StatusOK)
+// 	w.Write(jsonResponse)
+// }
 
 // Reorders List
 func Reorderlist(user User) (message Message, orders []Order) {
@@ -1396,54 +1327,6 @@ func Reorderlist(user User) (message Message, orders []Order) {
 	}
 
 	return message, orders
-}
-
-func ProductList2(Manufacturer string, page int, pageSize int) (products []Product, totalPages int) {
-	//Debug
-	log.Debug("Page:", page, " Pagesize:", pageSize)
-
-	// Calculate the offset based on the page and page size
-	offset := (page) * pageSize
-	// Build the Query for the skus in the order
-	newquery := "SELECT a.sku_internal,`manufacturer_code`,`sku_manufacturer`,`product_option`,`processing_request`,`sorting_request`,`unit`,`unit_price`,`Currency`,`order_qty`,`modified`,`reorder`,`inventory_qty`,season,url_thumb,url_standard FROM `skus` a LEFT JOIN (select sku_internal FROM orderskus a left join orders b on a.ordernum = b.ordernum where status != 'Closed') b on a.sku_internal = b.sku_internal WHERE inventory_qty = 0 and reorder = 1 and b.sku_internal is null and manufacturer_code = ? LIMIT ?, ?"
-	skurows, err := db.Query(newquery, Manufacturer, offset, pageSize)
-	if err != nil {
-		log.Error(err)
-	}
-	var skus []Product
-	defer skurows.Close()
-
-	// Get the total number of rows without LIMIT applied
-	countquery := "SELECT COUNT(*) FROM `skus` a LEFT JOIN (select sku_internal FROM orderskus a left join orders b on a.ordernum = b.ordernum where status != 'Closed') b on a.sku_internal = b.sku_internal WHERE inventory_qty = 0 and reorder = 1 and b.sku_internal is null and manufacturer_code = ?"
-	countRows, err := db.Query(countquery, Manufacturer)
-	if err != nil {
-		log.Error(err)
-		return products, totalPages
-	}
-	defer countRows.Close()
-
-	// Retrieve the count
-	var totalRows int
-	if countRows.Next() {
-		err := countRows.Scan(&totalRows)
-		if err != nil {
-			log.Error(err)
-			return products, totalPages
-		}
-	}
-
-	// Calculate the total number of pages
-	totalPages = int(math.Ceil(float64(totalRows) / float64(pageSize)))
-
-	for skurows.Next() {
-		var r Product
-		err := skurows.Scan(&r.SKU, &r.Manufacturer, &r.ManufacturerPart, &r.Description, &r.ProcessRequest, &r.SortingRequest, &r.Unit, &r.UnitPrice, &r.Currency, &r.OrderQty, &r.Modified, &r.Reorder, &r.InventoryQty, &r.Season, &r.Image.URL_Thumb, &r.Image.URL_Standard)
-		if err != nil {
-			log.Error(err)
-		}
-		skus = append(skus, r)
-	}
-	return skus, totalPages
 }
 
 // ListUsersAPI godoc
@@ -1515,7 +1398,7 @@ func ListUsersAPI(w http.ResponseWriter, r *http.Request) {
 
 // ListCustomersAPI godoc
 // @Summary List customers
-// @Description List customers with optional search filters
+// @Description List customers with optional search filters and pagination
 // @Tags customers
 // @Accept  json
 // @Produce  json
@@ -1523,6 +1406,8 @@ func ListUsersAPI(w http.ResponseWriter, r *http.Request) {
 // @Param first_name query string false "First Name"
 // @Param last_name query string false "Last Name"
 // @Param country query string false "Country"
+// @Param page query int false "Page number"
+// @Param limit query int false "Limit per page"
 // @Success 200 {object} map[string]interface{} "Customers listed successfully"
 // @Failure 500 {object} map[string]string "Internal Server Error"
 // @Router /api/customers [get]
@@ -1544,6 +1429,17 @@ func ListCustomersAPI(w http.ResponseWriter, r *http.Request) {
 		// Add other query parameters as needed
 	}
 
+	// Pagination parameters
+	page, _ := strconv.Atoi(r.URL.Query().Get("page"))
+	limit, _ := strconv.Atoi(r.URL.Query().Get("limit"))
+	if page < 1 {
+		page = 1
+	}
+	if limit < 1 {
+		limit = 10 // Default limit
+	}
+	offset := (page - 1) * limit
+
 	var queryArgs []interface{}
 	var queryBuilder strings.Builder
 	queryBuilder.WriteString("SELECT customer_email, first_name, last_name, country, rebill_day, rebill_months, autorenew, a.status as cratejoy_status, start_date, end_date, b.status as mailchimp_status FROM `customers.cratejoy_subscriptions` a LEFT JOIN `customers.mailchimp` b on a.customer_email = b.email WHERE 1")
@@ -1555,7 +1451,23 @@ func ListCustomersAPI(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	query := queryBuilder.String()
+	// Count total records query (without LIMIT and OFFSET)
+	countQuery := strings.Replace(queryBuilder.String(), "SELECT customer_email, first_name, last_name, country, rebill_day, rebill_months, autorenew, a.status as cratejoy_status, start_date, end_date, b.status as mailchimp_status", "SELECT COUNT(*)", 1)
+	log.WithFields(log.Fields{"countQuery": countQuery, "args": queryArgs}).Debug("Executing count query")
+
+	// Execute count query
+	var totalRecords int
+	err := db.QueryRow(countQuery, queryArgs...).Scan(&totalRecords)
+	if err != nil {
+		log.Debug(err)
+		respondWithJSON(w, http.StatusInternalServerError, map[string]string{"message": "Error executing count query"})
+		return
+	}
+	totalPages := (totalRecords + limit - 1) / limit // Calculate total pages
+
+	// Add pagination to the main query
+	queryArgs = append(queryArgs, limit, offset)
+	query := queryBuilder.String() + " LIMIT ? OFFSET ?"
 	log.WithFields(log.Fields{"query": query, "args": queryArgs}).Debug("Executing query")
 
 	rows, err := db.Query(query, queryArgs...)
@@ -1586,8 +1498,14 @@ func ListCustomersAPI(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Respond with the customer list
-	respondWithJSON(w, http.StatusOK, map[string]interface{}{"customers": customers})
+	// Respond with the customer list and pagination info
+	respondWithJSON(w, http.StatusOK, map[string]interface{}{
+		"customers":    customers,
+		"currentPage":  page,
+		"perPage":      limit,
+		"totalPages":   totalPages,
+		"totalRecords": totalRecords,
+	})
 }
 
 // UserDeleteAPI godoc

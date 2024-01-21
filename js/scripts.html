@@ -687,6 +687,100 @@ function showToast(message, type) {
 </script>
 {{end}}
 
+{{define "updateCustomerTable"}}
+<script>
+    function fetchAndUpdateCustomerTable(page, limit, searchParams) {
+    var queryParams = $.param(searchParams); // Convert search parameters to query string
+    var apiUrl = `/api-handler?targetAPI=/api/customers&page=${page}&limit=${limit}&${queryParams}`;
+    console.log("Fetching data with search parameters:", searchParams);
+
+    console.log("Fetching data from " + apiUrl);
+
+    $.ajax({
+        url: apiUrl,
+        type: 'GET',
+        dataType: 'json',
+        success: function(response) {
+            console.log("Data fetched successfully. Number of records:", response.customers.length);
+
+            // Update the customer table with the new data
+            updateCustomerTable(response.customers);
+
+            // Update pagination controls if you have
+            // updatePaginationControls(response.currentPage, response.totalPages);
+
+            console.log("Customer table updated successfully.");
+        },
+        error: function(jqXHR, textStatus, errorThrown) {
+            console.error("Error fetching data:", textStatus, errorThrown, jqXHR);
+
+            // Initialize errorMessage with a default error message
+            let errorMessage = "An error occurred. Please try again.";
+
+            // Try to parse and use the custom error message from the server if available
+            if (jqXHR.responseText) {
+                try {
+                    var resp = JSON.parse(jqXHR.responseText);
+                    if (resp && resp.error) {
+                        errorMessage = resp.error;
+                    }
+                } catch (e) {
+                    console.error("Error parsing server response:", e);
+                }
+            }
+            
+            showToast(errorMessage, "error");  // Show the custom error message or the default one
+        },
+
+        beforeSend: function() {
+            console.log("Preparing to send AJAX request to /api/customers.");
+            // You can add a loading spinner here
+        },
+        complete: function(jqXHR, textStatus) {
+            console.log("AJAX request completed with status:", textStatus);
+            // You can remove the loading spinner here
+        }
+    });
+}
+
+function generateCustomerTableRow(customer, index) {
+    // Constructing the row HTML
+    var rowHtml = `
+    <tr>
+        <td><input class="form-control" type="text" value="${customer.customer_email}" readonly></td>
+        <td><input class="form-control" type="text" value="${customer.first_name}" readonly></td>
+        <td><input class="form-control" type="text" value="${customer.last_name}" readonly></td>
+        <td><input class="form-control" type="text" value="${customer.country}" readonly></td>
+        <td><input class="form-control" type="text" value="${customer.rebill_day}" readonly></td>
+        <td><input class="form-control" type="text" value="${customer.rebill_months}" readonly></td>
+        <td><input class="form-control" type="text" value="${customer.autorenew}" readonly></td>
+        <td><input class="form-control" type="text" value="${customer.cratejoy_status}" readonly></td>
+        <td><input class="form-control" type="text" value="${customer.start_date}" readonly></td>
+        <td><input class="form-control" type="text" value="${customer.end_date}" readonly></td>
+        <td><input class="form-control" type="text" value="${customer.mailchimp_status}" readonly></td>
+        <td><button class="btn btn-primary update-button" data-customer-email="${customer.customer_email}">Update</button></td>
+        <td><button class="btn btn-danger delete-button" data-customer-email="${customer.customer_email}" data-bs-toggle="modal" data-bs-target="#ModalDelete${index}">Delete</button></td>
+    </tr>
+    `;
+
+    // Returning the row HTML
+    return rowHtml;
+}
+
+function updateCustomerTable(customers) {
+    var tableBody = $('#customerTableBody');
+    tableBody.empty(); // Clear existing data
+
+    customers.forEach(function(customer, index) {
+        var row = generateCustomerTableRow(customer, index);
+        tableBody.append(row);
+    });
+
+    console.log("Customer table updated successfully.");
+}
+</script>
+{{end}}
+
 {{define "sortTable"}}
 <script>
     $(document).ready(function() {

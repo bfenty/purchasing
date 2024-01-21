@@ -45,10 +45,24 @@
           // Redirect user to appropriate page based on response from server
           window.location.href = response;
         },
-        error: function(xhr, status, error) {
-          // Show login error message
-          var errorMessage = xhr.responseText; // Extract error message from server response
-          $('#login-error').text(errorMessage).show(); // Display error message to user
+        error: function(jqXHR, textStatus, errorThrown) {
+            console.error("Error fetching data:", textStatus, errorThrown, jqXHR);
+
+            // Initialize errorMessage with a default error message
+            let errorMessage = "An error occurred. Please try again.";
+
+            // Try to parse and use the custom error message from the server if available
+            if (jqXHR.responseText) {
+                try {
+                    var resp = JSON.parse(jqXHR.responseText);
+                    if (resp && resp.error) {
+                        errorMessage = resp.error;
+                    }
+                } catch (e) {
+                    console.error("Error parsing server response:", e);
+                }
+            }
+            showToast(errorMessage, "error");  // Show the custom error message or the default one
         }
       });
     });

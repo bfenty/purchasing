@@ -304,7 +304,7 @@ func APIHandler(w http.ResponseWriter, r *http.Request) {
 		UserDeleteAPI(w, r)
 	case "customers":
 		log.Debug("Calling ListCustomersAPI function")
-		UserDeleteAPI(w, r)
+		ListCustomersAPI(w, r)
 	// Add other cases as needed
 	default:
 		log.WithFields(log.Fields{
