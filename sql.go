@@ -50,17 +50,17 @@ type Product struct {
 }
 
 type Customer struct {
-	CustomerEmail   string `json:"customer_email"`
-	FirstName       string `json:"first_name"`
-	LastName        string `json:"last_name"`
-	Country         string `json:"country"`
-	RebillDay       int    `json:"rebill_day"`
-	RebillMonths    int    `json:"rebill_months"`
-	AutoRenew       bool   `json:"autorenew"`
-	CratejoyStatus  string `json:"cratejoy_status"`
-	StartDate       string `json:"start_date"` // Assuming dates are in string format, change to time.Time if using date objects
-	EndDate         string `json:"end_date"`
-	MailchimpStatus string `json:"mailchimp_status"`
+	CustomerEmail   string         `json:"customer_email"`
+	FirstName       sql.NullString `json:"first_name"`
+	LastName        sql.NullString `json:"last_name"`
+	Country         sql.NullString `json:"country"`
+	RebillDay       sql.NullInt32  `json:"rebill_day"`
+	RebillMonths    sql.NullInt32  `json:"rebill_months"`
+	AutoRenew       bool           `json:"autorenew"`
+	CratejoyStatus  sql.NullString `json:"cratejoy_status"`
+	StartDate       sql.NullString `json:"start_date"` // Assuming dates are in string format, change to time.Time if using date objects
+	EndDate         sql.NullString `json:"end_date"`
+	MailchimpStatus sql.NullString `json:"mailchimp_status"`
 }
 
 var db *sql.DB
@@ -79,7 +79,7 @@ func opendb() (db *sql.DB, messagebox Message) {
 	log.Debug("server:", server)
 	log.Debug("port:", port)
 	log.Debug("Opening Database...")
-	connectstring := os.Getenv("USER") + ":" + os.Getenv("PASS") + "@tcp(" + os.Getenv("SERVER") + ":" + os.Getenv("PORT") + ")/purchasing?parseTime=true"
+	connectstring := os.Getenv("USER") + ":" + os.Getenv("PASS") + "@tcp(" + os.Getenv("SERVER") + ":" + os.Getenv("PORT") + ")/?parseTime=true"
 	log.Debug("Connection: ", connectstring)
 	db, err = sql.Open("mysql",
 		connectstring)
@@ -1412,6 +1412,7 @@ func ListUsersAPI(w http.ResponseWriter, r *http.Request) {
 // @Failure 500 {object} map[string]string "Internal Server Error"
 // @Router /api/customers [get]
 func ListCustomersAPI(w http.ResponseWriter, r *http.Request) {
+
 	// Test database connection
 	pingErr := db.Ping()
 	if pingErr != nil {
@@ -1442,7 +1443,7 @@ func ListCustomersAPI(w http.ResponseWriter, r *http.Request) {
 
 	var queryArgs []interface{}
 	var queryBuilder strings.Builder
-	queryBuilder.WriteString("SELECT customer_email, first_name, last_name, country, rebill_day, rebill_months, autorenew, a.status as cratejoy_status, start_date, end_date, b.status as mailchimp_status FROM `customers.cratejoy_subscriptions` a LEFT JOIN `customers.mailchimp` b on a.customer_email = b.email WHERE 1")
+	queryBuilder.WriteString("SELECT customer_email, first_name, last_name, country, rebill_day, rebill_months, autorenew, a.status as cratejoy_status, start_date, end_date, b.status as mailchimp_status FROM customers.cratejoy_subscriptions a LEFT JOIN customers.mailchimp b on a.customer_email = b.email WHERE 1")
 
 	for param, value := range queryParams {
 		if value != "" {
@@ -1654,7 +1655,7 @@ func ProductList(w http.ResponseWriter, r *http.Request) {
 	var queryArgs []interface{}
 	var queryBuilder strings.Builder
 
-	queryBuilder.WriteString("SELECT `sku_internal`,`manufacturer_code`,`sku_manufacturer`,`product_option`,`processing_request`,`sorting_request`,`unit`,`unit_price`,`Currency`,`order_qty`,`modified`,`reorder`,`inventory_qty`,season,url_standard,url_thumb,url_tiny FROM `skus` WHERE 1")
+	queryBuilder.WriteString("SELECT `sku_internal`,`manufacturer_code`,`sku_manufacturer`,`product_option`,`processing_request`,`sorting_request`,`unit`,`unit_price`,`Currency`,`order_qty`,`modified`,`reorder`,`inventory_qty`,season,url_standard,url_thumb,url_tiny FROM purchasing.skus WHERE 1")
 
 	for param, value := range queryParams {
 		if value != "" && param != "limit" { // Exclude 'limit' from filtering

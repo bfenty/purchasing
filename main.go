@@ -316,7 +316,7 @@ func APIHandler(w http.ResponseWriter, r *http.Request) {
 
 func validateAPIKey(key string) bool {
 	var exists bool
-	query := "SELECT EXISTS(SELECT 1 FROM apikeys WHERE apikey = ?)"
+	query := "SELECT EXISTS(SELECT 1 FROM purchasing.apikeys WHERE apikey = ?)"
 
 	// Query the database to check if the key exists
 	err := db.QueryRow(query, key).Scan(&exists)

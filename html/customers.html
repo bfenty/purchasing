@@ -8,30 +8,60 @@
 <br>
     {{template "toastBox" .}}
     {{template "modalDelete" .}}
+    <nav aria-label="Page navigation">
+        <ul class="pagination justify-content-center">
+          <li class="page-item" id="prevPage">
+            <a class="page-link" href="#" aria-label="Previous">
+              <span aria-hidden="true">&laquo;</span>
+              <span class="sr-only">Previous</span>
+            </a>
+          </li>
+          <li class="page-item" id="nextPage">
+            <a class="page-link" href="#" aria-label="Next">
+              <span aria-hidden="true">&raquo;</span>
+              <span class="sr-only">Next</span>
+            </a>
+          </li>
+        </ul>
+      </nav>
+      
         <!-- Main Table -->
         <table class="table table-striped table-hover">
             <thead class="table-dark" style="position: sticky; top: 0; z-index: 1;">
                 <tr>
-                    <th></th>
-                    <th scope="col">Season</th>
-                    <th scope="col">Inventory</th>
-                    <th></th>
-                    <th></th>
+                    <th scope="col">Customer Email</th>
+                    <th scope="col">First Name</th>
+                    <th scope="col">Last Name</th>
+                    <th scope="col">Country</th>
+                    <th scope="col">Rebill Day</th>
+                    <th scope="col">Rebill Months</th>
+                    <th scope="col">Auto Renew</th>
+                    <th scope="col">Cratejoy Status</th>
+                    <th scope="col">Start Date</th>
+                    <th scope="col">End Date</th>
+                    <th scope="col">Mailchimp Status</th>
+                    <th scope="col"></th>
+                    <th scope="col"></th>
                 </tr>
             </thead>
-            <tbody id="cusomterTableBody">
+            <tbody id="customerTableBody">
             </tbody>
         </table>
 
         <script>
-          $(document).ready(function() {
-              console.log("Document ready. Initializing table data fetch.");
+            
+            var currentPage = 1; // keep track of the current page
+            var totalPages = 0; // total number of pages, you might get this from the server
+            $(document).ready(function() {
+                console.log("Document ready. Initializing table data fetch.");
+
                 // Call the function with page number, limit, and any search parameters
-                fetchAndUpdateCustomerTable(1, 10, {});
+                fetchAndUpdateCustomerTable(currentPage, 250, {cratejoy_status: "active"});
           });
       </script>
       {{template "toast" .}}
       {{template "updateCustomerTable" .}}
+      {{template "pageControls" .}}
       
   {{template "footer" .}}
 </body>

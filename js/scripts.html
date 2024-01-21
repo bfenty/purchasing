@@ -702,13 +702,12 @@ function showToast(message, type) {
         dataType: 'json',
         success: function(response) {
             console.log("Data fetched successfully. Number of records:", response.customers.length);
-
+            console.log("Response:", response);
+            totalPages = response.totalPages; // set the total pages from the response
+            currentPage = response.currentPage; // set the current page from the response
             // Update the customer table with the new data
             updateCustomerTable(response.customers);
-
-            // Update pagination controls if you have
-            // updatePaginationControls(response.currentPage, response.totalPages);
-
+            updatePaginationControls();
             console.log("Customer table updated successfully.");
         },
         error: function(jqXHR, textStatus, errorThrown) {
@@ -743,41 +742,57 @@ function showToast(message, type) {
     });
 }
 
-function generateCustomerTableRow(customer, index) {
-    // Constructing the row HTML
-    var rowHtml = `
-    <tr>
-        <td><input class="form-control" type="text" value="${customer.customer_email}" readonly></td>
-        <td><input class="form-control" type="text" value="${customer.first_name}" readonly></td>
-        <td><input class="form-control" type="text" value="${customer.last_name}" readonly></td>
-        <td><input class="form-control" type="text" value="${customer.country}" readonly></td>
-        <td><input class="form-control" type="text" value="${customer.rebill_day}" readonly></td>
-        <td><input class="form-control" type="text" value="${customer.rebill_months}" readonly></td>
-        <td><input class="form-control" type="text" value="${customer.autorenew}" readonly></td>
-        <td><input class="form-control" type="text" value="${customer.cratejoy_status}" readonly></td>
-        <td><input class="form-control" type="text" value="${customer.start_date}" readonly></td>
-        <td><input class="form-control" type="text" value="${customer.end_date}" readonly></td>
-        <td><input class="form-control" type="text" value="${customer.mailchimp_status}" readonly></td>
-        <td><button class="btn btn-primary update-button" data-customer-email="${customer.customer_email}">Update</button></td>
-        <td><button class="btn btn-danger delete-button" data-customer-email="${customer.customer_email}" data-bs-toggle="modal" data-bs-target="#ModalDelete${index}">Delete</button></td>
-    </tr>
-    `;
+    function updateCustomerTable(customers) {
+        var tableBody = $('#customerTableBody');
+        tableBody.empty(); // Clear existing data
+        customers.forEach(function(customer) {
+            var row = generateCustomerTableRow(customer);
+            tableBody.append(row);
+        });
+    }
 
-    // Returning the row HTML
-    return rowHtml;
-}
+    function generateCustomerTableRow(customer, index) {
+        // Constructing the row HTML
+        var rowHtml = `
+        <tr>
+            <td><input class="form-control" type="text" value="${customer.customer_email}" readonly></td>
+            <td><input class="form-control" type="text" value="${customer.first_name.String}" readonly></td>
+            <td><input class="form-control" type="text" value="${customer.last_name.String}" readonly></td>
+            <td><input class="form-control" type="text" value="${customer.country.String}" readonly></td>
+            <td><input class="form-control" type="text" value="${customer.rebill_day.Int32}" readonly></td>
+            <td><input class="form-control" type="text" value="${customer.rebill_months.Int32}" readonly></td>
+            <td><input class="form-control" type="text" value="${customer.autorenew}" readonly></td>
+            <td><input class="form-control" type="text" value="${customer.cratejoy_status.String}" readonly></td>
+            <td><input class="form-control" type="text" value="${customer.start_date.String}" readonly></td>
+            <td><input class="form-control" type="text" value="${customer.end_date.String}" readonly></td>
+            <td><input class="form-control" type="text" value="${customer.mailchimp_status.String}" readonly></td>
+            <td><button class="btn btn-primary update-button" data-customer-email="${customer.customer_email}">Update</button></td>
+            <td><button class="btn btn-danger delete-button" data-customer-email="${customer.customer_email}" data-bs-toggle="modal" data-bs-target="#ModalDelete${index}">Delete</button></td>
+        </tr>
+        `;
 
-function updateCustomerTable(customers) {
-    var tableBody = $('#customerTableBody');
-    tableBody.empty(); // Clear existing data
+        // Returning the row HTML
+        return rowHtml;
+    }
 
-    customers.forEach(function(customer, index) {
-        var row = generateCustomerTableRow(customer, index);
-        tableBody.append(row);
+    // Event listener for the previous page button
+    $('#prevPage').click(function(event) {
+        event.preventDefault();
+        if (currentPage > 1) {
+            currentPage--;
+            fetchAndUpdateCustomerTable(currentPage);
+        }
     });
 
-    console.log("Customer table updated successfully.");
-}
+    // Event listener for the next page button
+    $('#nextPage').click(function(event) {
+        console.log("next page clicked")
+        event.preventDefault();
+        if (currentPage < totalPages) {
+            currentPage++;
+            fetchAndUpdateCustomerTable(currentPage);
+        }
+    });
 </script>
 {{end}}
 
@@ -884,4 +899,26 @@ function updateCustomerTable(customers) {
             </div>
         </div>
     </div>
+{{end}}
+
+{{define "pageControls"}}
+<script>
+    // Update pagination controls
+    function updatePaginationControls() {
+        console.log("Updating Paginiation Controls")
+        // Disable prev button if on first page
+        if (currentPage <= 1) {
+            $('#prevPage').addClass('disabled');
+        } else {
+            $('#prevPage').removeClass('disabled');
+        }
+
+        // Disable next button if on last page
+        if (currentPage >= totalPages) {
+            $('#nextPage').addClass('disabled');
+        } else {
+            $('#nextPage').removeClass('disabled');
+        }
+    }
+</script>
 {{end}}
