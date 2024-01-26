@@ -72,7 +72,7 @@ function showToast(message, type) {
 {{define "searchProductRow"}}
 {{$permission := .Permission.Role}}
 <script>
-    function generateInputRow(manufacturers, currencies, seasons) {
+    function GenerateTopRow(manufacturers, currencies, seasons) {
         console.log("Generating Search Row")
         
         // Manufacturer dropdown options
@@ -118,12 +118,12 @@ function showToast(message, type) {
 
 {{define "searchCustomerRow"}}
 <script>
-    function generateInputRow() {
+    function GenerateTopRow() {
         console.log("Generating Search Row")
 
         // Generate the Insert Row
         var insertRow = `
-        <tr>
+        <tr class="search-row">
             <td><input class="form-control" type="text" id="customer_email" ></td>
             <td><input class="form-control" type="text" id="first_name" </td>
             <td><input class="form-control" type="text" id="last_name" ></td>
@@ -149,7 +149,7 @@ function showToast(message, type) {
 {{define "insertProductRow"}}
 {{$permission := .Permission.Role}}
 <script>
-    function generateInputRow(manufacturers, currencies, seasons) {
+    function GenerateTopRow(manufacturers, currencies, seasons) {
         console.log("Generating Insert Row")
         
         // Manufacturer dropdown options
@@ -239,7 +239,7 @@ function showToast(message, type) {
 
 {{define "insertUserRow"}}
 <script>
-    function generateUserTableRow(user, index) {
+    function generateTableRow(user, index) {
         // Constructing the row HTML
         var rowHtml = `
         <tr>
@@ -268,7 +268,7 @@ function showToast(message, type) {
 
 {{define "btninsertProduct"}}
 <script>
-    $('#productTableBody').on('click', '#btnInsertNew', function() {
+    $('#contentTableBody').on('click', '#btnInsertNew', function() {
         console.log("Collecting data to insert new Product");
         var validationMessage = validateNewProductForm();
         if (validationMessage !== "") {
@@ -383,7 +383,7 @@ function showToast(message, type) {
 {{define "btnupdateProduct"}}
 <script>
     // Event listener for the update button click
-    $('#productTableBody').on('click', '.update-button', function() {
+    $('#contentTableBody').on('click', '.update-button', function() {
         var row = $(this).closest('tr');
         var sku = $(this).data('item-id');
 
@@ -440,30 +440,29 @@ function showToast(message, type) {
 {{define "btnSearch"}}
 <script>
     // Event listener for the search button
-    $('#productTableBody').on('click', '#btnSearch', function() {
+    var searchParams = {};
+    $('#contentTableBody').on('click', '#btnSearch', function() {
         console.log("Search button clicked");
+        // Construct searchParams object from input values
+        $('#btnSearch').closest('tr').find('input').each(function() {
+            // Use the input's id as the key and the input's value as the value
+            var key = $(this).attr('id');
+            var value = $(this).val();
 
-        var searchParams = {
-            sku: $('#new_sku').val(),
-            manufacturerpart: $('#new_manufacturerpart').val(),
-            description: $('#new_description').val(),
-            manufacturer: $('#new_manufacturer').val(),
-            processrequest: $('#new_processrequest').val(),
-            unit: $('#new_unit').val(),
-            unitprice: $('#new_unitprice').val(),
-            currency: $('#new_currency').val(),
-            orderqty: $('#new_orderqty').val(),
-            season: $('#new_season').val(),
-            inventoryqty: $('#new_inventoryqty').val()
-        };
-
-        console.log("Search Parameters:", searchParams);
-
-        // Remove empty parameters
-        Object.keys(searchParams).forEach(key => {
-            if (!searchParams[key]) delete searchParams[key];
+            // Add key-value pair to searchParams object if the value is not empty
+            if (value) {
+                searchParams[key] = value;
+            }
         });
-        fetchAndUpdateTable(searchParams);
+        // Fetch and update the table based on the search parameters
+        fetchAndUpdateTable(1, limit, searchParams);  // Reset to page 1 for new search
+    });
+
+    // Optional: Trigger search when pressing 'Enter' in any search field
+    $('.search-row input').keypress(function(event) {
+        if (event.which == 13) {  // 'Enter' key code
+            $('#searchBtn').click();
+        }
     });
 </script>
 {{end}}
@@ -559,7 +558,7 @@ function showToast(message, type) {
             success: function(response) {
                 console.log("User deleted successfully:", response);
                 showToast("User deleted successfully.", "info");
-                fetchAndUpdateUserTable();  // Refresh the user table
+                fetchAndUpdateTable();  // Refresh the user table
             },
             error: function(jqXHR, textStatus, errorThrown) {
                 console.error("Error during the request:", textStatus, errorThrown, jqXHR);
@@ -616,7 +615,7 @@ function showToast(message, type) {
                     totalPages = response.totalPages; // set the total pages from the response
                     currentPage = response.currentPage; // set the current page from the response
 
-                    var tableBody = $('#productTableBody');
+                    var tableBody = $('#contentTableBody');
                     tableBody.empty(); // Clear existing data
 
                     // Currency dropdown options
@@ -626,7 +625,7 @@ function showToast(message, type) {
                     var seasons = ['None', 'Christmas', 'Fall', 'Halloween'];
 
                     // Add the insert row at the beginning
-                    var insertRow = generateInputRow(manufacturers, currencies, seasons);
+                    var insertRow = GenerateTopRow(manufacturers, currencies, seasons);
                     tableBody.append(insertRow);
 
                     response.products.forEach(function(item, index) {
@@ -668,25 +667,6 @@ function showToast(message, type) {
             // Handle the error
         }
     }
-
-    // Event listener for the previous page button
-    $('#prevPage').click(function(event) {
-        event.preventDefault();
-        if (currentPage > 1) {
-            currentPage--;
-            fetchAndUpdateTable(currentPage,limit);
-        }
-    });
-
-    // Event listener for the next page button
-    $('#nextPage').click(function(event) {
-        console.log("next page clicked")
-        event.preventDefault();
-        if (currentPage < totalPages) {
-            currentPage++;
-            fetchAndUpdateTable(currentPage,limit);
-        }
-    });
   </script>
 {{end}}
 
@@ -697,14 +677,14 @@ function showToast(message, type) {
         tableBody.empty(); // Clear existing data
 
         users.forEach(function(user, index) {
-            var row = generateUserTableRow(user, index);
+            var row = generateTableRow(user, index);
             tableBody.append(row);
         });
 
         console.log("User table updated successfully.");
     }
 
-    function fetchAndUpdateUserTable() {
+    function fetchAndUpdateTable() {
         console.log("Fetching data from /api/users");
 
         $.ajax({
@@ -746,7 +726,7 @@ function showToast(message, type) {
 
 {{define "updateCustomerTable"}}
 <script>
-    function fetchAndUpdateCustomerTable(page, limit, searchParams) {
+    function fetchAndUpdateTable(page, limit, searchParams) {
     var queryParams = $.param(searchParams); // Convert search parameters to query string
     var apiUrl = `/api-handler?targetAPI=/api/customers&page=${page}&limit=${limit}&${queryParams}`;
     console.log("Fetching data with search parameters:", searchParams);
@@ -800,11 +780,11 @@ function showToast(message, type) {
 }
 
     function updateCustomerTable(customers) {
-        var tableBody = $('#customerTableBody');
+        var tableBody = $('#contentTableBody');
         tableBody.empty(); // Clear existing data
 
         // Add the insert row at the beginning
-        var insertRow = generateInputRow();
+        var insertRow = GenerateTopRow();
         tableBody.append(insertRow);
 
         // Loop through the rows
@@ -837,52 +817,6 @@ function showToast(message, type) {
         // Returning the row HTML
         return rowHtml;
     }
-
-    // Event listener for the previous page button
-    $('#prevPage').click(function(event) {
-        event.preventDefault();
-        if (currentPage > 1) {
-            currentPage--;
-            fetchAndUpdateCustomerTable(currentPage,limit, {cratejoy_status: "active"});
-        }
-    });
- 
-    // Event listener for the next page button
-    $('#nextPage').click(function(event) {
-        console.log("next page clicked")
-        event.preventDefault();
-        if (currentPage < totalPages) {
-            currentPage++;
-            fetchAndUpdateCustomerTable(currentPage,limit, {cratejoy_status: "active"});
-        }
-    });
-
-    // Event listener for the search button
-    $('#customerTableBody').on('click', '#btnSearch', function() {
-        console.log("Search button clicked");
-        // Construct searchParams object from input values
-        var searchParams = {
-            customer_email: $('#customer_email').val(),
-            first_name: $('#first_name').val(),
-            country: $('#country').val(),
-            rebill_day: $('#rebill_day').val(),
-            rebill_months: $('#rebill_months').val(),
-            autorenew: $('#autorenew').val(),
-            cratejoy_status: $('#cratejoy_status').val(),
-            start_date: $('#start_date').val(),
-            end_date: $('#end_date').val(),
-            mailchimp_status: $('#mailchimp_status').val(),
-        };
-        // Fetch and update the table based on the search parameters
-        fetchAndUpdateCustomerTable(1, 250, searchParams);  // Reset to page 1 for new search
-    });
-
-    // Optional: Trigger search when pressing 'Enter' in any search field
-    $('.search-row input').keypress(function(event) {
-        if (event.which == 13) {  // 'Enter' key code
-            $('#searchBtn').click();
-        }
-    });
 </script>
 {{end}}
 
@@ -1029,5 +963,24 @@ function showToast(message, type) {
             $('#nextPage').removeClass('disabled');
         }
     }
+
+    // Event listener for the previous page button
+    $('#prevPage').click(function(event) {
+        event.preventDefault();
+        if (currentPage > 1) {
+            currentPage--;
+            fetchAndUpdateTable(currentPage,limit, {cratejoy_status: "active"});
+        }
+    });
+
+    // Event listener for the next page button
+    $('#nextPage').click(function(event) {
+        console.log("next page clicked")
+        event.preventDefault();
+        if (currentPage < totalPages) {
+            currentPage++;
+            fetchAndUpdateTable(currentPage,limit, {cratejoy_status: "active"});
+        }
+    });
 </script>
 {{end}}

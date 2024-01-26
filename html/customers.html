@@ -29,7 +29,7 @@
                     <th scope="col"></th>
                 </tr>
             </thead>
-            <tbody id="customerTableBody">
+            <tbody id="contentTableBody">
             </tbody>
         </table>
 
@@ -38,16 +38,18 @@
             var currentPage = 1; // keep track of the current page
             var totalPages = 0; // total number of pages, you might get this from the server
             var limit = 50;
+            var searchParams = {}; //set initial search parameters
             $(document).ready(function() {
                 console.log("Document ready. Initializing table data fetch.");
 
                 // Call the function with page number, limit, and any search parameters
-                fetchAndUpdateCustomerTable(currentPage, limit, {cratejoy_status: "active"});
+                fetchAndUpdateTable(currentPage, limit, {cratejoy_status: "active"});
           });
       </script>
       {{template "toast" .}}
       {{template "updateCustomerTable" .}}
       {{template "searchCustomerRow" .}}
+      {{template "btnSearch" .}}
       
   {{template "footer" .}}
 </body>
