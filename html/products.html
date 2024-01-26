@@ -36,9 +36,14 @@
         </table>
 
         <script>
+            // Setup Page Variables
+            var currentPage = 1; // keep track of the current page
+            var totalPages = 0; // total number of pages, you might get this from the server
+            var limit = 100; // set page size limit
+            var searchParams = {}; //set initial search parameters
             $(document).ready(function() {
                 console.log("Document ready. Initializing table data fetch.")
-                fetchAndUpdateTable(currentPage,100);
+                fetchAndUpdateTable(currentPage,limit, searchParams);
 
                 // Event handler for image clicks
                 $(document).on('click', '.image-link', function() {
