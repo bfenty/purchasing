@@ -116,6 +116,36 @@ function showToast(message, type) {
 </script>
 {{end}}
 
+{{define "searchCustomerRow"}}
+<script>
+    function generateInputRow() {
+        console.log("Generating Search Row")
+
+        // Generate the Insert Row
+        var insertRow = `
+        <tr>
+            <td><input class="form-control" type="text" id="customer_email" ></td>
+            <td><input class="form-control" type="text" id="first_name" </td>
+            <td><input class="form-control" type="text" id="last_name" ></td>
+            <td><input class="form-control" type="text" id="country" ></td>
+            <td><input class="form-control" type="text" id="rebill_day" ></td>
+            <td><input class="form-control" type="text" id="rebill_months" ></td>
+            <td><input class="form-control" type="text" id="autorenew" ></td>
+            <td><input class="form-control" type="text" id="cratejoy_status" ></td>
+            <td><input class="form-control" type="text" id="start_date" ></td>
+            <td><input class="form-control" type="text" id="end_date" ></td>
+            <td><input class="form-control" type="text" id="mailchimp_status"></td>
+            <td><button class="btn btn-primary" id="btnSearch">Search</button></td>
+            <td></td>
+        </tr>
+        `;
+
+        // Returning the row HTML
+        return insertRow;
+    }
+</script>
+{{end}}
+
 {{define "insertProductRow"}}
 {{$permission := .Permission.Role}}
 <script>
@@ -644,7 +674,7 @@ function showToast(message, type) {
         event.preventDefault();
         if (currentPage > 1) {
             currentPage--;
-            fetchAndUpdateTable(currentPage,100);
+            fetchAndUpdateTable(currentPage,limit);
         }
     });
 
@@ -654,7 +684,7 @@ function showToast(message, type) {
         event.preventDefault();
         if (currentPage < totalPages) {
             currentPage++;
-            fetchAndUpdateTable(currentPage,100);
+            fetchAndUpdateTable(currentPage,limit);
         }
     });
   </script>
@@ -772,6 +802,12 @@ function showToast(message, type) {
     function updateCustomerTable(customers) {
         var tableBody = $('#customerTableBody');
         tableBody.empty(); // Clear existing data
+
+        // Add the insert row at the beginning
+        var insertRow = generateInputRow();
+        tableBody.append(insertRow);
+
+        // Loop through the rows
         customers.forEach(function(customer) {
             var row = generateCustomerTableRow(customer);
             tableBody.append(row);
@@ -782,17 +818,17 @@ function showToast(message, type) {
         // Constructing the row HTML
         var rowHtml = `
         <tr>
-            <td><input class="form-control" type="text" value="${customer.customer_email}" readonly></td>
-            <td><input class="form-control" type="text" value="${customer.first_name.String}" readonly></td>
-            <td><input class="form-control" type="text" value="${customer.last_name.String}" readonly></td>
-            <td><input class="form-control" type="text" value="${customer.country.String}" readonly></td>
-            <td><input class="form-control" type="text" value="${customer.rebill_day.Int32}" readonly></td>
-            <td><input class="form-control" type="text" value="${customer.rebill_months.Int32}" readonly></td>
-            <td><input class="form-control" type="text" value="${customer.autorenew}" readonly></td>
-            <td><input class="form-control" type="text" value="${customer.cratejoy_status.String}" readonly></td>
-            <td><input class="form-control" type="text" value="${customer.start_date.String}" readonly></td>
-            <td><input class="form-control" type="text" value="${customer.end_date.String}" readonly></td>
-            <td><input class="form-control" type="text" value="${customer.mailchimp_status.String}" readonly></td>
+            <td><input class="form-control" type="text" id="customer_email" value="${customer.customer_email}" readonly></td>
+            <td><input class="form-control" type="text" id="first_name" value="${customer.first_name.String}" readonly></td>
+            <td><input class="form-control" type="text" id="last_name" value="${customer.last_name.String}" readonly></td>
+            <td><input class="form-control" type="text" id="country" value="${customer.country.String}" readonly></td>
+            <td><input class="form-control" type="text" id="rebill_day" value="${customer.rebill_day.Int32}" readonly></td>
+            <td><input class="form-control" type="text" id="rebill_months" value="${customer.rebill_months.Int32}" readonly></td>
+            <td><input class="form-control" type="text" id="autorenew" value="${customer.autorenew}" readonly></td>
+            <td><input class="form-control" type="text" id="cratejoy_status" value="${customer.cratejoy_status.String}" readonly></td>
+            <td><input class="form-control" type="text" id="start_date" value="${customer.start_date.String.substring(0, 10)}" readonly></td>
+            <td><input class="form-control" type="text" id="end_date" value="${customer.end_date.String.substring(0, 10)}" readonly></td>
+            <td><input class="form-control" type="text" id="mailchimp_status" value="${customer.mailchimp_status.String}" readonly></td>
             <td><button class="btn btn-primary update-button" data-customer-email="${customer.customer_email}">Update</button></td>
             <td><button class="btn btn-danger delete-button" data-customer-email="${customer.customer_email}" data-bs-toggle="modal" data-bs-target="#ModalDelete${index}">Delete</button></td>
         </tr>
@@ -807,7 +843,7 @@ function showToast(message, type) {
         event.preventDefault();
         if (currentPage > 1) {
             currentPage--;
-            fetchAndUpdateCustomerTable(currentPage,250, {cratejoy_status: "active"});
+            fetchAndUpdateCustomerTable(currentPage,limit, {cratejoy_status: "active"});
         }
     });
  
@@ -817,7 +853,34 @@ function showToast(message, type) {
         event.preventDefault();
         if (currentPage < totalPages) {
             currentPage++;
-            fetchAndUpdateCustomerTable(currentPage,250, {cratejoy_status: "active"});
+            fetchAndUpdateCustomerTable(currentPage,limit, {cratejoy_status: "active"});
+        }
+    });
+
+    // Event listener for the search button
+    $('#customerTableBody').on('click', '#btnSearch', function() {
+        console.log("Search button clicked");
+        // Construct searchParams object from input values
+        var searchParams = {
+            customer_email: $('#customer_email').val(),
+            first_name: $('#first_name').val(),
+            country: $('#country').val(),
+            rebill_day: $('#rebill_day').val(),
+            rebill_months: $('#rebill_months').val(),
+            autorenew: $('#autorenew').val(),
+            cratejoy_status: $('#cratejoy_status').val(),
+            start_date: $('#start_date').val(),
+            end_date: $('#end_date').val(),
+            mailchimp_status: $('#mailchimp_status').val(),
+        };
+        // Fetch and update the table based on the search parameters
+        fetchAndUpdateCustomerTable(1, 250, searchParams);  // Reset to page 1 for new search
+    });
+
+    // Optional: Trigger search when pressing 'Enter' in any search field
+    $('.search-row input').keypress(function(event) {
+        if (event.which == 13) {  // 'Enter' key code
+            $('#searchBtn').click();
         }
     });
 </script>
