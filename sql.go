@@ -1427,7 +1427,13 @@ func ListCustomersAPI(w http.ResponseWriter, r *http.Request) {
 		"first_name":     r.URL.Query().Get("first_name"),
 		"last_name":      r.URL.Query().Get("last_name"),
 		"country":        r.URL.Query().Get("country"),
-		// Add other query parameters as needed
+		"rebill_day":     r.URL.Query().Get("rebill_day"),
+		"rebill_months":  r.URL.Query().Get("rebill_months"),
+		"autorenew":      r.URL.Query().Get("autorenew"),
+		"a.status":       r.URL.Query().Get("cratejoy_status"),
+		"start_date":     r.URL.Query().Get("start_date"),
+		"end_date":       r.URL.Query().Get("end_date"),
+		"b.status":       r.URL.Query().Get("mailchimp_status"),
 	}
 
 	// Pagination parameters
@@ -1640,8 +1646,13 @@ func ProductList(w http.ResponseWriter, r *http.Request) {
 		"season":             r.URL.Query().Get("season"),
 	}
 
-	// Debug
-	log.Debug("Search Params: ", queryParams)
+	// Pagination parameters
+	currentPage := 1
+	if pageParam := r.URL.Query().Get("page"); pageParam != "" {
+		if newPage, err := strconv.Atoi(pageParam); err == nil && newPage > 0 {
+			currentPage = newPage
+		}
+	}
 
 	// Default limit
 	limit := 100
@@ -1650,6 +1661,12 @@ func ProductList(w http.ResponseWriter, r *http.Request) {
 			limit = newLimit
 		}
 	}
+
+	// Calculate offset for SQL query
+	offset := (currentPage - 1) * limit
+
+	// Debug
+	log.Debug("Search Params: ", queryParams)
 
 	// Build the SQL query dynamically
 	var queryArgs []interface{}
@@ -1665,8 +1682,8 @@ func ProductList(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Append order by and limit
-	queryBuilder.WriteString(" ORDER BY modified DESC, sku_internal LIMIT ?")
-	queryArgs = append(queryArgs, limit)
+	queryBuilder.WriteString(" ORDER BY modified DESC, sku_internal LIMIT ? OFFSET ?")
+	queryArgs = append(queryArgs, limit, offset)
 
 	log.WithFields(log.Fields{"query": queryBuilder.String(), "args": queryArgs}).Debug("Executing query")
 
@@ -1689,9 +1706,26 @@ func ProductList(w http.ResponseWriter, r *http.Request) {
 		products = append(products, p)
 	}
 
-	// Encode and send JSON response
+	// Calculate total number of records and total pages
+	var totalRecords int
+	err = db.QueryRow("SELECT COUNT(*) FROM purchasing.skus").Scan(&totalRecords)
+	if err != nil {
+		log.WithFields(log.Fields{"error": err}).Error("Error getting total number of records")
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+	totalPages := (totalRecords + limit - 1) / limit
+
+	// Encode and send JSON response with pagination details
+	responseData := map[string]interface{}{
+		"currentPage":  currentPage,
+		"totalPages":   totalPages,
+		"totalRecords": totalRecords,
+		"perPage":      limit,
+		"products":     products,
+	}
 	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(products); err != nil {
+	if err := json.NewEncoder(w).Encode(responseData); err != nil {
 		log.WithFields(log.Fields{"error": err}).Error("Error encoding JSON")
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 	}

@@ -780,7 +780,7 @@ function showToast(message, type) {
         event.preventDefault();
         if (currentPage > 1) {
             currentPage--;
-            fetchAndUpdateCustomerTable(currentPage);
+            fetchAndUpdateCustomerTable(currentPage,250, {cratejoy_status: "active"});
         }
     });
 
@@ -790,7 +790,7 @@ function showToast(message, type) {
         event.preventDefault();
         if (currentPage < totalPages) {
             currentPage++;
-            fetchAndUpdateCustomerTable(currentPage);
+            fetchAndUpdateCustomerTable(currentPage,250, {cratejoy_status: "active"});
         }
     });
 </script>
