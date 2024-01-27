@@ -96,17 +96,17 @@ function showToast(message, type) {
         // Generate the Insert Row
         var insertRow = `<tr class="table-danger">
             <td></td>
-            <td><input class="form-control" type='text' id="new_sku"></td>
-            <td><input class="form-control" type='text' id="new_manufacturerpart"></td>
-            <td><input class="form-control" type='text' id="new_description"></td>
-            {{if eq $permission "admin"}}<td><select class="form-select" id="new_manufacturer">${manufacturerOptions}</select></td>{{end}}
-            {{if eq $permission "admin"}}<td><input class="form-control" type='text' id="new_processrequest"></td>{{end}}
-            <td><input class="form-control" type='text' id="new_unit"></td>
-            {{if eq $permission "admin"}}<td><input class="form-control" type='text' id="new_unitprice"></td>{{end}}
-            {{if eq $permission "admin"}}<td><select class="form-select" id="new_currency">${currencyOptions}</select></td>{{end}}
-            {{if eq $permission "admin"}}<td><input class="form-control" type='text' id="new_orderqty"></td>{{end}}
+            <td><input class="form-control" type='text' id="sku"></td>
+            <td><input class="form-control" type='text' id="manufacturerpart"></td>
+            <td><input class="form-control" type='text' id="description"></td>
+            {{if eq $permission "admin"}}<td><select class="form-select" id="manufacturer">${manufacturerOptions}</select></td>{{end}}
+            {{if eq $permission "admin"}}<td><input class="form-control" type='text' id="processrequest"></td>{{end}}
+            <td><input class="form-control" type='text' id="unit"></td>
+            {{if eq $permission "admin"}}<td><input class="form-control" type='text' id="unitprice"></td>{{end}}
+            {{if eq $permission "admin"}}<td><select class="form-select" id="currency">${currencyOptions}</select></td>{{end}}
+            {{if eq $permission "admin"}}<td><input class="form-control" type='text' id="orderqty"></td>{{end}}
             {{if eq $permission "admin"}}<td><input class="form-check-input" type='checkbox' id="reorder" name="reorder" checked></td>{{end}}
-            <td><select class="form-select" id="new_season">${seasonOptions}</select></td>
+            <td><select class="form-select" id="season">${seasonOptions}</select></td>
             <td><input class="form-control" type='text' id="new_inventoryqty"></td>
             <td><button class="btn btn-primary" id="btnSearch">Search</button></td>
             <td></td>
@@ -600,13 +600,13 @@ function showToast(message, type) {
             console.log("Manufacturers fetched:", manufacturers);
 
             // Construct the query string from search parameters
-            var queryString = Object.entries(searchParams).map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`).join('&');
-            queryString += `&page=${currentPage}&limit=${limit}`; // Add pagination parameters to the query string
-            console.log("Query String: ", queryString);
-
+            var queryParams = $.param(searchParams); // Convert search parameters to query string
+            var apiUrl = `/api-handler?targetAPI=/api/products&page=${currentPage}&limit=${limit}&${queryParams}`;
             console.log("Fetching data with search parameters:", searchParams);
+
+            console.log("Fetching data from " + apiUrl);
             $.ajax({
-                url: '/api-handler?targetAPI=/api/products?' + queryString,
+                url: apiUrl,
                 type: 'GET',
                 dataType: 'json',
                 success: function(response) {
@@ -664,6 +664,7 @@ function showToast(message, type) {
             });
         } catch (error) {
             console.error("Error in fetching manufacturers:", error);
+            showToastF(error,"error")
             // Handle the error
         }
     }

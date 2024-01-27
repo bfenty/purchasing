@@ -1642,8 +1642,8 @@ func ProductList(w http.ResponseWriter, r *http.Request) {
 		"unit_price":         r.URL.Query().Get("unitprice"),
 		"currency":           r.URL.Query().Get("currency"),
 		"order_qty":          r.URL.Query().Get("orderqty"),
-		"reorder":            r.URL.Query().Get("reorder"),
-		"season":             r.URL.Query().Get("season"),
+		// "reorder":            r.URL.Query().Get("reorder"),
+		"season": r.URL.Query().Get("season"),
 	}
 
 	// Pagination parameters
