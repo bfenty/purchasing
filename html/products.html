@@ -5,6 +5,7 @@
 <body>
 {{template "navigation" .}}
 {{$permission := .Permission.Role}}
+{{$layout := .Layout}}
 <br>
     {{template "toastBox" .}}
     {{template "modalImage" .}}
@@ -39,7 +40,8 @@
             // Setup Page Variables
             var currentPage = 1; // keep track of the current page
             var totalPages = 0; // total number of pages, you might get this from the server
-            var limit = 100; // set page size limit
+            var limit = 25; // set page size limit
+            $('#limitSelect').val(limit);
             var searchParams = {}; //set initial search parameters
             $(document).ready(function() {
                 console.log("Document ready. Initializing table data fetch.")
@@ -59,12 +61,12 @@
       {{template "toast" .}}
       {{template "fetchmanufacturers" .}}
       {{template "updateTable" .}}
-      {{template "searchProductRow" .}}
+      {{if eq $layout "products"}}{{template "searchProductRow" .}}{{template "btnSearch" .}}{{end}}
+      {{if eq $layout "insert"}}{{template "insertProductRow" .}}{{end}}
       {{template "tableProductRow" .}}
       {{template "btninsertProduct" .}}
       {{template "btnupdateProduct" .}}
       {{template "btnDeleteSKU" .}}
-      {{template "btnSearch" .}}
       {{template "nedry" .}}
       
   {{template "footer" .}}

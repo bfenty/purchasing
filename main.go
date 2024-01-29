@@ -241,8 +241,9 @@ func PageHandler(w http.ResponseWriter, r *http.Request) {
 	if path != "login" {
 		page.Permission = auth(w, r)
 	}
-	page.Title = strings.Title(path) // Capitalize the first letter of the title
-	page.Message = message(r)
+	page.Title = strings.Title(path)          // Capitalize the first letter of the title
+	page.Layout = r.URL.Query().Get("layout") // Get the layout from the URL
+	log.Debug("Layout:", page.Layout)
 
 	log.WithFields(log.Fields{
 		"title":   page.Title,

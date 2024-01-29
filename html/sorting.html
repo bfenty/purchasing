@@ -12,8 +12,7 @@
   {{$layout := .Layout}}
   <div>
     <div id="message" class="alert"></div>
-    <!-- Dennis Nedry Easter Egg -->
-    <img id="gif" src="https://media.tenor.com/ttEnKdyDKKIAAAAC/jurassic-park-nedry-dennis.gif" style="display:none; position:fixed; top:50%; left:50%; transform: translate(-50%, -50%); z-index: 9999;">
+
     <h1>{{.Title}} - {{with $layout}}{{if eq $layout "receiving"}}Receiving{{else if eq $layout "mgmt"}}Management{{else if eq $layout "dataentry"}}Data Entry{{else if eq $layout "full"}}Full{{end}}{{end}}</h1>
     <div class="row" id="userTable">
       <div class="col-sm-12">
@@ -231,7 +230,7 @@
           console.log('Redirecting to /sorterror');
           window.location.href = '/sorterror';
         }
-      }); // Add a closing parenthesis and semicolon here
+      });
     });
   </script>
   <script>
@@ -278,23 +277,6 @@
           setTimeout(() => {
             messageDiv.style.display = 'none';
           }, 5000);
-
-          //for dynamic table reload, later:
-  //         fetch('/sorting')
-  // .then(response => {
-  //   if (!response.ok) {
-  //     throw new Error('Network response was not ok');
-  //   }
-  //   return response.text();
-  // })
-  // .then(data => {
-  //   // Replace the table body with the updated data
-  //   document.querySelector('#sorttable tbody').innerHTML = data;
-  // })
-  // .catch(error => {
-  //   console.error('Error:', error);
-  //   // Handle the error
-  // });
         })
         .catch(error => {
           console.error('Error:', error);
@@ -353,57 +335,6 @@
     });
   });
   </script>
-  <!-- <script>
-    $(document).ready(function() {   
-      // inspired by http://jsfiddle.net/arunpjohny/564Lxosz/1/
-      $('.table-responsive-stack').each(function (i) {
-        var id = $(this).attr('id');
-        //alert(id);
-        $(this).find("th").each(function(i) {
-            $('#'+id + ' td:nth-child(' + (i + 1) + ')').prepend('<span class="table-responsive-stack-thead">'+             $(this).text() + ':</span> ');
-            $('.table-responsive-stack-thead').hide();
-            
-        });
-      });
-
-      $( '.table-responsive-stack' ).each(function() {
-      var thCount = $(this).find("th").length; 
-      var rowGrow = 100 / thCount + '%';
-      //console.log(rowGrow);
-      $(this).find("th, td").css('flex-basis', rowGrow);   
-      });
-
-      function flexTable(){
-        const mediaQuery = window.matchMedia('(max-width: 1000px)')
-      // if ($(window).width() < 768) {
-        if (mediaQuery.matches) {
-        
-      $(".table-responsive-stack").each(function (i) {
-        $(this).find(".table-responsive-stack-thead").show();
-        $(this).find('thead').hide();
-      });
-      
-      // window is less than 1000px   
-      } else {
-        
-        
-      $(".table-responsive-stack").each(function (i) {
-        $(this).find(".table-responsive-stack-thead").hide();
-        $(this).find('thead').show();
-      });
-
-      }
-      // flextable   
-      }      
-
-      flexTable();
-
-      window.onresize = function(event) {
-      flexTable();
-      };
-      // document ready  
-      });
-  </script> -->
     <!-- Modal Dialogue -->
       <div class="modal fade" id="archiveRequestModal" tabindex="-1" role="dialog" aria-labelledby="archiveRequestModalLabel" aria-hidden="true">
         <div class="modal-dialog" role="document">

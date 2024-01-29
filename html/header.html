@@ -160,15 +160,16 @@ $('#myModal').on('shown.bs.modal', function () {
 {{$admin  := .Permission.Permissions.Admin}}
 <div class="collapse navbar-collapse" id="navbarSupportedContent">
   <ul class="navbar-nav mr-auto">
-  {{if or (eq $permission "admin") (eq $permission "purchasing") (eq $permission "receiving")}}
-    <li class="nav-item active">
-      <a class="nav-link active" href="/products">Products<span class="sr-only">(current)</span></a>
-    </li>
-    {{end}}
-  {{if or (eq $permission "admin") (eq $permission "purchasing")}}
-    <li class="nav-item active">
-      <a class="nav-link active" href="/productsinsert">New Product<span class="sr-only">(current)</span></a>
-    </li>
+    {{if or (eq $permission "admin") (eq $permission "purchasing") (eq $permission "receiving") (.Permission.Permissions.Sorting)}}
+  <li class="nav-item dropdown" style="position:relative; z-index: 9999;">
+          <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            Products
+          </a>
+          <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+            {{if or (eq $permission "admin") (eq $permission "purchasing") (eq $permission "receiving")}}<li><a class="dropdown-item" href="/products?layout=products">Product List</a></li>{{end}}
+            {{if or (eq $permission "admin") (eq $permission "purchasing")}}<li><a class="dropdown-item" href="/products?layout=insert">New Product</a></li>{{end}}
+          </ul>
+        </li>
     {{end}}
   {{if or (eq $permission "admin") (eq $permission "purchasing")}}
     <li class="nav-item active">

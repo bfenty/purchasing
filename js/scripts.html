@@ -600,6 +600,7 @@ function showToast(message, type) {
             console.log("Manufacturers fetched:", manufacturers);
 
             // Construct the query string from search parameters
+            var limit = $('#limitSelect').val();
             var queryParams = $.param(searchParams); // Convert search parameters to query string
             var apiUrl = `/api-handler?targetAPI=/api/products&page=${currentPage}&limit=${limit}&${queryParams}`;
             console.log("Fetching data with search parameters:", searchParams);
@@ -963,8 +964,6 @@ function showToast(message, type) {
     </div>
 </div>
 
-
-
 <script>
     // Update pagination controls
     function updatePaginationControls() {
@@ -1003,21 +1002,27 @@ function showToast(message, type) {
             fetchAndUpdateTable(currentPage,limit, {cratejoy_status: "active"});
         }
     });
+    // Refresh the table when the limit changes
+    $('#limitSelect').change(function() {
+        fetchAndUpdateTable(1, {}); // For example, reset to page 1
+    });
 </script>
 {{end}}
 {{define "nedry"}}
+<!-- Dennis Nedry Easter Egg -->
+<img id="gif" src="https://media.tenor.com/ttEnKdyDKKIAAAAC/jurassic-park-nedry-dennis.gif" style="display:none; position:fixed; top:50%; left:50%; transform: translate(-50%, -50%); z-index: 9999;">
 <script>
-    //Dennis Nedry easter egg
-    document.addEventListener("keydown", function(event) {
-      if (event.ctrlKey && event.key === "m") {
-        event.preventDefault(); // prevent browser default action
-        var gif = document.getElementById("gif");
-        if (gif.style.display === "block") {
-          gif.style.display = "none";
-        } else {
-          gif.style.display = "block";
-        }
-      }
-    });
-  </script>
-  {{end}}
+//Dennis Nedry easter egg
+document.addEventListener("keydown", function(event) {
+    if (event.ctrlKey && event.key === "m") {
+    event.preventDefault(); // prevent browser default action
+    var gif = document.getElementById("gif");
+    if (gif.style.display === "block") {
+        gif.style.display = "none";
+    } else {
+        gif.style.display = "block";
+    }
+    }
+});
+</script>
+{{end}}
