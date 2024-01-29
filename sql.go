@@ -1942,6 +1942,125 @@ func UpdateProduct(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, http.StatusOK, map[string]string{"message": "Product successfully updated"})
 }
 
+// ListSortRequestsAPI godoc
+// @Summary List sort requests
+// @Description List sort requests with optional search filters
+// @Tags sortrequests
+// @Accept  json
+// @Produce  json
+// @Param sku query string false "SKU"
+// @Param description query string false "Description"
+// @Param manufacturer_part query string false "Manufacturer Part"
+// @Param instructions query string false "Instructions"
+// @Param weightout query string false "Weight Out"
+// @Param weightin query string false "Weight In"
+// @Param pieces query string false "Pieces"
+// @Param hours query string false "Hours"
+// @Param checkout query string false "Checkout"
+// @Param checkin query string false "Checkin"
+// @Param sorter query string false "Sorter"
+// @Param status query string false "Status"
+// @Param priority query string false "Priority"
+// @Success 200 {object} map[string]interface{} "Sort requests listed successfully"
+// @Failure 500 {object} map[string]string "Internal Server Error"
+// @Router /api/sortrequests [get]
+func ListSortRequestsAPI(w http.ResponseWriter, r *http.Request) {
+	// Set up database connection (assuming db is a global *sql.DB)
+	db, err := sql.Open("mysql", "user:password@tcp(localhost:3306)/dbname")
+	if err != nil {
+		log.Println("Error connecting to the database: ", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+	defer db.Close()
+
+	//Gather Search Parameters
+	queryParams := map[string]string{
+		"sku":              r.URL.Query().Get("search-sku"),
+		"description":      r.URL.Query().Get("search-description"),
+		"sku_manufacturer": r.URL.Query().Get("search-manufacturerpart"),
+		"instructions":     r.URL.Query().Get("search-instructions"),
+		"weightout":        r.URL.Query().Get("search-weightout"),
+		"weightin":         r.URL.Query().Get("search-weightin"),
+		"pieces":           r.URL.Query().Get("search-pieces"),
+		"hours":            r.URL.Query().Get("search-hours"),
+		"checkout":         r.URL.Query().Get("search-checkout"),
+		"checkint":         r.URL.Query().Get("search-checkin"),
+		"sorter":           r.URL.Query().Get("search-sorter"),
+		"status":           r.URL.Query().Get("search-status"),
+		"prty":             r.URL.Query().Get("search-priority"),
+	}
+
+	// Construct SQL query
+	var i []interface{}
+	query := "SELECT requestid, sku,description,instructions,weightin,weightout,pieces,hours,checkout,checkint,COALESCE(sorter,''),status,sku_manufacturer,prty from sortrequest WHERE active=1 "
+	for param, value := range queryParams {
+		if value != "" {
+			value = value + "%"
+			i = append(i, value)
+			query += fmt.Sprintf(" AND %s LIKE ?", param)
+		}
+	}
+	query += " order by 1 desc"
+
+	// Execute query
+	rows, err := db.Query(query, args...)
+	if err != nil {
+		log.Println("Error executing query: ", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+
+	// Process rows
+	var sortRequests []SortRequest
+	//Pull Data
+	for rows.Next() {
+		var r SortRequest
+		err := rows.Scan(&r.ID, &r.SKU, &r.Description, &r.Instructions, &r.Weightin, &r.Weightout, &r.Pieces, &r.Hours, &r.Checkout, &r.Checkin, &r.Sorter, &r.Status, &r.ManufacturerPart, &r.Priority)
+		if err != nil {
+			log.Println("Error Processing Data: ", err)
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			return
+		}
+		var a float64
+		var b float64
+		var c float64
+		a = *r.Weightin
+		b = *r.Weightout
+		if r.Pieces != nil {
+			c = float64(*r.Pieces)
+		} else {
+			// Handle the case where r.Pieces is nil
+			c = 0.0
+		}
+		r.Difference = a - b - (c * 0.4555)               //0.4555 is the bag weight in grams
+		r.Difference = math.Round(r.Difference*100) / 100 // Round to 2 decimal places
+		if a != 0 {
+			r.DifferencePercent = formatAsPercent(r.Difference / a) //Get the percentage of the weight in
+		}
+		if r.Difference < (-0.1*a) && a != 0 {
+			r.Warn = true
+		}
+		r.Difference = -r.Difference
+		// log.Info(c)
+		sortRequests = append(sortRequests, r)
+	}
+
+	// Handle any errors encountered during iteration
+	if err = rows.Err(); err != nil {
+		log.Println("Error iterating over rows: ", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	// Send JSON response
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"sortRequests": sortRequests,
+	})
+}
+
 // respondWithJSON sends a JSON response to the client.
 // It logs and handles errors that occur during JSON marshaling or writing to the response.
 func respondWithJSON(w http.ResponseWriter, statusCode int, payload interface{}) {

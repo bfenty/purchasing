@@ -306,6 +306,9 @@ func APIHandler(w http.ResponseWriter, r *http.Request) {
 	case "customers":
 		log.Debug("Calling ListCustomersAPI function")
 		ListCustomersAPI(w, r)
+	case "sortinglist":
+		log.Debug("Calling ListCustomersAPI function")
+		ListSortRequestsAPI(w, r)
 	// Add other cases as needed
 	default:
 		log.WithFields(log.Fields{
