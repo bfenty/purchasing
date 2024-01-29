@@ -217,20 +217,6 @@
   </div>
   {{template "footer" .}}
   <script>
-    //Dennis Nedry easter egg
-    document.addEventListener("keydown", function(event) {
-      if (event.ctrlKey && event.key === "m") {
-        event.preventDefault(); // prevent browser default action
-        var gif = document.getElementById("gif");
-        if (gif.style.display === "block") {
-          gif.style.display = "none";
-        } else {
-          gif.style.display = "block";
-        }
-      }
-    });
-  </script>
-  <script>
     $(document).ready(function() {
       // Handle click event for Error button
       $('.error').on('click', function() {
