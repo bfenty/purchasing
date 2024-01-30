@@ -10,6 +10,8 @@
   {{$admin := .Permission.Permissions.Admin}}
   {{$mgmt := .Permission.Permissions.Mgmt}}
   {{$layout := .Layout}}
+  {{template "toastBox" .}}
+  {{template "pageControls" .}}
   <div>
     <div id="message" class="alert"></div>
 
@@ -38,11 +40,11 @@
                 {{if or (eq $layout "full")}}<th scope="col">Status</th>{{end}}
                 {{if or (eq $layout "full") (eq $layout "dataentry")}}<th scope="col">Priority</th>{{end}}
                 {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "dataentry") (eq $layout "mgmt")}}<th scope="col" class="btn-col"></th>{{end}}
-                {{if or (eq $layout "full") ($mgmt)}}<th scope="col" class="btn-col"></th>{{end}}
+                {{if or (eq $layout "full") (eq $layout "mgmt")}}<th scope="col" class="btn-col"></th>{{end}}
                 {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "mgmt")}}<th scope="col" class="btn-col"></th>{{end}}
               </tr>
             </thead>
-            <tbody>
+            <tbody id="contentTableBody">
               <!-- Search Form -->
               <form action="/sorting" method="GET">
               <tr>
@@ -216,7 +218,15 @@
   </div>
   {{template "footer" .}}
   <script>
+    // Setup Page Variables
+    var currentPage = 1; // keep track of the current page
+    var totalPages = 0; // total number of pages, you might get this from the server
+    var limit = 25; // set page size limit
+    var searchParams = {}; //set initial search parameters
+    var layout = {{$layout}}
     $(document).ready(function() {
+      console.log("Document ready. Initializing table data fetch.")
+      fetchAndUpdateTable(currentPage,limit, searchParams);
       // Handle click event for Error button
       $('.error').on('click', function() {
         // Get the requestid from the data attribute
@@ -335,6 +345,11 @@
     });
   });
   </script>
+  {{template "toast" .}}
+  {{template "nedry" .}}
+  {{template "updateSortTable" .}}
+  {{template "spinner" .}}
+
     <!-- Modal Dialogue -->
       <div class="modal fade" id="archiveRequestModal" tabindex="-1" role="dialog" aria-labelledby="archiveRequestModalLabel" aria-hidden="true">
         <div class="modal-dialog" role="document">

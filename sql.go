@@ -1491,7 +1491,7 @@ func ListCustomersAPI(w http.ResponseWriter, r *http.Request) {
 		var customer Customer
 		err := rows.Scan(&customer.CustomerEmail, &customer.FirstName, &customer.LastName, &customer.Country, &customer.RebillDay, &customer.RebillMonths, &customer.AutoRenew, &customer.CratejoyStatus, &customer.StartDate, &customer.EndDate, &customer.MailchimpStatus)
 		if err != nil {
-			log.Debug(err)
+			log.Error(err)
 			respondWithJSON(w, http.StatusInternalServerError, map[string]string{"message": "Error scanning row"})
 			return
 		}
@@ -1966,13 +1966,26 @@ func UpdateProduct(w http.ResponseWriter, r *http.Request) {
 // @Router /api/sortrequests [get]
 func ListSortRequestsAPI(w http.ResponseWriter, r *http.Request) {
 	// Set up database connection (assuming db is a global *sql.DB)
-	db, err := sql.Open("mysql", "user:password@tcp(localhost:3306)/dbname")
-	if err != nil {
-		log.Println("Error connecting to the database: ", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return
+	// db, err := sql.Open("mysql", "user:password@tcp(localhost:3306)/dbname")
+	// if err != nil {
+	// 	log.Println("Error connecting to the database: ", err)
+	// 	http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+	// 	return
+	// }
+	// defer db.Close()
+
+	// Pagination parameters
+	page, _ := strconv.Atoi(r.URL.Query().Get("page"))
+	limit, _ := strconv.Atoi(r.URL.Query().Get("limit"))
+	if page < 1 {
+		page = 1
 	}
-	defer db.Close()
+	if limit < 1 {
+		limit = 10 // Default limit
+	}
+
+	// Calculate offset
+	offset := (page - 1) * limit
 
 	//Gather Search Parameters
 	queryParams := map[string]string{
@@ -1992,22 +2005,40 @@ func ListSortRequestsAPI(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Construct SQL query
-	var i []interface{}
-	query := "SELECT requestid, sku,description,instructions,weightin,weightout,pieces,hours,checkout,checkint,COALESCE(sorter,''),status,sku_manufacturer,prty from sortrequest WHERE active=1 "
+	var queryArgs []interface{}
+	var queryBuilder strings.Builder
+	queryBuilder.WriteString("SELECT requestid, sku,description,instructions,weightin,weightout,pieces,hours,checkout,checkint,COALESCE(sorter,''),status,sku_manufacturer,prty from purchasing.sortrequest WHERE active=1 ")
 	for param, value := range queryParams {
 		if value != "" {
 			value = value + "%"
-			i = append(i, value)
-			query += fmt.Sprintf(" AND %s LIKE ?", param)
+			queryArgs = append(queryArgs, value)
+			queryBuilder.WriteString(fmt.Sprintf(" AND %s LIKE ?", param))
 		}
 	}
-	query += " order by 1 desc"
+
+	// Count total records query (without LIMIT and OFFSET)
+	countQuery := strings.Replace(queryBuilder.String(), "SELECT requestid, sku,description,instructions,weightin,weightout,pieces,hours,checkout,checkint,COALESCE(sorter,''),status,sku_manufacturer,prty", "SELECT COUNT(*)", 1)
+	log.WithFields(log.Fields{"countQuery": countQuery, "args": queryArgs}).Debug("Executing count query")
+
+	// Execute count query
+	var totalRecords int
+	err := db.QueryRow(countQuery, queryArgs...).Scan(&totalRecords)
+	if err != nil {
+		log.Debug(err)
+		respondWithJSON(w, http.StatusInternalServerError, map[string]string{"message": "Error executing count query"})
+		return
+	}
+	totalPages := (totalRecords + limit - 1) / limit // Calculate total pages
+
+	// Append limit and offset to the query
+	queryArgs = append(queryArgs, limit, offset)
+	query := queryBuilder.String() + " LIMIT ? OFFSET ?"
 
 	// Execute query
-	rows, err := db.Query(query, args...)
+	rows, err := db.Query(query, queryArgs...)
 	if err != nil {
-		log.Println("Error executing query: ", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		log.Debug(err)
+		respondWithJSON(w, http.StatusInternalServerError, map[string]string{"message": "Error executing query"})
 		return
 	}
 	defer rows.Close()
@@ -2019,8 +2050,8 @@ func ListSortRequestsAPI(w http.ResponseWriter, r *http.Request) {
 		var r SortRequest
 		err := rows.Scan(&r.ID, &r.SKU, &r.Description, &r.Instructions, &r.Weightin, &r.Weightout, &r.Pieces, &r.Hours, &r.Checkout, &r.Checkin, &r.Sorter, &r.Status, &r.ManufacturerPart, &r.Priority)
 		if err != nil {
-			log.Println("Error Processing Data: ", err)
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			log.Error(err)
+			respondWithJSON(w, http.StatusInternalServerError, map[string]string{"message": "Error scanning row"})
 			return
 		}
 		var a float64
@@ -2054,10 +2085,12 @@ func ListSortRequestsAPI(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Send JSON response
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]interface{}{
+	// Send JSON response with pagination details
+	respondWithJSON(w, http.StatusOK, map[string]interface{}{
 		"sortRequests": sortRequests,
+		"currentPage":  page,
+		"totalPages":   totalPages,
+		"totalRecords": totalRecords,
 	})
 }
 

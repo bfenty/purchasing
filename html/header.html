@@ -76,6 +76,23 @@ $('#myModal').on('shown.bs.modal', function () {
     z-index: 1051; /* Above Bootstrap's modal */
 }
 
+.loading-spinner-overlay {
+    display: none; /* Hidden initially */
+    position: fixed; /* Fixed position */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.8); /* Semi-transparent background */
+    z-index: 1050; /* High z-index to be on top */
+}
+
+.loading-spinner-overlay .spinner-border {
+    width: 3rem;
+    height: 3rem;
+}
+
+
 </style>
 <style>
 

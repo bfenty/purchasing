@@ -38,6 +38,7 @@
             var currentPage = 1; // keep track of the current page
             var totalPages = 0; // total number of pages, you might get this from the server
             var limit = 50;
+            $('#limitSelect').val(limit);
             var searchParams = {}; //set initial search parameters
             $(document).ready(function() {
                 console.log("Document ready. Initializing table data fetch.");
@@ -50,6 +51,8 @@
       {{template "updateCustomerTable" .}}
       {{template "searchCustomerRow" .}}
       {{template "btnSearch" .}}
+      {{template "nedry" .}}
+      {{template "spinner" .}}
       
   {{template "footer" .}}
 </body>

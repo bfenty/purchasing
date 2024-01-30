@@ -127,7 +127,7 @@ func Signin(w http.ResponseWriter, r *http.Request) {
 		}).Debug("Session token created and cookie set")
 
 		// Handling redirects based on role
-		redirectURL := "/productsinsert" // Default redirect
+		redirectURL := "/products?layout=insert" // Default redirect
 		if user.Role == "sorting" {
 			redirectURL = "/checkout"
 		} else if user.Role == "receiving" {

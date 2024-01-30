@@ -634,6 +634,8 @@ function showToast(message, type) {
                         tableBody.append(row);
                     });
 
+                    $('#loadingSpinner').hide(); // Hide the spinner
+
                     // Update pagination controls
                     updatePaginationControls();
 
@@ -658,6 +660,7 @@ function showToast(message, type) {
                 },
                 beforeSend: function() {
                     console.log("Preparing to send AJAX request to /api/products.");
+                    $('#loadingSpinner').show(); // Show the spinner before sending the request
                 },
                 complete: function(jqXHR, textStatus) {
                     console.log("AJAX request completed with status:", textStatus);
@@ -670,6 +673,199 @@ function showToast(message, type) {
         }
     }
   </script>
+{{end}}
+
+{{define "updateSortTable"}}
+{{$permission := .Permission.Role}}
+{{$layout := .Layout}}
+<script>
+    function fetchAndUpdateTable(page, limit, searchParams) {
+    var queryParams = $.param(searchParams); // Convert search parameters to query string
+    var apiUrl = `/api-handler?targetAPI=/api/sortinglist&page=${page}&limit=${limit}&${queryParams}`;
+    console.log("Fetching data with search parameters:", searchParams);
+
+    console.log("Fetching data from " + apiUrl);
+
+    $.ajax({
+        url: apiUrl,
+        type: 'GET',
+        dataType: 'json',
+        success: function(response) {
+            console.log("Data fetched successfully. Number of records:", response.sortRequests.length);
+            console.log("Response:", response);
+            totalPages = response.totalPages; // set the total pages from the response
+            currentPage = response.currentPage; // set the current page from the response
+            // Update the customer table with the new data
+            updateTable(response.sortRequests);
+            $('#loadingSpinner').hide(); // Hide the spinner
+            updatePaginationControls();
+            console.log("Sort Request table updated successfully.");
+        },
+        error: function(jqXHR, textStatus, errorThrown) {
+            $('#loadingSpinner').hide(); // Hide the spinner
+            console.error("Error fetching data:", textStatus, errorThrown, jqXHR);
+
+            // Initialize errorMessage with a default error message
+            let errorMessage = "An error occurred. Please try again.";
+
+            // Try to parse and use the custom error message from the server if available
+            if (jqXHR.responseText) {
+                try {
+                    var resp = JSON.parse(jqXHR.responseText);
+                    if (resp && resp.error) {
+                        errorMessage = resp.error;
+                    }
+                } catch (e) {
+                    console.error("Error parsing server response:", e);
+                }
+            }
+            
+            showToast(errorMessage, "error");  // Show the custom error message or the default one
+        },
+
+        beforeSend: function() {
+            console.log("Preparing to send AJAX request to /api/sortrequests.");
+            $('#loadingSpinner').show(); // Show the spinner before sending the request
+        },
+        complete: function(jqXHR, textStatus) {
+            console.log("AJAX request completed with status:", textStatus);
+            // You can remove the loading spinner here
+        }
+    });
+}
+
+    function updateTable(sortRequests) {
+        var tableBody = $('#contentTableBody');
+        tableBody.empty(); // Clear existing data
+
+        // Add the insert row at the beginning
+        var insertRow = GenerateTopRow();
+        tableBody.append(insertRow);
+
+        // Loop through the rows
+        sortRequests.forEach(function(sortRequest) {
+            var row = generateTableRow(sortRequest);
+            tableBody.append(row);
+        });
+    }
+
+    function GenerateTopRow() {
+        console.log("Generating Search Row")
+
+        // Generate the Insert Row
+        var rowHtml = `
+            <tr>
+                <td><input type="text" class="form-control" name="search-requestid" placeholder="Request ID"></td>`;
+                {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "dataentry") (eq $layout "mgmt")}}rowHtml += `<td class="col-sku"><input type="text" class="form-control" name="search-sku" placeholder="SKU"></td>`;{{end}}
+                {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "dataentry")}}rowHtml += `<td><input type="text" class="form-control" name="search-description" placeholder="Description"></td>`;{{end}}
+                {{if or (eq $layout "full") (eq $layout "dataentry")}}rowHtml += `<td><input type="text" class="form-control" name="search-manufacturerpart" placeholder="Manufacturer Part"></td>`;{{end}}
+                {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "dataentry") (eq $layout "mgmt")}}rowHtml += `<td><input type="text" class="form-control" name="search-instructions" pattern="[0-9]+(\.[0-9]+)?" title="Please enter a valid decimal number" placeholder="Pieces"></td>`;{{end}}
+                {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "dataentry")}}rowHtml += `<td><input type="text" class="form-control" name="search-weightout" placeholder="Weight Out"></td>`;{{end}}
+                {{if or (eq $layout "full") (eq $layout "receiving")}}rowHtml += `<td><input type="text" class="form-control" name="search-weightin" placeholder="Weight In"></td>`;{{end}}
+                {{if or (eq $layout "full") (eq $layout "receiving")}}
+                rowHtml += `<td>
+                    <select class="form-select" name="search-difference">
+                        <option value="">Difference</option>
+                        <option value="positive">Positive</option>
+                        <option value="negative">Negative</option>
+                    </select>
+                    </td>`;
+                {{end}}
+                {{if or (eq $layout "full") (eq $layout "receiving")}}rowHtml += `<td></td>`;{{end}}
+                {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "mgmt")}}rowHtml += `<td><input type="text" class="form-control" name="search-pieces" pattern="[0-9]+(\.[0-9]+)?" title="Please enter a valid decimal number" placeholder="Units"></td>`;{{end}}
+                {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "mgmt")}}rowHtml += `<td><input type="text" class="form-control" name="search-hours" placeholder="Hours"></td>`;{{end}}
+                {{if or (eq $layout "full") (eq $layout "mgmt")}}rowHtml += `<td><input type="text" class="form-control" name="search-checkout" placeholder="Check Out"></td>`;{{end}}
+                {{if or (eq $layout "full") (eq $layout "mgmt")}}rowHtml += `<td><input type="text" class="form-control" name="search-checkin" placeholder="Check In"></td>`;{{end}}
+                {{if or (eq $layout "full") (eq $layout "mgmt")}}
+                    rowHtml += `<td>
+                        <select class="form-select" name="search-sorter">
+                            <option value="">Sorter</option>
+                        </select>
+                    </td>`;
+                {{end}}
+                {{if or (eq $layout "full")}}
+                    rowHtml += `<td>
+                        <select class="form-select" name="search-status">
+                            <option value="">Status</option>
+                            <option value="New">New</option>
+                            <option value="Checkout">Checkout</option>
+                            <option value="Checkin">Checkin</option>
+                        </select>
+                    </td>`;
+                {{end}}
+                {{if or (eq $layout "full") (eq $layout "dataentry")}}
+                rowHtml += `<td>
+                  <select class="form-select" name="search-priority">
+                    <option value="">Priority</option>
+                    <option value="0">Normal</option>
+                    <option value="1">High</option>
+                  </select>
+                </td>`;
+                {{end}}
+                {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "dataentry") (eq $layout "mgmt")}}rowHtml += `<td class="btn-col"><input type=hidden name=layout id=layout><input type='submit' value='Search' class="btn btn-primary"></td>`;{{end}}
+                {{if or (eq $layout "full") (eq $layout "mgmt")}}}rowHtml += `<td class="btn-col"></td>`;{{end}}
+                {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "mgmt")}}rowHtml += `<td class="btn-col"></td>`;{{end}}
+                rowHtml += `</tr>`;
+        return rowHtml;
+    }
+
+    function generateTableRow(sortRequest, index) {
+        // Constructing the row HTML
+        var rowHtml = '<tr>';
+        rowHtml += `<td><input type="text" class="form-control requestid" id="requestid" name="requestid" value="${sortRequest.ID}"></td>`
+        {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "dataentry") (eq $layout "mgmt")}}rowHtml += `<td class="col-sku"><input type="text" class="form-control" name="sku"  value="${sortRequest.SKU}"></td>`;{{end}}
+        {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "dataentry")}}rowHtml += `<td><input type="text" class="form-control" name="search-description" value="${sortRequest.Description}"></td>`;{{end}}
+        {{if or (eq $layout "full") (eq $layout "dataentry")}}rowHtml += `<td><input type="text" class="form-control" name="search-manufacturerpart" value="${sortRequest.ManufacturerPart}"></td>`;{{end}}
+        {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "dataentry") (eq $layout "mgmt")}}rowHtml += `<td><input type="text" class="form-control" name="search-instructions" pattern="[0-9]+(\.[0-9]+)?" title="Please enter a valid decimal number" value="${sortRequest.Instructions}"></td>`;{{end}}
+        {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "dataentry")}}rowHtml += `<td><input type="text" class="form-control" name="weightout" value="${sortRequest.Weightout}"></td>`;{{end}}
+        {{if or (eq $layout "full") (eq $layout "receiving")}}rowHtml += `<td><input type="text" class="form-control" name="search-weightin" value="${sortRequest.Weightin}"></td>`;{{end}}
+        {{if or (eq $layout "full") (eq $layout "receiving")}}
+        rowHtml += `<td>
+            <select class="form-select" name="search-difference">
+                <option value="">Difference</option>
+                <option value="positive">Positive</option>
+                <option value="negative">Negative</option>
+            </select>
+            </td>`;
+        {{end}}
+        {{if or (eq $layout "full") (eq $layout "receiving")}}rowHtml += `<td></td>`;{{end}}
+        {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "mgmt")}}rowHtml += `<td><input type="text" class="form-control" name="search-pieces" pattern="[0-9]+(\.[0-9]+)?" title="Please enter a valid decimal number" value="${sortRequest.Pieces}"></td>`;{{end}}
+        {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "mgmt")}}rowHtml += `<td><input type="text" class="form-control" name="search-hours" value="${sortRequest.Hours}"></td>`;{{end}}
+        {{if or (eq $layout "full") (eq $layout "mgmt")}}rowHtml += `<td><input type="text" class="form-control" name="search-checkout" value="${sortRequest.Checkout}"></td>`;{{end}}
+        {{if or (eq $layout "full") (eq $layout "mgmt")}}rowHtml += `<td><input type="text" class="form-control" name="search-checkin" value="${sortRequest.Checkin}"></td>`;{{end}}
+        {{if or (eq $layout "full") (eq $layout "mgmt")}}
+            rowHtml += `<td>
+                <select class="form-select" name="search-sorter">
+                    <option value="">Sorter</option>
+                </select>
+            </td>`;
+        {{end}}
+        {{if or (eq $layout "full")}}
+            rowHtml += `<td>
+                <select class="form-select" name="search-status">
+                    <option value="">Status</option>
+                    <option value="New">New</option>
+                    <option value="Checkout">Checkout</option>
+                    <option value="Checkin">Checkin</option>
+                </select>
+            </td>`;
+        {{end}}
+        {{if or (eq $layout "full") (eq $layout "dataentry")}}
+        rowHtml += `<td>
+            <select class="form-select" name="search-priority">
+            <option value="">Priority</option>
+            <option value="0">Normal</option>
+            <option value="1">High</option>
+            </select>
+        </td>`;
+        {{end}}
+        {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "dataentry") (eq $layout "mgmt")}}rowHtml += `<td class="btn-col"><input type=hidden name=layout id=layout><input type='submit' value='Search' class="btn btn-primary"></td>`;{{end}}
+        {{if or (eq $layout "full") (eq $layout "mgmt")}}}rowHtml += `<td class="btn-col"></td>`;{{end}}
+        {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "mgmt")}}rowHtml += `<td class="btn-col"></td>`;{{end}}
+        rowHtml += `</tr>`;
+        return rowHtml;
+    }
+</script>
 {{end}}
 
 {{define "updateUserTable"}}
@@ -745,7 +941,8 @@ function showToast(message, type) {
             totalPages = response.totalPages; // set the total pages from the response
             currentPage = response.currentPage; // set the current page from the response
             // Update the customer table with the new data
-            updateCustomerTable(response.customers);
+            updateTable(response.customers);
+            $('#loadingSpinner').hide(); // Hide the spinner
             updatePaginationControls();
             console.log("Customer table updated successfully.");
         },
@@ -772,6 +969,7 @@ function showToast(message, type) {
 
         beforeSend: function() {
             console.log("Preparing to send AJAX request to /api/customers.");
+            $('#loadingSpinner').show(); // Show the spinner before sending the request
             // You can add a loading spinner here
         },
         complete: function(jqXHR, textStatus) {
@@ -781,7 +979,7 @@ function showToast(message, type) {
     });
 }
 
-    function updateCustomerTable(customers) {
+    function updateTable(customers) {
         var tableBody = $('#contentTableBody');
         tableBody.empty(); // Clear existing data
 
@@ -791,12 +989,12 @@ function showToast(message, type) {
 
         // Loop through the rows
         customers.forEach(function(customer) {
-            var row = generateCustomerTableRow(customer);
+            var row = generateTableRow(customer);
             tableBody.append(row);
         });
     }
 
-    function generateCustomerTableRow(customer, index) {
+    function generateTableRow(customer, index) {
         // Constructing the row HTML
         var rowHtml = `
         <tr>
@@ -957,6 +1155,8 @@ function showToast(message, type) {
                         <option value="25">25</option>
                         <option value="50">50</option>
                         <option value="100">100</option>
+                        <option value="250">250</option>
+                        <option value="500">500</option>
                     </select>
                 </div>
             </div>
@@ -1004,12 +1204,14 @@ function showToast(message, type) {
     });
     // Refresh the table when the limit changes
     $('#limitSelect').change(function() {
-        fetchAndUpdateTable(1, {}); // For example, reset to page 1
+        var limit = $('#limitSelect').val();
+        fetchAndUpdateTable(1, limit, {}); // Reset to page 1
     });
 </script>
 {{end}}
-{{define "nedry"}}
+
 <!-- Dennis Nedry Easter Egg -->
+{{define "nedry"}}
 <img id="gif" src="https://media.tenor.com/ttEnKdyDKKIAAAAC/jurassic-park-nedry-dennis.gif" style="display:none; position:fixed; top:50%; left:50%; transform: translate(-50%, -50%); z-index: 9999;">
 <script>
 //Dennis Nedry easter egg
@@ -1025,4 +1227,15 @@ document.addEventListener("keydown", function(event) {
     }
 });
 </script>
+{{end}}
+
+<!-- Loading Spinner -->
+{{define "spinner"}}
+<div id="loadingSpinner" class="loading-spinner-overlay">
+    <div class="d-flex justify-content-center align-items-center h-100">
+        <div class="spinner-border text-primary" role="status">
+            <span class="sr-only">Loading...</span>
+        </div>
+    </div>
+</div>
 {{end}}
