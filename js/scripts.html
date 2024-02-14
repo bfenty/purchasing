@@ -182,7 +182,7 @@ function showToast(message, type) {
             {{if eq $permission "admin"}}<td><input class="form-control" type='text' id="new_unitprice"></td>{{end}}
             {{if eq $permission "admin"}}<td><select class="form-select" id="new_currency">${currencyOptions}</select></td>{{end}}
             {{if eq $permission "admin"}}<td><input class="form-control" type='text' id="new_orderqty"></td>{{end}}
-            {{if eq $permission "admin"}}<td><input class="form-check-input" type='checkbox' id="reorder" name="reorder" checked></td>{{end}}
+            {{if eq $permission "admin"}}<td><input class="form-check-input" type='checkbox' id="new_reorder" name="new_reorder" checked></td>{{end}}
             <td><select class="form-select" id="new_season">${seasonOptions}</select></td>
             <td><input class="form-control" type='text' id="new_inventoryqty"></td>
             <td><button class="btn btn-primary" id="btnInsertNew">Insert</button></td>
@@ -283,7 +283,7 @@ function showToast(message, type) {
             manufacturer: $('#new_manufacturer').val() || null,
             processRequest: $('#new_processrequest').val() || null,
             unit: $('#new_unit').val() || null,
-            currency: $('#currency').val() || null,
+            currency: $('#new_currency').val() || null,
             unitPrice: $('#new_unitprice').val() ? parseFloat($('#new_unitprice').val()) : null,
             orderQty: $('#new_orderqty').val() ? parseInt($('#new_orderqty').val(), 10) : null,
             reorder: $('#new_reorder').is(':checked'),

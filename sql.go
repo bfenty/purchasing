@@ -1744,6 +1744,10 @@ func ProductList(w http.ResponseWriter, r *http.Request) {
 // @Router /api/productinsert [post]
 func InsertProduct(w http.ResponseWriter, r *http.Request) {
 	var p Product
+	// Log the start of the function
+	log.Debug("Starting InsertProduct")
+
+	// Attempt to decode the incoming request body into the Product struct
 	err := json.NewDecoder(r.Body).Decode(&p)
 	if err != nil {
 		log.WithFields(log.Fields{"error": err}).Error("Error decoding product data")
@@ -1751,6 +1755,15 @@ func InsertProduct(w http.ResponseWriter, r *http.Request) {
 		respondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": errMsg})
 		return
 	}
+
+	// Log the product being inserted for traceability
+	log.WithFields(log.Fields{
+		"SKU":              p.SKU,
+		"Manufacturer":     p.Manufacturer,
+		"ManufacturerPart": p.ManufacturerPart,
+		"Description":      p.Description,
+		"Currency":         p.Currency,
+	}).Debug("Attempting to insert product")
 
 	// Validate that SKU is provided
 	if p.SKU == "" {
@@ -1760,16 +1773,20 @@ func InsertProduct(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// SQL INSERT statement
-	query := `REPLACE INTO purchasing.skus (sku_internal, sku_manufacturer,  product_option, manufacturer_code, processing_request, unit, unit_price, order_qty, reorder, season, inventory_qty, Currency) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?)`
+	query := `REPLACE INTO purchasing.skus (sku_internal, sku_manufacturer, product_option, manufacturer_code, processing_request, unit, unit_price, order_qty, reorder, season, inventory_qty, Currency) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
 	_, err = db.Exec(query, p.SKU, p.ManufacturerPart, p.Description, p.Manufacturer, p.ProcessRequest, p.Unit, p.UnitPrice, p.OrderQty, p.Reorder, p.Season, p.InventoryQty, p.Currency)
 	if err != nil {
-		log.WithFields(log.Fields{"error": err}).Error("Error executing insert query")
+		log.WithFields(log.Fields{"error": err, "SKU": p.SKU}).Error("Error executing insert query")
 		errMsg := fmt.Sprintf("Internal Server Error: %v", err)
 		respondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": errMsg})
 		return
 	}
 
-	//update quantity and image urls
+	// Log the successful insertion
+	log.WithFields(log.Fields{"SKU": p.SKU}).Info("Product successfully inserted")
+
+	// Optionally log the call to update quantity and image URLs
+	log.Debug("Updating quantity and image URLs for SKU: ", p.SKU)
 	qty(p.SKU)
 
 	// Respond with success message
@@ -1807,7 +1824,7 @@ func DeleteProduct(w http.ResponseWriter, r *http.Request) {
 	log.WithFields(log.Fields{"SKU": sku}).Info("Parsed delete request")
 
 	// SQL DELETE statement
-	query := `DELETE FROM skus WHERE sku_internal = ?`
+	query := `DELETE FROM purchasing.skus WHERE sku_internal = ?`
 	result, err := db.Exec(query, sku)
 	if err != nil {
 		log.WithFields(log.Fields{"SKU": sku, "error": err}).Error("Error executing delete query")
@@ -1874,7 +1891,7 @@ func UpdateProduct(w http.ResponseWriter, r *http.Request) {
 
 	var queryArgs []interface{}
 	var queryBuilder strings.Builder
-	queryBuilder.WriteString("UPDATE skus SET ")
+	queryBuilder.WriteString("UPDATE purchasing.skus SET ")
 
 	// Dynamically build query based on provided fields
 	if p.ManufacturerPart != nil {
