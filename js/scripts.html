@@ -805,7 +805,7 @@ function showToast(message, type) {
                 {{if or (eq $layout "full") (eq $layout "mgmt")}}
                     rowHtml += `<td>
                         <select class="form-select" name="search-sorter">
-                            <option value="">Sorter</option>
+                            ${userOptions}
                         </select>
                     </td>`;
                 {{end}}
@@ -829,7 +829,7 @@ function showToast(message, type) {
                 </td>`;
                 {{end}}
                 {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "dataentry") (eq $layout "mgmt")}}rowHtml += `<td class="btn-col"><input type=hidden name=layout id=layout><input type='submit' value='Search' class="btn btn-primary"></td>`;{{end}}
-                {{if or (eq $layout "full") (eq $layout "mgmt")}}}rowHtml += `<td class="btn-col"></td>`;{{end}}
+                {{if or (eq $layout "full") (eq $layout "mgmt")}}rowHtml += `<td class="btn-col"></td>`;{{end}}
                 {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "mgmt")}}rowHtml += `<td class="btn-col"></td>`;{{end}}
                 rowHtml += `</tr>`;
 
@@ -851,9 +851,7 @@ function showToast(message, type) {
                 {{if or (eq $layout "full") (eq $layout "mgmt")}}
                 rowHtml += `<td>
                   <select class="form-select" id="sorter" name="sorter">
-                    <option selected disabled value="">Sorter</option>
-                    <option value=''></option>
-                    <option></option>
+                            ${userOptions}
                   </select>
                 </td>`
                 {{end}}
@@ -883,9 +881,25 @@ function showToast(message, type) {
         return rowHtml;
     }
 
-    function generateTableRow(sortRequest, index) {
+    function generateTableRow(sortRequest, users) {
+        //Strip percentage from percent
+        let differencePercent = parseFloat(sortRequest.DifferencePercent.replace('%', ''));
+
+        // Check if the absolute value is greater than 10
+        let rowClass = '';
+        if (Math.abs(differencePercent) > 20) {
+            rowClass = 'table-danger';
+        } else if (Math.abs(differencePercent) > 10) {
+            rowClass = 'table-warning';
+        }
+        
+        // Manufacturer dropdown options
+        var userOptions = '<option value="" selected>Select Sorter</option>';
+        users.forEach(function(user) {
+            userOptions += `<option value="${user}" ${sortRequest.Sorter = user ? 'selected' : ''}>${user}</option>`;
+        });
         // Constructing the row HTML
-        var rowHtml = `<tr class="table-warning">`
+        var rowHtml = `<tr class="${rowClass}">`
             rowHtml += `<td><input type="text" class="form-control requestid" id="requestid" name="requestid" value="${sortRequest.ID}"></td>`
                   {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "dataentry") (eq $layout "mgmt")}}rowHtml += `<td class="col-sku"><input type="text" class="form-control sku" id="sku" name="sku" value="${sortRequest.SKU}"></td>`{{end}}
                   {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "dataentry")}}rowHtml += `<td><input type="text" class="form-control description" id="description" name="description" value="${sortRequest.Description}"></td>`{{end}}
@@ -898,13 +912,11 @@ function showToast(message, type) {
                   {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "mgmt")}}rowHtml += `<td><div class="input-group"><input type="text" class="form-control pieces" id="pieces" name="pieces" pattern="[0-9]+(\.[0-9]+)?" title="Please enter a valid decimal number" value="${sortRequest.Pieces}"></div></td>`{{end}}
                   {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "mgmt")}}rowHtml += `<td><input type="text" class="form-control hours" id="hours" name="hours" value="${sortRequest.Hours}"></td>`{{end}}
                   {{if or (eq $layout "full") (eq $layout "mgmt")}}rowHtml += `<td><input type="date" class="form-control checkout" id="checkout" name="checkout" value="${sortRequest.Checkout}"></td>`{{end}}
-                  {{if or (eq $layout "full") (eq $layout "mgmt")}}rowHtml += `td><input type="date" class="form-control checkin" id="checkin" name="checkin" value="${sortRequest.Checkin}"></td>`{{end}}
+                  {{if or (eq $layout "full") (eq $layout "mgmt")}}rowHtml += `<td><input type="date" class="form-control checkin" id="checkin" name="checkin" value="${sortRequest.Checkin}"></td>`{{end}}
                   {{if or (eq $layout "full") (eq $layout "mgmt")}}
                   rowHtml += `<td>
                     <select class="form-select" id="sorter" name="sorter">
-                      <option selected disabled value></option>
-                      <option value=''></option>
-                      <option></option>
+                            ${userOptions}
                     </select>
                   </td>`
                   {{end}}
@@ -915,8 +927,9 @@ function showToast(message, type) {
                       <option value="New" selected>New</option>
                       <option value="Checkout">Checkout</option>
                       <option value="Checkin">Checkin</option>
-                    </select>
-                      <input class="form-control" type="text" id="status" name="status" value="" readonly>`
+                    </select>`
+                    {{else}}
+                      `<input class="form-control" type="text" id="status" name="status" value="" readonly>`
                       {{end}}
                   rowHtml += `</td>`
                   {{end}}
