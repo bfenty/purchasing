@@ -199,6 +199,15 @@ func main() {
 	http.ListenAndServe(":8082", nil)
 }
 
+// Function to check if a file exists
+func fileExists(filename string) bool {
+	info, err := os.Stat(filename)
+	if os.IsNotExist(err) {
+		return false
+	}
+	return !info.IsDir()
+}
+
 func PageHandler(w http.ResponseWriter, r *http.Request) {
 	// Extract the path component and strip the leading slash
 	path := strings.TrimPrefix(r.URL.Path, "/")
@@ -227,6 +236,19 @@ func PageHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Construct the template file name
 	tmplFile := fmt.Sprintf("html/%s.html", path)
+
+	// Check if the template file exists
+	if !fileExists(tmplFile) {
+		log.WithFields(log.Fields{
+			"file": tmplFile,
+		}).Warn("Template file not found")
+
+		// Use http.NotFound to send a 404 response
+		http.NotFound(w, r)
+		return
+	}
+
+	// Construct the template
 	t, err := template.ParseFiles(tmplFile, "html/header.html", "js/login.js", "js/scripts.html")
 	if err != nil {
 		log.WithFields(log.Fields{

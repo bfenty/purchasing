@@ -217,7 +217,7 @@
     </div>
   </div>
   {{template "footer" .}}
-  <script>
+  <!-- <script>
     // Setup Page Variables
     var currentPage = 1; // keep track of the current page
     var totalPages = 0; // total number of pages, you might get this from the server
@@ -242,8 +242,8 @@
         }
       });
     });
-  </script>
-  <script>
+  </script> -->
+  <!-- <script>
     document.querySelectorAll('form.update-form').forEach(form => {
       form.addEventListener('submit', e => {
         e.preventDefault();
@@ -344,6 +344,28 @@
       });
     });
   });
+  </script> -->
+  <script>
+      // Setup Page Variables
+      var currentPage = 1; // keep track of the current page
+      var totalPages = 0; // total number of pages, you might get this from the server
+      var limit = 100; // set page size limit
+      $('#limitSelect').val(limit);
+      var searchParams = {}; //set initial search parameters
+      $(document).ready(function() {
+          console.log("Document ready. Initializing table data fetch.")
+          fetchAndUpdateTable(currentPage,limit, searchParams);
+
+          // Event handler for image clicks
+          $(document).on('click', '.image-link', function() {
+              var standardUrl = $(this).data('standard-url');
+              var sku = $(this).data('sku');
+
+              $('#imageModalLabel').text(sku);
+              $('#modalImage').attr('src', standardUrl);
+              $('#imageModal').modal('show');
+          });
+      });
   </script>
   {{template "toast" .}}
   {{template "nedry" .}}

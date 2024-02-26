@@ -1341,59 +1341,94 @@ func Reorderlist(user User) (message Message, orders []Order) {
 // @Failure 500 {object} map[string]string "Internal Server Error"
 // @Router /users [get]
 // ListUsersAPI is an HTTP handler function that returns a list of users in JSON format
+// ListUsersAPI with pagination and search
 func ListUsersAPI(w http.ResponseWriter, r *http.Request) {
-	// Extract role from query parameter if needed
-	role := r.URL.Query().Get("role")
+	// Connect to the database
+	// db, err := sql.Open("mysql", "user:password@tcp(localhost:3306)/dbname")
+	// if err != nil {
+	// 	log.Println("Error connecting to the database: ", err)
+	// 	http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+	// 	return
+	// }
+	// defer db.Close()
 
-	// Test database connection
-	pingErr := db.Ping()
-	if pingErr != nil {
-		log.Debug(pingErr)
-		respondWithJSON(w, http.StatusInternalServerError, map[string]string{"message": "Database connection error"})
+	page, _ := strconv.Atoi(r.URL.Query().Get("page"))
+	limit, _ := strconv.Atoi(r.URL.Query().Get("limit"))
+	if page < 1 {
+		page = 1
+	}
+	if limit < 1 || limit > 100 { // set a maximum limit to prevent abuse
+		limit = 10
+	}
+
+	// Assuming permissions are stored in a separate table or as a JSON column in the users table
+	// Adjust the SQL based on your actual schema, especially how permissions are stored and queried
+
+	searchParams := map[string]interface{}{
+		"username":   r.URL.Query().Get("username"),
+		"usercode":   r.URL.Query().Get("usercode"),
+		"role":       r.URL.Query().Get("role"),
+		"sorting":    r.URL.Query().Get("sorting"),
+		"manager":    r.URL.Query().Get("manager"),
+		"management": r.URL.Query().Get("management"),
+		// Assuming permissions are a JSON string; you'll need to adjust if using a different method
+		"permissions": r.URL.Query().Get("permissions"),
+	}
+
+	var queryParams []interface{}
+	query := `SELECT username, usercode, permissions, sorting, manager, management FROM orders.users WHERE 1=1`
+
+	for key, value := range searchParams {
+		if value != "" && value != nil {
+			query += fmt.Sprintf(" AND %s = ?", key)
+			queryParams = append(queryParams, value)
+		}
+	}
+
+	// Handle pagination
+	var totalRecords int
+	countQuery := `SELECT COUNT(*) FROM (` + query + `) AS countQuery`
+	err := db.QueryRow(countQuery, queryParams...).Scan(&totalRecords)
+	if err != nil {
+		log.Println("Error executing count query:", err)
+		respondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Error counting records"})
 		return
 	}
 
-	// Build the query based on the role
-	var newquery string
-	if role == "sorting" {
-		newquery = "SELECT username,usercode,permissions,sorting,manager,management FROM orders.users WHERE sorting=1 AND active=1"
-	} else if role == "manager" {
-		newquery = "SELECT username,usercode,permissions,sorting,manager,management FROM orders.users WHERE management=1 AND active=1"
-	} else {
-		newquery = "SELECT username,usercode,permissions,sorting,manager,management FROM orders.users WHERE active=1"
-	}
+	totalPages := (totalRecords + limit - 1) / limit
+	offset := (page - 1) * limit
+	queryParams = append(queryParams, limit, offset)
+	query += " LIMIT ? OFFSET ?"
 
-	// Execute the query
-	rows, err := db.Query(newquery)
+	rows, err := db.Query(query, queryParams...)
 	if err != nil {
-		log.Debug(err)
-		respondWithJSON(w, http.StatusInternalServerError, map[string]string{"message": "Error executing query"})
+		log.Println("Error executing query:", err)
+		respondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Error executing query"})
 		return
 	}
 	defer rows.Close()
 
 	var users []User
-	// Fetch rows
 	for rows.Next() {
 		var user User
-		err := rows.Scan(&user.Username, &user.Usercode, &user.Role, &user.Sorting, &user.Manager, &user.Management)
-		if err != nil {
-			log.Debug(err)
-			respondWithJSON(w, http.StatusInternalServerError, map[string]string{"message": "Error scanning row"})
-			return
+		// var permissions string // Assuming permissions are stored as JSON
+		if err := rows.Scan(&user.Username, &user.Usercode, &user.Role, &user.Sorting, &user.Manager, &user.Management); err != nil {
+			log.Println("Error scanning user row:", err)
+			continue
 		}
+		// if err := json.Unmarshal([]byte(permissions), &user.Permissions); err != nil {
+		// 	log.Println("Error unmarshalling permissions:", err)
+		// 	continue
+		// }
 		users = append(users, user)
 	}
 
-	// Handle any errors encountered during iteration
-	if err = rows.Err(); err != nil {
-		log.Debug(err)
-		respondWithJSON(w, http.StatusInternalServerError, map[string]string{"message": "Error iterating over rows"})
-		return
-	}
-
-	// Respond with the user list
-	respondWithJSON(w, http.StatusOK, map[string]interface{}{"users": users})
+	respondWithJSON(w, http.StatusOK, map[string]interface{}{
+		"users":        users,
+		"currentPage":  page,
+		"totalPages":   totalPages,
+		"totalRecords": totalRecords,
+	})
 }
 
 // ListCustomersAPI godoc
@@ -1982,14 +2017,6 @@ func UpdateProduct(w http.ResponseWriter, r *http.Request) {
 // @Failure 500 {object} map[string]string "Internal Server Error"
 // @Router /api/sortrequests [get]
 func ListSortRequestsAPI(w http.ResponseWriter, r *http.Request) {
-	// Set up database connection (assuming db is a global *sql.DB)
-	// db, err := sql.Open("mysql", "user:password@tcp(localhost:3306)/dbname")
-	// if err != nil {
-	// 	log.Println("Error connecting to the database: ", err)
-	// 	http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-	// 	return
-	// }
-	// defer db.Close()
 
 	// Pagination parameters
 	page, _ := strconv.Atoi(r.URL.Query().Get("page"))

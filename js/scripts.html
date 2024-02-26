@@ -37,35 +37,35 @@ function showToast(message, type) {
 <script>
     // Fetch manufacturers
     async function fetchManufacturers() {
-                    return new Promise((resolve, reject) => {
-                        $.ajax({
-                            url: '/api-handler?targetAPI=/api/manufacturers',
-                            type: 'GET',
-                            dataType: 'json',
-                            success: function(data) {
-                                console.log("Manufacturers fetched successfully. Data:", data);
-                                resolve(data); // Resolve the promise with the data
-                            },
-                            error: function(jqXHR, textStatus, errorThrown) {
-                                console.error("Error during the request:", textStatus, errorThrown, jqXHR);
-                                var errorMessage = "Error during the request.";
-                                
-                                // Try to parse and use the custom error message from the server if available
-                                if (jqXHR.responseText) {
-                                    try {
-                                        var resp = JSON.parse(jqXHR.responseText);
-                                        if (resp && resp.error) {
-                                            errorMessage = resp.error;
-                                        }
-                                    } catch (e) {
-                                        console.error("Error parsing server response:", e);
-                                    }
-                                }
-                                showToast(errorMessage, "error");  // Show the custom error message
+        return new Promise((resolve, reject) => {
+            $.ajax({
+                url: '/api-handler?targetAPI=/api/manufacturers',
+                type: 'GET',
+                dataType: 'json',
+                success: function(data) {
+                    console.log("Manufacturers fetched successfully. Data:", data);
+                    resolve(data); // Resolve the promise with the data
+                },
+                error: function(jqXHR, textStatus, errorThrown) {
+                    console.error("Error during the request:", textStatus, errorThrown, jqXHR);
+                    var errorMessage = "Error during the request.";
+                    
+                    // Try to parse and use the custom error message from the server if available
+                    if (jqXHR.responseText) {
+                        try {
+                            var resp = JSON.parse(jqXHR.responseText);
+                            if (resp && resp.error) {
+                                errorMessage = resp.error;
                             }
-                        });
-                    });
+                        } catch (e) {
+                            console.error("Error parsing server response:", e);
+                        }
+                    }
+                    showToast(errorMessage, "error");  // Show the custom error message
                 }
+            });
+        });
+    }
 </script>
 {{end}}
 
@@ -233,35 +233,6 @@ function showToast(message, type) {
                     <td><button type="button" class="btn btn-danger delete-button" data-item-id="${item.SKU}" data-bs-toggle="modal">Delete</button></td>
                     </tr>`;
         return row
-    }
-</script>
-{{end}}
-
-{{define "insertUserRow"}}
-<script>
-    function generateTableRow(user, index) {
-        // Constructing the row HTML
-        var rowHtml = `
-        <tr>
-            <td data-username="${user.Username}"><input class="form-control" type="text" value="${user.Username}" readonly></td>
-            <td data-username="${user.Usercode}"><input class="form-control" type="text" value="${user.Usercode}" readonly></td>
-            <td data-username="${user.Role}"><input class="form-control" type="text" value="${user.Role}" readonly></td>
-            <td data-username="${user.Manager}">
-                <select class="form-select">
-                    <option value="${user.Manager}" selected>${user.Manager}</option>
-                    <option value="johale">johale</option>
-                    <option value="adicke">adicke</option>
-                    <option value="cmcclu">cmcclu</option>
-                </select>
-            </td>
-            <td data-username="${user.Sorting}"><input class="form-check-input" type="checkbox" ${user.Sorting ? 'checked' : ''}></td>
-            <td><button class="btn btn-primary update-button" data-user-id="${user.Usercode}">Update</button></td>
-            <td><button class="btn btn-danger delete-button" data-item-id="${user.Usercode}" data-bs-toggle="modal">Archive</button></td>
-        </tr>
-        `;
-
-        // Returning the row HTML
-        return rowHtml;
     }
 </script>
 {{end}}
@@ -678,81 +649,136 @@ function showToast(message, type) {
 {{define "updateSortTable"}}
 {{$permission := .Permission.Role}}
 {{$layout := .Layout}}
+{{$admin := .Permission.Permissions.Admin}}
+{{$mgmt := .Permission.Permissions.Mgmt}}
 <script>
-    function fetchAndUpdateTable(page, limit, searchParams) {
-    var queryParams = $.param(searchParams); // Convert search parameters to query string
-    var apiUrl = `/api-handler?targetAPI=/api/sortinglist&page=${page}&limit=${limit}&${queryParams}`;
-    console.log("Fetching data with search parameters:", searchParams);
-
-    console.log("Fetching data from " + apiUrl);
-
-    $.ajax({
-        url: apiUrl,
-        type: 'GET',
-        dataType: 'json',
-        success: function(response) {
-            console.log("Data fetched successfully. Number of records:", response.sortRequests.length);
-            console.log("Response:", response);
-            totalPages = response.totalPages; // set the total pages from the response
-            currentPage = response.currentPage; // set the current page from the response
-            // Update the customer table with the new data
-            updateTable(response.sortRequests);
-            $('#loadingSpinner').hide(); // Hide the spinner
-            updatePaginationControls();
-            console.log("Sort Request table updated successfully.");
-        },
-        error: function(jqXHR, textStatus, errorThrown) {
-            $('#loadingSpinner').hide(); // Hide the spinner
-            console.error("Error fetching data:", textStatus, errorThrown, jqXHR);
-
-            // Initialize errorMessage with a default error message
-            let errorMessage = "An error occurred. Please try again.";
-
-            // Try to parse and use the custom error message from the server if available
-            if (jqXHR.responseText) {
-                try {
-                    var resp = JSON.parse(jqXHR.responseText);
-                    if (resp && resp.error) {
-                        errorMessage = resp.error;
+    // Fetch users
+    async function fetchUsers() {
+        return new Promise((resolve, reject) => {
+            $.ajax({
+                url: '/api-handler?targetAPI=/api/users&limit=100', // Using the users API endpoint
+                type: 'GET',
+                dataType: 'json',
+                success: function(response) {
+                    console.log("Users fetched successfully. Data:", response);
+                    // Assuming `response` includes a property `users` which is an array of user objects
+                    const usernames = response.users.map(user => user.Username); // Extract usernames
+                    resolve(usernames); // Resolve the promise with the array of usernames
+                },
+                error: function(jqXHR, textStatus, errorThrown) {
+                    console.error("Error fetching users:", textStatus, errorThrown, jqXHR);
+                    let errorMessage = "Error fetching users.";
+                    
+                    if (jqXHR.responseText) {
+                        try {
+                            let resp = JSON.parse(jqXHR.responseText);
+                            if (resp && resp.error) {
+                                errorMessage = resp.error;
+                            }
+                        } catch (e) {
+                            console.error("Error parsing server response:", e);
+                        }
                     }
-                } catch (e) {
-                    console.error("Error parsing server response:", e);
+                    reject(errorMessage); // Reject the promise with the error message
                 }
-            }
-            
-            showToast(errorMessage, "error");  // Show the custom error message or the default one
-        },
+            });
+        });
+    }
+</script>
+<script>
+    async function fetchAndUpdateTable(currentPage, limit,searchParams = {}) {
+        // Get Users Data
+        try {
+            console.log("Fetching users...");
+            const users = await fetchUsers(); // Wait for users to be fetched
+            console.log("Users fetched:", users);
 
-        beforeSend: function() {
-            console.log("Preparing to send AJAX request to /api/sortrequests.");
-            $('#loadingSpinner').show(); // Show the spinner before sending the request
-        },
-        complete: function(jqXHR, textStatus) {
-            console.log("AJAX request completed with status:", textStatus);
-            // You can remove the loading spinner here
+            // Construct the query string from search parameters
+            var limit = $('#limitSelect').val();
+            var queryParams = $.param(searchParams); // Convert search parameters to query string
+            var apiUrl = `/api-handler?targetAPI=/api/sortinglist&page=${currentPage}&limit=${limit}&${queryParams}`;
+            console.log("Fetching data with search parameters:", searchParams);
+
+            console.log("Fetching data from " + apiUrl);
+
+            $.ajax({
+                url: apiUrl,
+                type: 'GET',
+                dataType: 'json',
+                success: function(response) {
+                    console.log("Data fetched successfully. Number of records:", response.sortRequests.length);
+                    console.log("Response:", response);
+                    totalPages = response.totalPages; // set the total pages from the response
+                    currentPage = response.currentPage; // set the current page from the response
+                    // Update the customer table with the new data
+                    updateTable(response.sortRequests,users);
+                    $('#loadingSpinner').hide(); // Hide the spinner
+                    updatePaginationControls();
+                    console.log("Sort Request table updated successfully.");
+                },
+                error: function(jqXHR, textStatus, errorThrown) {
+                    $('#loadingSpinner').hide(); // Hide the spinner
+                    console.error("Error fetching data:", textStatus, errorThrown, jqXHR);
+
+                    // Initialize errorMessage with a default error message
+                    let errorMessage = "An error occurred. Please try again.";
+
+                    // Try to parse and use the custom error message from the server if available
+                    if (jqXHR.responseText) {
+                        try {
+                            var resp = JSON.parse(jqXHR.responseText);
+                            if (resp && resp.error) {
+                                errorMessage = resp.error;
+                            }
+                        } catch (e) {
+                            console.error("Error parsing server response:", e);
+                        }
+                    }
+                    
+                    showToast(errorMessage, "error");  // Show the custom error message or the default one
+                },
+
+                beforeSend: function() {
+                    console.log("Preparing to send AJAX request to /api/sortrequests.");
+                    $('#loadingSpinner').show(); // Show the spinner before sending the request
+                },
+                complete: function(jqXHR, textStatus) {
+                    console.log("AJAX request completed with status:", textStatus);
+                    // You can remove the loading spinner here
+                }
+            });
+        } catch (error) {
+            console.error("Error in fetching users:", error);
+            showToast(error,"error")
+            // Handle the error
         }
-    });
-}
+    }
 
-    function updateTable(sortRequests) {
+    function updateTable(sortRequests,users) {
         var tableBody = $('#contentTableBody');
         tableBody.empty(); // Clear existing data
 
         // Add the insert row at the beginning
-        var insertRow = GenerateTopRow();
+        var insertRow = GenerateTopRow(users);
         tableBody.append(insertRow);
 
         // Loop through the rows
         sortRequests.forEach(function(sortRequest) {
-            var row = generateTableRow(sortRequest);
+            var row = generateTableRow(sortRequest,users);
             tableBody.append(row);
         });
     }
 
-    function GenerateTopRow() {
+    function GenerateTopRow(users) {
         console.log("Generating Search Row")
 
-        // Generate the Insert Row
+        // Manufacturer dropdown options
+        var userOptions = '<option value="" selected>Select Sorter</option>';
+        users.forEach(function(user) {
+            userOptions += `<option value="${user}">${user}</option>`;
+        });
+        
+        // Generate the Search Row
         var rowHtml = `
             <tr>
                 <td><input type="text" class="form-control" name="search-requestid" placeholder="Request ID"></td>`;
@@ -806,63 +832,106 @@ function showToast(message, type) {
                 {{if or (eq $layout "full") (eq $layout "mgmt")}}}rowHtml += `<td class="btn-col"></td>`;{{end}}
                 {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "mgmt")}}rowHtml += `<td class="btn-col"></td>`;{{end}}
                 rowHtml += `</tr>`;
+
+                // Generate the Insert row
+                rowHtml += `<tr>
+                <td></td>`
+                {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "dataentry") (eq $layout "mgmt")}}rowHtml += `<td class="col-sku"><input type="text" class="form-control sku" id="sku" name="sku" placeholder="SKU"></td>`{{end}}
+                {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "dataentry")}}rowHtml += `<td><input type="text" class="form-control description" id="description" name="description" placeholder="Description"></td>`{{end}}
+                {{if or (eq $layout "full") (eq $layout "dataentry")}}rowHtml += `<td><input type="text" class="form-control manufacturerpart" id="manufacturerpart" name="manufacturerpart" placeholder="Manufacturer Part"></td>`{{end}}
+                {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "dataentry") (eq $layout "mgmt")}}rowHtml += `<td><div class="input-group"><input type="text" class="form-control instructions" id="instructions" name="instructions" pattern="[0-9]+(\.[0-9]+)?" title="Please enter a valid decimal number" placeholder="Pieces"></div></td>`{{end}}
+                {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "dataentry")}}rowHtml += `<td><div class="input-group"><input type="text" class="form-control weightout" id="weightout" name="weightout" placeholder="Weight Out"></div></td>`{{end}}
+                {{if or (eq $layout "full") (eq $layout "receiving")}}rowHtml += `<td><div class="input-group"><input type="text" class="form-control weightin" id="weightin" name="weightin" placeholder="Weight In"></div></td>`{{end}}
+                {{if or (eq $layout "full") (eq $layout "receiving")}}rowHtml += `<td><div class="input-group"><input type="text" class="form-control difference" id="difference" name="difference" readonly placeholder="Difference"></div></td>`{{end}}
+                {{if or (eq $layout "full") (eq $layout "receiving")}}rowHtml += `<td></td>`{{end}}
+                {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "mgmt")}}rowHtml += `<td><div class="input-group"><input type="text" class="form-control pieces" id="pieces" name="pieces" pattern="[0-9]+(\.[0-9]+)?" title="Please enter a valid decimal number" placeholder="Pieces"></div></td>`{{end}}
+                {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "mgmt")}}rowHtml += `<td><input type="text" class="form-control hours" id="hours" name="hours" placeholder="Hours"></td>`{{end}}
+                {{if or (eq $layout "full") (eq $layout "mgmt")}}rowHtml += `<td><input type="date" class="form-control checkout" id="checkout" name="checkout" placeholder="Checkout Date"></td>`{{end}}
+                {{if or (eq $layout "full") (eq $layout "mgmt")}}rowHtml += `<td><input type="date" class="form-control checkin" id="checkin" name="checkin" placeholder="Checkin Date"></td>`{{end}}
+                {{if or (eq $layout "full") (eq $layout "mgmt")}}
+                rowHtml += `<td>
+                  <select class="form-select" id="sorter" name="sorter">
+                    <option selected disabled value="">Sorter</option>
+                    <option value=''></option>
+                    <option></option>
+                  </select>
+                </td>`
+                {{end}}
+                {{if or (eq $layout "full")}}
+                rowHtml += `<td>
+                  <select class="form-select" id="status" name="status">
+                    <option selected disabled value="">Status</option>
+                    <option value="New">New</option>
+                    <option value="Checkout">Checkout</option>
+                    <option value="Checkin">Checkin</option>
+                  </select>
+                </td>`
+                {{end}}
+                {{if or (eq $layout "full") (eq $layout "dataentry")}}
+                rowHtml += `<td>
+                  <select class="form-select" id="prty" name="prty">
+                    <option selected disabled value="">Priority</option>
+                    <option value="0">Normal</option>
+                    <option value="1">High</option>
+                  </select>
+                </td>`
+                {{end}}
+                {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "dataentry") (eq $layout "mgmt")}}rowHtml += `<td class="btn-col"><input type='hidden' id='requestid' name='requestid' value=''><input type='hidden' id='active' name='active' value='1'><input type='submit' value='Insert' class="btn btn-primary update-request"></td>`{{end}}
+                {{if or (eq $layout "full") ($mgmt)}}rowHtml += `<td class="btn-col"></td>`{{end}}
+                {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "mgmt")}}rowHtml += `<td class="btn-col"></td>`{{end}}
+                rowHtml += `</tr>`
         return rowHtml;
     }
 
     function generateTableRow(sortRequest, index) {
         // Constructing the row HTML
-        var rowHtml = '<tr>';
-        rowHtml += `<td><input type="text" class="form-control requestid" id="requestid" name="requestid" value="${sortRequest.ID}"></td>`
-        {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "dataentry") (eq $layout "mgmt")}}rowHtml += `<td class="col-sku"><input type="text" class="form-control" name="sku"  value="${sortRequest.SKU}"></td>`;{{end}}
-        {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "dataentry")}}rowHtml += `<td><input type="text" class="form-control" name="search-description" value="${sortRequest.Description}"></td>`;{{end}}
-        {{if or (eq $layout "full") (eq $layout "dataentry")}}rowHtml += `<td><input type="text" class="form-control" name="search-manufacturerpart" value="${sortRequest.ManufacturerPart}"></td>`;{{end}}
-        {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "dataentry") (eq $layout "mgmt")}}rowHtml += `<td><input type="text" class="form-control" name="search-instructions" pattern="[0-9]+(\.[0-9]+)?" title="Please enter a valid decimal number" value="${sortRequest.Instructions}"></td>`;{{end}}
-        {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "dataentry")}}rowHtml += `<td><input type="text" class="form-control" name="weightout" value="${sortRequest.Weightout}"></td>`;{{end}}
-        {{if or (eq $layout "full") (eq $layout "receiving")}}rowHtml += `<td><input type="text" class="form-control" name="search-weightin" value="${sortRequest.Weightin}"></td>`;{{end}}
-        {{if or (eq $layout "full") (eq $layout "receiving")}}
-        rowHtml += `<td>
-            <select class="form-select" name="search-difference">
-                <option value="">Difference</option>
-                <option value="positive">Positive</option>
-                <option value="negative">Negative</option>
-            </select>
-            </td>`;
-        {{end}}
-        {{if or (eq $layout "full") (eq $layout "receiving")}}rowHtml += `<td></td>`;{{end}}
-        {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "mgmt")}}rowHtml += `<td><input type="text" class="form-control" name="search-pieces" pattern="[0-9]+(\.[0-9]+)?" title="Please enter a valid decimal number" value="${sortRequest.Pieces}"></td>`;{{end}}
-        {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "mgmt")}}rowHtml += `<td><input type="text" class="form-control" name="search-hours" value="${sortRequest.Hours}"></td>`;{{end}}
-        {{if or (eq $layout "full") (eq $layout "mgmt")}}rowHtml += `<td><input type="text" class="form-control" name="search-checkout" value="${sortRequest.Checkout}"></td>`;{{end}}
-        {{if or (eq $layout "full") (eq $layout "mgmt")}}rowHtml += `<td><input type="text" class="form-control" name="search-checkin" value="${sortRequest.Checkin}"></td>`;{{end}}
-        {{if or (eq $layout "full") (eq $layout "mgmt")}}
-            rowHtml += `<td>
-                <select class="form-select" name="search-sorter">
-                    <option value="">Sorter</option>
-                </select>
-            </td>`;
-        {{end}}
-        {{if or (eq $layout "full")}}
-            rowHtml += `<td>
-                <select class="form-select" name="search-status">
-                    <option value="">Status</option>
-                    <option value="New">New</option>
-                    <option value="Checkout">Checkout</option>
-                    <option value="Checkin">Checkin</option>
-                </select>
-            </td>`;
-        {{end}}
-        {{if or (eq $layout "full") (eq $layout "dataentry")}}
-        rowHtml += `<td>
-            <select class="form-select" name="search-priority">
-            <option value="">Priority</option>
-            <option value="0">Normal</option>
-            <option value="1">High</option>
-            </select>
-        </td>`;
-        {{end}}
-        {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "dataentry") (eq $layout "mgmt")}}rowHtml += `<td class="btn-col"><input type=hidden name=layout id=layout><input type='submit' value='Search' class="btn btn-primary"></td>`;{{end}}
-        {{if or (eq $layout "full") (eq $layout "mgmt")}}}rowHtml += `<td class="btn-col"></td>`;{{end}}
-        {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "mgmt")}}rowHtml += `<td class="btn-col"></td>`;{{end}}
-        rowHtml += `</tr>`;
+        var rowHtml = `<tr class="table-warning">`
+            rowHtml += `<td><input type="text" class="form-control requestid" id="requestid" name="requestid" value="${sortRequest.ID}"></td>`
+                  {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "dataentry") (eq $layout "mgmt")}}rowHtml += `<td class="col-sku"><input type="text" class="form-control sku" id="sku" name="sku" value="${sortRequest.SKU}"></td>`{{end}}
+                  {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "dataentry")}}rowHtml += `<td><input type="text" class="form-control description" id="description" name="description" value="${sortRequest.Description}"></td>`{{end}}
+                  {{if or (eq $layout "full") (eq $layout "dataentry")}}rowHtml += `<td><input type="text" class="form-control manufacturerpart" id="manufacturerpart" name="manufacturerpart" value="${sortRequest.ManufacturerPart}"></td>`{{end}}
+                  {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "dataentry") (eq $layout "mgmt")}}rowHtml += `<td><div class="input-group"><input type="text" class="form-control instructions" id="instructions" name="instructions" pattern="[0-9]+(\.[0-9]+)?" title="Please enter a valid decimal number" value="${sortRequest.Instructions}"></div></td>`{{end}}
+                  {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "dataentry")}}rowHtml += `<td><div class="input-group"><input type="text" class="form-control weightout" id="weightout" name="weightout" value="${sortRequest.Weightout}"></div></td>`{{end}}
+                  {{if or (eq $layout "full") (eq $layout "receiving")}}rowHtml += `<td><div class="input-group"><input type="text" class="form-control weightin" id="weightin" name="weightin" value="${sortRequest.Weightin}"></div></td>`{{end}}
+                  {{if or (eq $layout "full") (eq $layout "receiving")}}rowHtml += `<td><div class="input-group"><input type="text" class="form-control difference" id="difference" name="difference" value="${sortRequest.Difference}" readonly></div></td>`{{end}}
+                  {{if or (eq $layout "full") (eq $layout "receiving")}}rowHtml += `<td><div class="input-group"><input type="text" class="form-control differencepercent" id="differencepercent" name="differencepercent" value="${sortRequest.DifferencePercent}" readonly percent></div></td>`{{end}}
+                  {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "mgmt")}}rowHtml += `<td><div class="input-group"><input type="text" class="form-control pieces" id="pieces" name="pieces" pattern="[0-9]+(\.[0-9]+)?" title="Please enter a valid decimal number" value="${sortRequest.Pieces}"></div></td>`{{end}}
+                  {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "mgmt")}}rowHtml += `<td><input type="text" class="form-control hours" id="hours" name="hours" value="${sortRequest.Hours}"></td>`{{end}}
+                  {{if or (eq $layout "full") (eq $layout "mgmt")}}rowHtml += `<td><input type="date" class="form-control checkout" id="checkout" name="checkout" value="${sortRequest.Checkout}"></td>`{{end}}
+                  {{if or (eq $layout "full") (eq $layout "mgmt")}}rowHtml += `td><input type="date" class="form-control checkin" id="checkin" name="checkin" value="${sortRequest.Checkin}"></td>`{{end}}
+                  {{if or (eq $layout "full") (eq $layout "mgmt")}}
+                  rowHtml += `<td>
+                    <select class="form-select" id="sorter" name="sorter">
+                      <option selected disabled value></option>
+                      <option value=''></option>
+                      <option></option>
+                    </select>
+                  </td>`
+                  {{end}}
+                  {{if or (eq $layout "full")}}
+                  rowHtml += `<td>`
+                    {{if $admin}}
+                    rowHtml += `<select class="form-select" id="status" name="status">
+                      <option value="New" selected>New</option>
+                      <option value="Checkout">Checkout</option>
+                      <option value="Checkin">Checkin</option>
+                    </select>
+                      <input class="form-control" type="text" id="status" name="status" value="" readonly>`
+                      {{end}}
+                  rowHtml += `</td>`
+                  {{end}}
+                  {{if or (eq $layout "full") (eq $layout "dataentry")}}
+                  rowHtml += `<td>
+                    <select class="form-select" id="prty" name="prty">
+                      <option value="0">Normal</option>
+                      <option value="1">High</option>
+                    </select>
+                  </td>`
+                  {{end}}
+                  {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "dataentry") (eq $layout "mgmt")}}rowHtml += `<td class="btn-col"><input type='hidden' id='active' name='active' value='1'><input type='submit' value='Update' class="btn btn-primary update-request"></td>`{{end}}
+                {{if or (eq $layout "full") ($mgmt)}}rowHtml += `<td class="btn-col"><button type="button" class="btn btn-danger archive-request" id="archiveRequest" name="archiveRequest" data-requestid="">Archive</button></td>`{{end}}
+                {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "mgmt")}}rowHtml += `<td class="btn-col"><button class="btn btn-warning error" id="error" name="error" data-requestid="">Error</button></td>`{{end}}
+                rowHtml += `</tr>`;
         return rowHtml;
     }
 </script>
@@ -870,8 +939,34 @@ function showToast(message, type) {
 
 {{define "updateUserTable"}}
 <script>
-    function updateUserTable(users) {
-        var tableBody = $('#userTableBody');
+    function generateTableRow(user, index) {
+        // Constructing the row HTML
+        var rowHtml = `
+        <tr>
+            <td data-username="${user.Username}"><input class="form-control" type="text" value="${user.Username}" readonly></td>
+            <td data-username="${user.Usercode}"><input class="form-control" type="text" value="${user.Usercode}" readonly></td>
+            <td data-username="${user.Role}"><input class="form-control" type="text" value="${user.Role}" readonly></td>
+            <td data-username="${user.Manager}">
+                <select class="form-select">
+                    <option value="${user.Manager}" selected>${user.Manager}</option>
+                    <option value="johale">johale</option>
+                    <option value="adicke">adicke</option>
+                    <option value="cmcclu">cmcclu</option>
+                </select>
+            </td>
+            <td data-username="${user.Sorting}"><input class="form-check-input" type="checkbox" ${user.Sorting ? 'checked' : ''}></td>
+            <td><button class="btn btn-primary update-button" data-user-id="${user.Usercode}">Update</button></td>
+            <td><button class="btn btn-danger delete-button" data-item-id="${user.Usercode}" data-bs-toggle="modal">Archive</button></td>
+        </tr>
+        `;
+
+        // Returning the row HTML
+        return rowHtml;
+    }
+</script>
+<script>
+    function updateUserTable(users, currentPage, totalPages) {
+        var tableBody = $('#contentTableBody');
         tableBody.empty(); // Clear existing data
 
         users.forEach(function(user, index) {
@@ -879,29 +974,35 @@ function showToast(message, type) {
             tableBody.append(row);
         });
 
+        // Update pagination display, etc.
+        updatePaginationControls(currentPage, totalPages);
+
         console.log("User table updated successfully.");
     }
 
-    function fetchAndUpdateTable() {
-        console.log("Fetching data from /api/users");
+    function fetchAndUpdateTable(page = 1, limit = 10, searchParams = {}) {
+        console.log("Fetching data from /api/users with page " + page + " and limit " + limit);
+
+        // Constructing the search query string from `searchParams` object
+        let queryString = $.param({...searchParams, page: page, limit: limit});
 
         $.ajax({
-            url: '/api-handler?targetAPI=/api/users',
+            url: `/api-handler?targetAPI=/api/users&${queryString}`,
             type: 'GET',
             dataType: 'json',
-            success: function(data) {
-                console.log("Received data:", data); // Debug the data received
-                console.log("Data fetched successfully. Number of records:", data.users.length);
-                updateUserTable(data.users);
+            success: function(response) {
+                console.log("Received data:", response); // Debug the data received
+                console.log("Data fetched successfully. Number of records:", response.users.length, "Page:", response.currentPage, "of", response.totalPages);
+                updateUserTable(response.users, response.currentPage, response.totalPages);
             },
             error: function(jqXHR, textStatus, errorThrown) {
                 console.error("Error during the request:", textStatus, errorThrown, jqXHR);
-                var errorMessage = "Error during the request.";
+                let errorMessage = "Error during the request.";
                 
                 // Try to parse and use the custom error message from the server if available
                 if (jqXHR.responseText) {
                     try {
-                        var resp = JSON.parse(jqXHR.responseText);
+                        let resp = JSON.parse(jqXHR.responseText);
                         if (resp && resp.error) {
                             errorMessage = resp.error;
                         }
@@ -913,12 +1014,15 @@ function showToast(message, type) {
             },
             beforeSend: function() {
                 console.log("Preparing to send AJAX request to /api/users.");
+                // Optionally, you can add a loading spinner here
             },
             complete: function(jqXHR, textStatus) {
                 console.log("AJAX request completed with status:", textStatus);
+                // Optionally, remove the loading spinner here
             }
         });
     }
+
 </script>
 {{end}}
 

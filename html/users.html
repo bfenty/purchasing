@@ -8,6 +8,7 @@
   <br>
   {{template "toastBox" .}}
   {{template "modalDelete" .}}
+  {{template "pageControls" .}}
   {{$manage := .Permission.Permissions.Mgmt}}
   {{$admin  := .Permission.Permissions.Admin}}
   <table class="table table-striped table-hover .table-sm" style="max-width: none">
@@ -21,22 +22,38 @@
         <th width=80px></th>
         <th width=80px></th>
     </tr>    
-  <tbody id="userTableBody">
+  <tbody id="contentTableBody">
   </tbody>
   </table>
   <br><br>
   <script>
+    // Setup Page Variables
+    var currentPage = 1; // keep track of the current page
+    var totalPages = 0; // total number of pages, you might get this from the server
+    var limit = 100; // set page size limit
+    $('#limitSelect').val(limit);
+    var searchParams = {}; //set initial search parameters
     $(document).ready(function() {
-        fetchAndUpdateTable();
-        
-        showToast("Testing the Toast system.", "info");
+        console.log("Document ready. Initializing table data fetch.")
+        fetchAndUpdateTable(currentPage,limit, searchParams);
+
+        // Event handler for image clicks
+        $(document).on('click', '.image-link', function() {
+            var standardUrl = $(this).data('standard-url');
+            var sku = $(this).data('sku');
+
+            $('#imageModalLabel').text(sku);
+            $('#modalImage').attr('src', standardUrl);
+            $('#imageModal').modal('show');
+        });
     });
-  </script>
+</script>
   {{template "toast" .}}
   {{template "sortTable" .}}
-  {{template "insertUserRow" .}}
   {{template "updateUserTable" .}}
   {{template "footer" .}}
   {{template "btnDeleteUser" .}}
+  {{template "nedry" .}}
+  {{template "spinner" .}}
 </body>
 </html>
