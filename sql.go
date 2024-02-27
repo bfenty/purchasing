@@ -1358,7 +1358,7 @@ func ListUsersAPI(w http.ResponseWriter, r *http.Request) {
 		page = 1
 	}
 	if limit < 1 || limit > 100 { // set a maximum limit to prevent abuse
-		limit = 10
+		limit = 100
 	}
 
 	// Assuming permissions are stored in a separate table or as a JSON column in the users table
@@ -2025,7 +2025,7 @@ func ListSortRequestsAPI(w http.ResponseWriter, r *http.Request) {
 		page = 1
 	}
 	if limit < 1 {
-		limit = 10 // Default limit
+		limit = 100 // Default limit
 	}
 
 	// Calculate offset
@@ -2033,6 +2033,7 @@ func ListSortRequestsAPI(w http.ResponseWriter, r *http.Request) {
 
 	//Gather Search Parameters
 	queryParams := map[string]string{
+		"requestid":        r.URL.Query().Get("requestid"),
 		"sku":              r.URL.Query().Get("search-sku"),
 		"description":      r.URL.Query().Get("search-description"),
 		"sku_manufacturer": r.URL.Query().Get("search-manufacturerpart"),
@@ -2047,6 +2048,8 @@ func ListSortRequestsAPI(w http.ResponseWriter, r *http.Request) {
 		"status":           r.URL.Query().Get("search-status"),
 		"prty":             r.URL.Query().Get("search-priority"),
 	}
+
+	log.Debug("Parameters: ", queryParams)
 
 	// Construct SQL query
 	var queryArgs []interface{}
@@ -2076,7 +2079,7 @@ func ListSortRequestsAPI(w http.ResponseWriter, r *http.Request) {
 
 	// Append limit and offset to the query
 	queryArgs = append(queryArgs, limit, offset)
-	query := queryBuilder.String() + " LIMIT ? OFFSET ?"
+	query := queryBuilder.String() + " ORDER BY 1 DESC LIMIT ? OFFSET ? "
 
 	// Execute query
 	rows, err := db.Query(query, queryArgs...)

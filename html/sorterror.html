@@ -34,7 +34,7 @@
 #existing-errors .list-group-item strong {
   font-weight: bold;
 }
-  </style>
+</style>
 
 </head>
 <body>
@@ -100,7 +100,7 @@
       Error reporting error: <span id="error-text"></span>
     </div>
   </div>
-    <form id="error-form" action="/sorterrorupdate" method="post">
+    <form id="error-form" action="/api/sorterrorupdate" method="post">
       <div class="form-group">
         <label for="requestid">Request ID:</label>
         <input type="text" class="form-control" id="requestid" name="requestid">
@@ -144,78 +144,97 @@
       
 <script>
       $(document).ready(function() {
-        var requestid = getParameterByName('requestid');
-        if (requestid) {
-          $('#requestid').val(requestid);
-          handleRequestIdInput(requestid);
-        }
-      
-        $('#requestid').on('input', function() {
-          handleRequestIdInput($(this).val());
-        });
-      });
-      
-      function handleRequestIdInput(requestid) {
-        if (requestid !== '') {
-          $.ajax({
-            type: 'GET',
-            url: '/lookuprequestid',
-            data: {'requestid': requestid},
-            success: function(data) {
-              $('#sorter').val(data.sorter);
-              $('#description').val(data.description);
-              checkExistingErrors(requestid);
-            }
-          });
-        }
+  console.log('Document ready.');
+  var requestid = getParameterByName('requestid');
+  console.log('Retrieved requestid:', requestid);
+  if (requestid) {
+    $('#requestid').val(requestid);
+    console.log('Setting #requestid value and handling input.');
+    handleRequestIdInput(requestid);
+  }
+
+  $('#requestid').on('input', function() {
+    console.log('Handling #requestid input:', $(this).val());
+    handleRequestIdInput($(this).val());
+  });
+});
+
+function handleRequestIdInput(requestid) {
+  console.log('handleRequestIdInput called with:', requestid);
+  if (requestid !== '') {
+    $.ajax({
+      type: 'GET',
+      url: `/api-handler?targetAPI=/api/sortinglist&limit=1&requestid=${requestid}`,
+      data: {'requestid': requestid},
+      success: function(data) {
+        console.log('AJAX request success. Data:', data);
+        $('#sorter').val(data.sortRequests.Sorter);
+        $('#description').val(data.description);
+        checkExistingErrors(requestid);
+      },
+      error: function(xhr, status, error) {
+        console.error('AJAX request failed:', status, error);
       }
-      
-      function checkExistingErrors(requestid) {
-        var prevRequestid = $('#existing-errors').data('requestid');
-        if (prevRequestid !== requestid) {
-          // Clear the existing errors box and hide it if the request ID has changed
-          $('#existing-errors').empty();
-          $('#existing-errors').hide();
+    });
+  }
+}
+
+function checkExistingErrors(requestid) {
+  console.log('checkExistingErrors called with:', requestid);
+  var prevRequestid = $('#existing-errors').data('requestid');
+  if (prevRequestid !== requestid) {
+    console.log('Request ID changed. Clearing and hiding existing errors.');
+    $('#existing-errors').empty();
+    $('#existing-errors').hide();
+  }
+
+  $.ajax({
+    type: 'GET',
+    url: `/api-handler?targetAPI=/api/sortinglist&limit=1&requestid=${requestid}`,
+    data: {'requestid': requestid},
+    success: function(data) {
+      console.log('Existing errors check success. Data length:', data.length);
+      if (data.length > 0) {
+        console.log('Existing errors found. Displaying.');
+        $('#existing-errors').show();
+        $('#existing-errors').data('requestid', requestid);
+
+        for (var i = 0; i < data.length; i++) {
+          var error = data[i];
+          var html = '<div class="card"><div class="card-body">';
+          html += '<h5 class="card-title">Existing Error</h5>';
+          html += '<p class="card-text"><strong>Error Type:</strong> ' + error.errortype + '</p>';
+          html += '<p class="card-text"><strong>Notes:</strong> ' + error.notes + '</p>';
+          html += '</div></div>';
+          $('#existing-errors').append(html);
         }
-      
-        $.ajax({
-          type: 'GET',
-          url: '/checkexistingerrors',
-          data: {'requestid': requestid},
-          success: function(data) {
-            if (data.length > 0) {
-              // Display the existing errors box
-              $('#existing-errors').show();
-              $('#existing-errors').data('requestid', requestid);
-      
-              // Add a box for each error
-              for (var i = 0; i < data.length; i++) {
-                var error = data[i];
-                var html = '<div class="card"><div class="card-body">';
-                html += '<h5 class="card-title">Existing Error</h5>';
-                html += '<p class="card-text"><strong>Error Type:</strong> ' + error.errortype + '</p>';
-                html += '<p class="card-text"><strong>Notes:</strong> ' + error.notes + '</p>';
-                html += '</div></div>';
-                $('#existing-errors').append(html);
-              }
-            } else {
-              // Hide the existing errors box if there are no errors
-              $('#existing-errors').empty();
-              $('#existing-errors').hide();
-            }
-          }
-        });
+      } else {
+        console.log('No existing errors. Hiding error box.');
+        $('#existing-errors').empty();
+        $('#existing-errors').hide();
       }
-      
-      function getParameterByName(name, url) {
-        if (!url) url = window.location.href;
-        name = name.replace(/[\[\]]/g, '\\$&');
-        var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),
-            results = regex.exec(url);
-        if (!results) return null;
-        if (!results[2]) return '';
-        return decodeURIComponent(results[2].replace(/\+/g, ' '));
-      }
+    },
+    error: function(xhr, status, error) {
+      console.error('Existing errors check failed:', status, error);
+    }
+  });
+}
+
+function getParameterByName(name, url) {
+  console.log('getParameterByName called for:', name);
+  if (!url) url = window.location.href;
+  name = name.replace(/[\[\]]/g, '\\$&');
+  var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),
+      results = regex.exec(url);
+  if (!results) {
+    console.log('Parameter', name, 'not found in URL.');
+    return null;
+  }
+  if (!results[2]) return '';
+  console.log('Parameter', name, 'found with value:', decodeURIComponent(results[2].replace(/\+/g, ' ')));
+  return decodeURIComponent(results[2].replace(/\+/g, ' '));
+}
+
     </script>
       
        

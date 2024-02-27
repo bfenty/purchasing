@@ -656,7 +656,7 @@ function showToast(message, type) {
     async function fetchUsers() {
         return new Promise((resolve, reject) => {
             $.ajax({
-                url: '/api-handler?targetAPI=/api/users&limit=100', // Using the users API endpoint
+                url: '/api-handler?targetAPI=/api/users?limit=100&sorting=1&active=1', // Using the users API endpoint
                 type: 'GET',
                 dataType: 'json',
                 success: function(response) {
@@ -896,7 +896,7 @@ function showToast(message, type) {
         // Manufacturer dropdown options
         var userOptions = '<option value="" selected>Select Sorter</option>';
         users.forEach(function(user) {
-            userOptions += `<option value="${user}" ${sortRequest.Sorter = user ? 'selected' : ''}>${user}</option>`;
+            userOptions += `<option value="${user}" ${sortRequest.Sorter === user ? 'selected' : ''}>${user}</option>`;
         });
         // Constructing the row HTML
         var rowHtml = `<tr class="${rowClass}">`
@@ -924,12 +924,12 @@ function showToast(message, type) {
                   rowHtml += `<td>`
                     {{if $admin}}
                     rowHtml += `<select class="form-select" id="status" name="status">
-                      <option value="New" selected>New</option>
-                      <option value="Checkout">Checkout</option>
-                      <option value="Checkin">Checkin</option>
+                      <option value="New" ${sortRequest.Status === "New" ? 'selected' : ''}>New</option>
+                      <option value="Checkout" ${sortRequest.Status === "Checkout" ? 'selected' : ''}>Checkout</option>
+                      <option value="Checkin" ${sortRequest.Status === "Checkin" ? 'selected' : ''}>Checkin</option>
                     </select>`
                     {{else}}
-                      `<input class="form-control" type="text" id="status" name="status" value="" readonly>`
+                      `<input class="form-control" type="text" id="status" name="status" value="${sortRequest.Status}" readonly>`
                       {{end}}
                   rowHtml += `</td>`
                   {{end}}
