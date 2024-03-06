@@ -101,15 +101,26 @@ func Signin(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "/signup")
 		return
 
-	// Add other roles and their handling here...
+		// Add other roles and their handling here...
 
-	default:
-		// Handle session token creation
+		// Create a new random session token
+		// we use the "github.com/google/uuid" library to generate UUIDs
 		sessionToken := uuid.NewString()
 		expiresAt := time.Now().Add(1800 * time.Second)
+		// log.Debug("Authorized")
+
+		// Set the token in the session map, along with the session information
 		sessions[sessionToken] = session{
-			username: user.Username,
+			username: creds.Username,
 			expiry:   expiresAt,
+		}
+
+		// Replace the session map assignment with a database insert
+		_, err := db.Exec("INSERT INTO purchasing.sessions (token, username, expiry) VALUES (?, ?, ?)", sessionToken, creds.Username, expiresAt)
+		if err != nil {
+			log.WithFields(log.Fields{"error": err}).Error("Error saving session to database")
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			return
 		}
 
 		// Setting client cookie
@@ -162,44 +173,113 @@ func auth(w http.ResponseWriter, r *http.Request) (user User) {
 	log.Debug("Session token cookie found:", c.Value)
 	sessionToken := c.Value
 
-	userSession, exists := sessions[sessionToken]
-	if !exists {
-		log.Debug("Session token not found in session map, redirecting to login")
+	// We then get the name of the user from our session map, where we set the session token
+	// userSession, exists := sessions[sessionToken]
+	// if !exists {
+	// 	// If the session token is not present in session map, return an unauthorized error
+	// 	// w.WriteHeader(http.StatusUnauthorized)
+	// 	log.Debug("Unauthorized")
+	// 	http.Redirect(w, r, "/login?messagetitle=User Unauthorized&messagebody=Please login to use this site", http.StatusSeeOther)
+	// 	user.Role = "Unauthorized"
+	// 	return user
+	// }
+	// if userSession.isExpired() {
+	// 	delete(sessions, sessionToken)
+	// 	// w.WriteHeader(http.StatusUnauthorized)
+	// 	log.Debug("Unauthorized")
+	// 	http.Redirect(w, r, "/login?messagetitle=User Unauthorized&messagebody=Please login to use this site", http.StatusSeeOther)
+
+	// 	user.Role = "Unauthorized"
+	// 	return user
+	// }
+
+	var username string
+	var expiry time.Time
+	err = db.QueryRow("SELECT username, expiry FROM sessions WHERE token = ?", sessionToken).Scan(&username, &expiry)
+	if err != nil {
+		// Handle no rows found or other errors
+		log.Debug("Session token not found in database, redirecting to login")
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
-		return User{Role: "Unauthorized"} // Return immediately after redirect
+		return User{Role: "Unauthorized"}
 	}
 
-	if userSession.isExpired() {
-		log.Debug("Session token expired, deleting session and redirecting to login")
-		delete(sessions, sessionToken)
+	if expiry.Before(time.Now()) {
+		// Session is expired, delete it and redirect to login
+		_, delErr := db.Exec("DELETE FROM sessions WHERE token = ?", sessionToken)
+		if delErr != nil {
+			log.WithFields(log.Fields{"error": delErr}).Error("Error deleting expired session")
+		}
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
-		return User{Role: "Unauthorized"} // Return immediately after redirect
+		return User{Role: "Unauthorized"}
 	}
 
-	log.Debug("User is authorized, creating new session token")
+	// Finally, return the welcome message to the user
+	log.Debug("Authorized")
+	// If the previous session is valid, create a new session token for the current user
 	newSessionToken := uuid.NewString()
 	expiresAt := time.Now().Add(1800 * time.Second)
 
-	sessions[newSessionToken] = session{
-		username: userSession.username,
-		expiry:   expiresAt,
+	// First, delete the old session ID
+	_, delErr := db.Exec("DELETE FROM sessions WHERE token = ?", sessionToken)
+	if delErr != nil {
+		log.WithFields(log.Fields{"error": delErr}).Error("Error deleting expired session")
 	}
+
+	// Replace the session map assignment with a database insert
+	_, err = db.Exec("INSERT INTO sessions (token, username, expiry) VALUES (?, ?, ?)", newSessionToken, username, expiresAt)
+	if err != nil {
+		log.WithFields(log.Fields{"error": err}).Error("Error saving session to database")
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	// Set the token in the session map, along with the user whom it represents
+	// sessions[newSessionToken] = session{
+	// 	username: userSession.username,
+	// 	expiry:   expiresAt,
+	// }
 
 	log.Debug("New session token created:", newSessionToken)
 	delete(sessions, sessionToken)
 
 	http.SetCookie(w, &http.Cookie{
-		Name:     "session_token",
-		Value:    newSessionToken,
-		Expires:  expiresAt,
-		Path:     "/",
-		HttpOnly: true,
+		Name:    "session_token",
+		Value:   newSessionToken,
+		Expires: time.Now().Add(1800 * time.Second),
 	})
-
-	userData := userdata(userSession.username)
-	log.Debug("Exiting auth function, user data:", userData)
-	return userData
+	return userdata(username)
 }
+
+// func Logout(w http.ResponseWriter, r *http.Request) {
+// 	c, err := r.Cookie("session_token")
+// 	if err != nil {
+// 		if err == http.ErrNoCookie {
+// 			// If the cookie is not set, return an unauthorized status
+// 			w.WriteHeader(http.StatusUnauthorized)
+// 			http.Redirect(w, r, "/login?messagetitle=User Unauthorized&messagebody=Please login to use this site", http.StatusSeeOther)
+// 			return
+// 		}
+// 		// For any other type of error, return a bad request status
+// 		w.WriteHeader(http.StatusBadRequest)
+// 		http.Redirect(w, r, "/login?messagetitle=User Unauthorized&messagebody=Please login to use this site", http.StatusSeeOther)
+// 		return
+// 	}
+// 	sessionToken := c.Value
+
+// 	// remove the users session from the session map
+// 	delete(sessions, sessionToken)
+
+// 	// We need to let the client know that the cookie is expired
+// 	// In the response, we set the session token to an empty
+// 	// value and set its expiry as the current time
+// 	http.SetCookie(w, &http.Cookie{
+// 		Name:    "session_token",
+// 		Value:   "",
+// 		Expires: time.Now(),
+// 	})
+// 	//Redirect Login
+// 	http.Redirect(w, r, "/login?messagetitle=Logout Successful&messagebody=You have successfully been logged out", http.StatusSeeOther)
+// }
 
 func Logout(w http.ResponseWriter, r *http.Request) {
 	// Get the session token from the user's cookies
@@ -210,22 +290,28 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	_, delErr := db.Exec("DELETE FROM sessions WHERE token = ?", sessionToken.Value)
+	if delErr != nil {
+		log.WithFields(log.Fields{"error": delErr}).Error("Error deleting session from database")
+		// Handle error appropriately
+	}
+
 	// Remove the session token from the sessions map
-	delete(sessions, sessionToken.Value)
+	// delete(sessions, sessionToken.Value)
 
 	// Set the session token cookie to expire immediately
-	http.SetCookie(w, &http.Cookie{
-		Name:    "session_token",
-		Value:   "",
-		Expires: time.Unix(0, 0),
-	})
+	// http.SetCookie(w, &http.Cookie{
+	// 	Name:    "session_token",
+	// 	Value:   "",
+	// 	Expires: time.Unix(0, 0),
+	// })
 
-	// Set a cookie with the logout message
-	http.SetCookie(w, &http.Cookie{
-		Name:  "message",
-		Value: "You have been logged out",
-		Path:  "/login",
-	})
+	// // Set a cookie with the logout message
+	// http.SetCookie(w, &http.Cookie{
+	// 	Name:  "message",
+	// 	Value: "You have been logged out",
+	// 	Path:  "/login",
+	// })
 
 	// Redirect the user to the login page
 	http.Redirect(w, r, "/login", http.StatusSeeOther)
