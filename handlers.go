@@ -101,7 +101,7 @@ func Signin(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "/signup")
 		return
 
-		// Add other roles and their handling here...
+	default:
 
 		// Create a new random session token
 		// we use the "github.com/google/uuid" library to generate UUIDs
