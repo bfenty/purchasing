@@ -215,6 +215,9 @@ $('#myModal').on('shown.bs.modal', function () {
             {{if or (eq $permission "admin") (eq $permission "purchasing")}}<li><a class="dropdown-item" href="/sorting?layout=mgmt">Management</a></li>{{end}}
             <li><a class="dropdown-item" href="/checkout">Checkout</a></li>
             <li><a class="dropdown-item" href="/checkin">Checkin</a></li>
+            {{if or (eq $permission "admin") (eq $permission "purchasing")}}
+              <li><a class="dropdown-item" href="/sorterror">Sort Errors<span class="sr-only">(current)</span></a></li>
+              {{end}}
           </ul>
         </li>
     {{end}} 
@@ -235,11 +238,6 @@ $('#myModal').on('shown.bs.modal', function () {
       </li>
       {{end}}
       {{if or (eq $permission "admin")}}<li class="nav-item active"><a class="nav-link active" href="/users">Users<span class="sr-only">(current)</span></a></li>{{end}}
-    {{if or (eq $permission "admin") (eq $permission "purchasing")}}
-    <li class="nav-item active">
-      <a class="nav-link active" href="/sorterror">Sort Errors<span class="sr-only">(current)</span></a>
-    </li>
-    {{end}}
       {{if or (eq $permission "admin") (eq $permission "receiving") (eq $permission "purchasing") (eq $permission "sorting") (ne $permission "")}}
       <li class="nav-item active">
         <a class="nav-link active" href="/logout">Logout <span class="sr-only">(current)</span></a>

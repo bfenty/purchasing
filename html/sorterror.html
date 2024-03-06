@@ -39,6 +39,7 @@
 </head>
 <body>
   {{template "navigation" .}}
+  {{template "toastBox" .}}
   <br>
   {{template "messagebox" .}}
   {{$permission := .Permission.Role}}
@@ -48,59 +49,49 @@
     <h2>Report Error</h2>
     <script>
     function submitErrorForm(event) {
-        event.preventDefault();
+    event.preventDefault();
 
-        // Check if all fields are populated
-        var requiredFields = ['notes'];
-        for (var i = 0; i < requiredFields.length; i++) {
-            var field = requiredFields[i];
-            if (!$('#' + field).val()) {
-                $('#message').addClass('alert-danger').text('Please fill in all required fields.');
-                return;
-            }
+    // Check if all fields are populated
+    var requiredFields = ['notes'];
+    for (var i = 0; i < requiredFields.length; i++) {
+        var field = requiredFields[i];
+        if (!$('#' + field).val()) {
+            showToast('Please fill in all required fields.', 'error');
+            return;
         }
-
-        var formData = $('#error-form').serialize();
-        var url = $('#error-form').attr('action');
-
-        console.log('Submitting form data:', formData);
-        console.log('Sending AJAX request to:', url);
-
-        $.ajax({
-            type: 'POST',
-            url: url,
-            data: formData,
-            success: function(data) {
-                console.log('AJAX request succeeded:', data);
-                $('#message').addClass('alert-success').text('Error report submitted successfully.');
-                $('#success-message').fadeIn(function() {
-                    $(this).delay(3000).fadeOut();
-                });
-
-                $('#error-form')[0].reset();
-                $('#existing-errors').empty().hide();
-            },
-            error: function(jqXHR, textStatus, errorThrown) {
-                console.error('AJAX request failed:', textStatus, errorThrown);
-                $('#message').addClass('alert-danger').text('Error submitting error report.');
-                $('#error-message').fadeIn().delay(3000).fadeOut();
-            }
-        });
     }
-</script>
-  <div id="message" class="alert"></div>
-  <div id="success-message" style="display: none;">
-    <div class="alert alert-success" role="alert">
-      Error reported successfully!
-    </div>
-  </div>
 
-  <div id="error-message" style="display: none;">
-    <div class="alert alert-danger" role="alert">
-      Error reporting error: <span id="error-text"></span>
-    </div>
-  </div>
-    <form id="error-form" action="/api/sorterrorupdate" method="post">
+    var formData = $('#error-form').serialize();
+    var url = $('#error-form').attr('action');
+
+    console.log('Submitting form data:', formData);
+    console.log('Sending AJAX request to:', url);
+
+    $.ajax({
+        type: 'POST',
+        url: url,
+        data: formData,
+        success: function(data) {
+            console.log('AJAX request succeeded:', data);
+            showToast('Error report submitted successfully.', 'info'); // Assuming 'info' type for success messages
+
+            $('#error-form')[0].reset();
+            $('#existing-errors').empty().hide();
+        },
+        error: function(jqXHR, textStatus, errorThrown) {
+            console.error('AJAX request failed:', textStatus, errorThrown);
+            var errorMessage = 'Error submitting error report.';
+            if(jqXHR.responseJSON && jqXHR.responseJSON.error){
+                errorMessage = jqXHR.responseJSON.error; // Use the server-provided error message if available
+            }
+            showToast(errorMessage, 'error');
+        }
+    });
+}
+
+</script>
+  
+    <form id="error-form" action="/api-handlers?targetAPI=/api/sorterrorupdate" method="post">
       <div class="form-group">
         <label for="requestid">Request ID:</label>
         <input type="text" class="form-control" id="requestid" name="requestid">
@@ -166,12 +157,18 @@ function handleRequestIdInput(requestid) {
       type: 'GET',
       url: `/api-handler?targetAPI=/api/sortinglist&limit=1&requestid=${requestid}`,
       data: {'requestid': requestid},
-      success: function(data) {
-        console.log('AJAX request success. Data:', data);
-        $('#sorter').val(data.sortRequests.Sorter);
-        $('#description').val(data.description);
-        checkExistingErrors(requestid);
-      },
+      success: function(response) {
+      // Assuming you're only interested in the first sortRequest object
+      var firstSortRequest = response.sortRequests[0];
+      if (firstSortRequest) {
+          $('#sorter').val(firstSortRequest.Sorter);
+          $('#description').val(firstSortRequest.Description);
+          checkExistingErrors(firstSortRequest.ID); // Assuming checkExistingErrors function exists and can use the ID
+      } else {
+          console.log("No sort requests found.");
+          // Handle case where no sort requests are returned
+      }
+  },
       error: function(xhr, status, error) {
         console.error('AJAX request failed:', status, error);
       }
@@ -237,7 +234,8 @@ function getParameterByName(name, url) {
 
     </script>
       
-       
 {{template "footer" .}}
+{{template "toast" .}}
+{{template "nedry" .}}
 </body>
 </html>

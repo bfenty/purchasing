@@ -312,71 +312,63 @@ func LookupRequestID(w http.ResponseWriter, r *http.Request) {
 	w.Write(jsonBytes)
 }
 
-func sortErrorUpdate(w http.ResponseWriter, r *http.Request) {
-	//Auth User
+func SortErrorUpdate(w http.ResponseWriter, r *http.Request) {
+	// Assuming 'auth' function checks for authentication and returns a User object
 	user := auth(w, r)
 
-	fmt.Println("TEST")
-	log.WithFields(log.Fields{"username": user.Username}).Debug("Inserting Error")
+	log.WithFields(log.Fields{"username": user.Username}).Debug("Attempting to insert sort error")
+
 	// Parse the form data
-	err := r.ParseForm()
-	if err != nil {
+	if err := r.ParseForm(); err != nil {
 		log.WithError(err).Error("Error parsing form data")
-		http.Error(w, "Error parsing form data", http.StatusBadRequest)
+		respondWithJSON(w, http.StatusBadRequest, map[string]string{"error": "Error parsing form data"})
 		return
 	}
 
-	// Get the form data
-	requestid := r.Form.Get("requestid")
-	sorter := r.Form.Get("sorter")
-	description := r.Form.Get("description")
-	errortype := r.Form.Get("errortype")
-	notes := r.Form.Get("notes")
+	// Extract form data
+	requestID := r.FormValue("requestid")
+	sorter := r.FormValue("sorter")           // Assuming sorter is not used in the insert query
+	description := r.FormValue("description") // Assuming description is for logging or response
+	errorType := r.FormValue("errortype")
+	notes := r.FormValue("notes")
 
-	// Insert the error into the database
-	result, err := db.Exec("REPLACE INTO purchasing.sorterror (requestid, errortype, notes,reporter) VALUES (?, ?, ?, ?)", requestid, errortype, notes, user.Username)
+	// Perform the database insert
+	result, err := db.Exec("REPLACE INTO purchasing.sorterror (requestid, errortype, notes, reporter) VALUES (?, ?, ?, ?)",
+		requestID, errorType, notes, user.Username)
 	if err != nil {
-		log.WithError(err).Error("Error inserting error into database")
-		http.Error(w, "Error inserting error into database", http.StatusInternalServerError)
+		log.WithError(err).Error("Error inserting sort error into database")
+		respondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Error inserting sort error into database"})
 		return
 	}
 
-	// Get the ID of the inserted error
 	errorID, err := result.LastInsertId()
 	if err != nil {
-		log.WithError(err).Error("Error getting last inserted ID")
-		http.Error(w, "Error getting last inserted ID", http.StatusInternalServerError)
+		log.WithError(err).Error("Error getting last inserted error ID")
+		respondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Error getting last inserted error ID"})
 		return
 	}
 
-	// Create a JSON response
+	// Prepare and send the response
 	response := map[string]interface{}{
-		"errorid":     errorID,
-		"requestid":   requestid,
+		"message":   "Sort error reported successfully",
+		"errorID":   errorID,
+		"requestID": requestID,
+		// Including sorter and description in response for completeness
 		"sorter":      sorter,
 		"description": description,
-		"errortype":   errortype,
+		"errorType":   errorType,
 		"notes":       notes,
 	}
-	jsonResponse, err := json.Marshal(response)
-	if err != nil {
-		log.WithError(err).Error("Error marshaling JSON response")
-		http.Error(w, "Error marshaling JSON response", http.StatusInternalServerError)
-		return
-	}
-
-	// Set the content type header and write the response
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(jsonResponse)
+	respondWithJSON(w, http.StatusOK, response)
 
 	log.WithFields(log.Fields{
-		"errorid":     errorID,
-		"requestid":   requestid,
+		"errorID":     errorID,
+		"requestID":   requestID,
 		"sorter":      sorter,
 		"description": description,
-		"errortype":   errortype,
+		"errorType":   errorType,
 		"notes":       notes,
-	}).Debug("Error reported successfully")
+	}).Info("Sort error reported successfully")
 }
 
 func SortErrorList(w http.ResponseWriter, r *http.Request) {
@@ -2056,6 +2048,16 @@ func ListSortRequestsAPI(w http.ResponseWriter, r *http.Request) {
 	var queryBuilder strings.Builder
 	queryBuilder.WriteString("SELECT requestid, sku,description,instructions,weightin,weightout,pieces,hours,checkout,checkint,COALESCE(sorter,''),status,sku_manufacturer,prty from purchasing.sortrequest WHERE active=1 ")
 	for param, value := range queryParams {
+		if value == "NOT_NULL" {
+			// Dynamically insert the parameter name into the query for NOT NULL conditions
+			queryBuilder.WriteString(fmt.Sprintf(" AND %s IS NOT NULL", param))
+			continue // Skip adding this to queryArgs since it's a special case
+		}
+		if value == "IS_NULL" {
+			// Dynamically insert the parameter name into the query for NOT NULL conditions
+			queryBuilder.WriteString(fmt.Sprintf(" AND %s IS NULL", param))
+			continue // Skip adding this to queryArgs since it's a special case
+		}
 		if value != "" {
 			value = value + "%"
 			queryArgs = append(queryArgs, value)

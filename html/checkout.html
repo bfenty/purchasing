@@ -68,6 +68,8 @@
   {{$permission := .Permission.Role}}
   {{$user := .Permission.Username}}
   {{$date := .Date}}
+  {{template "toastBox" .}}
+  {{template "pageControls" .}}
   <div id="message" class="alert"></div>
   <h1>{{.Title}}</h1>
         <!-- Checkout Table -->
@@ -127,6 +129,10 @@
       <br>
         <!-- End Checkout Table -->
 {{template "footer" .}}
+{{template "toast" .}}
+{{template "nedry" .}}
+{{template "updateSortTable" .}}
+{{template "spinner" .}}
 <script>
   document.querySelectorAll('form.update-form').forEach(form => {
     form.addEventListener('submit', e => {
@@ -171,23 +177,6 @@
         setTimeout(() => {
           messageDiv.style.display = 'none';
         }, 5000);
-
-        //for dynamic table reload, later:
-        //         fetch('/sorting')
-        // .then(response => {
-        //   if (!response.ok) {
-        //     throw new Error('Network response was not ok');
-        //   }
-        //   return response.text();
-        // })
-        // .then(data => {
-        //   // Replace the table body with the updated data
-        //   document.querySelector('#sorttable tbody').innerHTML = data;
-        // })
-        // .catch(error => {
-        //   console.error('Error:', error);
-        //   // Handle the error
-        // });
               })
               .catch(error => {
                 console.error('Error:', error);

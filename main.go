@@ -333,7 +333,7 @@ func APIHandler(w http.ResponseWriter, r *http.Request) {
 		ListSortRequestsAPI(w, r)
 	case "sorterrorupdate":
 		log.Debug("Calling sortErrorUpdate function")
-		sortErrorUpdate(w, r)
+		SortErrorUpdate(w, r)
 	// Add other cases as needed
 	default:
 		log.WithFields(log.Fields{
