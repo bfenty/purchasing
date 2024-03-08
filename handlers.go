@@ -195,7 +195,7 @@ func auth(w http.ResponseWriter, r *http.Request) (user User) {
 
 	var username string
 	var expiry time.Time
-	err = db.QueryRow("SELECT username, expiry FROM sessions WHERE token = ?", sessionToken).Scan(&username, &expiry)
+	err = db.QueryRow("SELECT username, expiry FROM purchasing.sessions WHERE token = ?", sessionToken).Scan(&username, &expiry)
 	if err != nil {
 		// Handle no rows found or other errors
 		log.Debug("Session token not found in database, redirecting to login")
@@ -205,7 +205,7 @@ func auth(w http.ResponseWriter, r *http.Request) (user User) {
 
 	if expiry.Before(time.Now()) {
 		// Session is expired, delete it and redirect to login
-		_, delErr := db.Exec("DELETE FROM sessions WHERE token = ?", sessionToken)
+		_, delErr := db.Exec("DELETE FROM purchasing.sessions WHERE token = ?", sessionToken)
 		if delErr != nil {
 			log.WithFields(log.Fields{"error": delErr}).Error("Error deleting expired session")
 		}
@@ -220,13 +220,13 @@ func auth(w http.ResponseWriter, r *http.Request) (user User) {
 	expiresAt := time.Now().Add(1800 * time.Second)
 
 	// First, delete the old session ID
-	_, delErr := db.Exec("DELETE FROM sessions WHERE token = ?", sessionToken)
+	_, delErr := db.Exec("DELETE FROM purchasing.sessions WHERE token = ?", sessionToken)
 	if delErr != nil {
 		log.WithFields(log.Fields{"error": delErr}).Error("Error deleting expired session")
 	}
 
 	// Replace the session map assignment with a database insert
-	_, err = db.Exec("INSERT INTO sessions (token, username, expiry) VALUES (?, ?, ?)", newSessionToken, username, expiresAt)
+	_, err = db.Exec("INSERT INTO purchasing.sessions (token, username, expiry) VALUES (?, ?, ?)", newSessionToken, username, expiresAt)
 	if err != nil {
 		log.WithFields(log.Fields{"error": err}).Error("Error saving session to database")
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
