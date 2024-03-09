@@ -598,66 +598,6 @@ function showToast(message, type) {
 
             console.log("Fetching data from " + apiUrl);
             apicall(apiUrl,manufacturers)
-            // $.ajax({
-            //     url: apiUrl,
-            //     type: 'GET',
-            //     dataType: 'json',
-            //     success: function(response) {
-            //         console.log("Data fetched successfully. Number of records:", response.products.length);
-            //         console.log("Response:", response);
-            //         totalPages = response.totalPages; // set the total pages from the response
-            //         currentPage = response.currentPage; // set the current page from the response
-
-            //         // var tableBody = $('#contentTableBody');
-            //         // tableBody.empty(); // Clear existing data
-
-            //         // // Currency dropdown options
-            //         // var currencies = ["USD", "CZK", "EUR", "GBP"];
-
-            //         // // Season dropdown options
-            //         // var seasons = ['None', 'Christmas', 'Fall', 'Halloween'];
-
-            //         // // Add the insert row at the beginning
-            //         // var insertRow = GenerateTopRow(manufacturers, currencies, seasons);
-            //         // tableBody.append(insertRow);
-
-            //         // response.products.forEach(function(item, index) {
-            //         //     var row = generateTableRow(item, index, manufacturers, currencies, seasons);
-            //         //     tableBody.append(row);
-            //         // });
-
-            //         $('#loadingSpinner').hide(); // Hide the spinner
-
-            //         // Update pagination controls
-            //         updatePaginationControls();
-
-            //         console.log("Table updated successfully.");
-            //     },
-            //     error: function(jqXHR, textStatus, errorThrown) {
-            //         console.error("Error during the request:", textStatus, errorThrown, jqXHR);
-            //         var errorMessage = "Error during the request.";
-
-            //         // Try to parse and use the custom error message from the server if available
-            //         if (jqXHR.responseText) {
-            //             try {
-            //                 var resp = JSON.parse(jqXHR.responseText);
-            //                 if (resp && resp.error) {
-            //                     errorMessage = resp.error;
-            //                 }
-            //             } catch (e) {
-            //                 console.error("Error parsing server response:", e);
-            //             }
-            //         }
-            //         showToast(errorMessage, "error");  // Show the custom error message
-            //     },
-            //     beforeSend: function() {
-            //         console.log("Preparing to send AJAX request to /api/products.");
-            //         $('#loadingSpinner').show(); // Show the spinner before sending the request
-            //     },
-            //     complete: function(jqXHR, textStatus) {
-            //         console.log("AJAX request completed with status:", textStatus);
-            //     }
-            // });
         } catch (error) {
             console.error("Error in fetching manufacturers:", error);
             showToastF(error,"error")
@@ -723,53 +663,6 @@ function showToast(message, type) {
             console.log("Fetching data from " + apiUrl);
 
             apicall(apiUrl, users);
-
-            // $.ajax({
-            //     url: apiUrl,
-            //     type: 'GET',
-            //     dataType: 'json',
-            //     success: function(response) {
-            //         console.log("Data fetched successfully. Number of records:", response.sortRequests.length);
-            //         console.log("Response:", response);
-            //         totalPages = response.totalPages; // set the total pages from the response
-            //         currentPage = response.currentPage; // set the current page from the response
-            //         // Update the customer table with the new data
-            //         updateTable(response.sortRequests,users);
-            //         $('#loadingSpinner').hide(); // Hide the spinner
-            //         updatePaginationControls();
-            //         console.log("Sort Request table updated successfully.");
-            //     },
-            //     error: function(jqXHR, textStatus, errorThrown) {
-            //         $('#loadingSpinner').hide(); // Hide the spinner
-            //         console.error("Error fetching data:", textStatus, errorThrown, jqXHR);
-
-            //         // Initialize errorMessage with a default error message
-            //         let errorMessage = "An error occurred. Please try again.";
-
-            //         // Try to parse and use the custom error message from the server if available
-            //         if (jqXHR.responseText) {
-            //             try {
-            //                 var resp = JSON.parse(jqXHR.responseText);
-            //                 if (resp && resp.error) {
-            //                     errorMessage = resp.error;
-            //                 }
-            //             } catch (e) {
-            //                 console.error("Error parsing server response:", e);
-            //             }
-            //         }
-                    
-            //         showToast(errorMessage, "error");  // Show the custom error message or the default one
-            //     },
-
-            //     beforeSend: function() {
-            //         console.log("Preparing to send AJAX request to /api/sortrequests.");
-            //         $('#loadingSpinner').show(); // Show the spinner before sending the request
-            //     },
-            //     complete: function(jqXHR, textStatus) {
-            //         console.log("AJAX request completed with status:", textStatus);
-            //         // You can remove the loading spinner here
-            //     }
-            // });
         } catch (error) {
             console.error("Error in fetching users:", error);
             showToast(error,"error")
@@ -1320,63 +1213,12 @@ function showToast(message, type) {
         console.log("User table updated successfully.");
     }
 
-    // function updateUserTable(users, currentPage, totalPages) {
-    //     var tableBody = $('#contentTableBody');
-    //     tableBody.empty(); // Clear existing data
-
-    //     users.forEach(function(user, index) {
-    //         var row = generateTableRow(user, index);
-    //         tableBody.append(row);
-    //     });
-
-    //     // Update pagination display, etc.
-    //     updatePaginationControls(currentPage, totalPages);
-
-    //     console.log("User table updated successfully.");
-    // }
-
     function fetchAndUpdateTable(page = 1, limit = 10, searchParams = {}) {
         console.log("Fetching data from /api/users with page " + page + " and limit " + limit);
 
         // Constructing the search query string from `searchParams` object
         let queryString = $.param({...searchParams, page: page, limit: limit});
         apicall(`/api-handler?targetAPI=/api/users&${queryString}`);
-
-        // $.ajax({
-        //     url: `/api-handler?targetAPI=/api/users&${queryString}`,
-        //     type: 'GET',
-        //     dataType: 'json',
-        //     success: function(response) {
-        //         console.log("Received data:", response); // Debug the data received
-        //         console.log("Data fetched successfully. Number of records:", response.users.length, "Page:", response.currentPage, "of", response.totalPages);
-        //         updateUserTable(response.users, response.currentPage, response.totalPages);
-        //     },
-        //     error: function(jqXHR, textStatus, errorThrown) {
-        //         console.error("Error during the request:", textStatus, errorThrown, jqXHR);
-        //         let errorMessage = "Error during the request.";
-                
-        //         // Try to parse and use the custom error message from the server if available
-        //         if (jqXHR.responseText) {
-        //             try {
-        //                 let resp = JSON.parse(jqXHR.responseText);
-        //                 if (resp && resp.error) {
-        //                     errorMessage = resp.error;
-        //                 }
-        //             } catch (e) {
-        //                 console.error("Error parsing server response:", e);
-        //             }
-        //         }
-        //         showToast(errorMessage, "error");  // Show the custom error message
-        //     },
-        //     beforeSend: function() {
-        //         console.log("Preparing to send AJAX request to /api/users.");
-        //         // Optionally, you can add a loading spinner here
-        //     },
-        //     complete: function(jqXHR, textStatus) {
-        //         console.log("AJAX request completed with status:", textStatus);
-        //         // Optionally, remove the loading spinner here
-        //     }
-        // });
     }
 
 </script>
@@ -1391,53 +1233,7 @@ function showToast(message, type) {
 
     console.log("Fetching data from " + apiUrl);
 
-    $.ajax({
-        url: apiUrl,
-        type: 'GET',
-        dataType: 'json',
-        success: function(response) {
-            console.log("Data fetched successfully. Number of records:", response.customers.length);
-            console.log("Response:", response);
-            totalPages = response.totalPages; // set the total pages from the response
-            currentPage = response.currentPage; // set the current page from the response
-            // Update the customer table with the new data
-            updateTable(response.customers);
-            $('#loadingSpinner').hide(); // Hide the spinner
-            updatePaginationControls();
-            console.log("Customer table updated successfully.");
-        },
-        error: function(jqXHR, textStatus, errorThrown) {
-            console.error("Error fetching data:", textStatus, errorThrown, jqXHR);
-
-            // Initialize errorMessage with a default error message
-            let errorMessage = "An error occurred. Please try again.";
-
-            // Try to parse and use the custom error message from the server if available
-            if (jqXHR.responseText) {
-                try {
-                    var resp = JSON.parse(jqXHR.responseText);
-                    if (resp && resp.error) {
-                        errorMessage = resp.error;
-                    }
-                } catch (e) {
-                    console.error("Error parsing server response:", e);
-                }
-            }
-            
-            showToast(errorMessage, "error");  // Show the custom error message or the default one
-        },
-
-        beforeSend: function() {
-            console.log("Preparing to send AJAX request to /api/customers.");
-            $('#loadingSpinner').show(); // Show the spinner before sending the request
-            // You can add a loading spinner here
-        },
-        complete: function(jqXHR, textStatus) {
-            console.log("AJAX request completed with status:", textStatus);
-            // You can remove the loading spinner here
-        }
-    });
-}
+    apicall(apiUrl);
 
     function updateTable(customers) {
         var tableBody = $('#contentTableBody');
@@ -1453,6 +1249,7 @@ function showToast(message, type) {
             tableBody.append(row);
         });
     }
+}
 
     function generateTableRow(customer, index) {
         // Constructing the row HTML
