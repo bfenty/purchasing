@@ -61,6 +61,7 @@
       {{template "toast" .}}
       {{template "fetchmanufacturers" .}}
       {{template "updateTable" .}}
+      {{template "apicall" .}}
       {{if eq $layout "products"}}{{template "searchProductRow" .}}{{template "btnSearch" .}}{{end}}
       {{if eq $layout "insert"}}{{template "insertProductRow" .}}{{end}}
       {{template "tableProductRow" .}}
