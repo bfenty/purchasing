@@ -1711,6 +1711,9 @@ document.addEventListener("keydown", function(event) {
                     console.log("Received data:", response); // Debug the data received
                     console.log("Data fetched successfully. Page:", response.currentPage, "of", response.totalPages);
                     updateTable(response, data);
+                    // Update Pagination
+                    currentPage = response.currentPage;
+                    totalPages = response.totalPages;
                     updatePaginationControls();
                 },
                 error: function(jqXHR, textStatus, errorThrown) {
