@@ -6,7 +6,7 @@
 <body>
   {{template "navigation" .}}
   <br>
-  {{template "messagebox" .}}
+  {{template "toastBox" .}}
   <div class="container">
     <div class="row justify-content-center">
       <div class="col-sm-6">
@@ -33,6 +33,7 @@
     </div>
   </div>
   {{template "footer" .}}
+  {{template "toast" .}}
   <script>
     // Intercept form submission and send AJAX request instead
     $('#login-form').submit(function(e) {
@@ -49,7 +50,7 @@
             console.error("Error fetching data:", textStatus, errorThrown, jqXHR);
 
             // Initialize errorMessage with a default error message
-            let errorMessage = "An error occurred. Please try again.";
+            let errorMessage = errorThrown;//"An error occurred. Please try again.";
 
             // Try to parse and use the custom error message from the server if available
             if (jqXHR.responseText) {

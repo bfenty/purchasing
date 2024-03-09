@@ -12,8 +12,7 @@
   {{$layout := .Layout}}
   {{template "toastBox" .}}
   {{template "pageControls" .}}
-  <div>
-    <div id="message" class="alert"></div>
+  {{template "toastBox" .}}
 
     <h1>{{.Title}} - {{with $layout}}{{if eq $layout "receiving"}}Receiving{{else if eq $layout "mgmt"}}Management{{else if eq $layout "dataentry"}}Data Entry{{else if eq $layout "full"}}Full{{end}}{{end}}</h1>
     <div class="row" id="userTable">
