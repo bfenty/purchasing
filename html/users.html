@@ -32,7 +32,7 @@
     var totalPages = 0; // total number of pages, you might get this from the server
     var limit = 100; // set page size limit
     $('#limitSelect').val(limit);
-    var searchParams = {}; //set initial search parameters
+    var searchParams = {active: 1}; //set initial search parameters
     $(document).ready(function() {
         console.log("Document ready. Initializing table data fetch.")
         fetchAndUpdateTable(currentPage,limit, searchParams);
@@ -53,7 +53,6 @@
   {{template "updateUserTable" .}}
   {{template "apicall" .}}
   {{template "footer" .}}
-  {{template "btnDeleteUser" .}}
   {{template "nedry" .}}
   {{template "spinner" .}}
 </body>

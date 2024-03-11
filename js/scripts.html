@@ -499,67 +499,6 @@ function showToast(message, type) {
 </script>
 {{end}}
 
-{{define "btnDeleteUser"}}
-<script>
-    var currentItemToDelete; // Global variable to store the current item to delete
-
-    // Event handler for delete button clicks
-    $(document).on('click', '.delete-button', function() {
-        var itemId = $(this).data('item-id');
-        currentItemToDelete = itemId;
-
-        // Show the delete modal
-        var deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
-        $('#deleteItemID').text(itemId);
-        $('#deleteModalLabel').text("Confirm User Delete");
-        $('#deleteModalText').text("Are you sure you want to delete User: ");
-            deleteModal.show();
-    });
-
-    // Event handler for the confirm delete action
-    $('#confirmDelete').click(function() {
-        console.log("Initiating delete request for user:", currentItemToDelete);
-
-        $.ajax({
-            url: '/api-handler?targetAPI=/api/userdelete',
-            type: 'POST',
-            contentType: 'application/json',  // Ensure JSON content type
-            dataType: 'json',
-            data: JSON.stringify({ usercode: currentItemToDelete }), // Send usercode for deletion
-            success: function(response) {
-                console.log("User deleted successfully:", response);
-                showToast("User deleted successfully.", "info");
-                fetchAndUpdateTable();  // Refresh the user table
-            },
-            error: function(jqXHR, textStatus, errorThrown) {
-                console.error("Error during the request:", textStatus, errorThrown, jqXHR);
-                var errorMessage = "Error during the request.";
-                
-                // Try to parse and use the custom error message from the server if available
-                if (jqXHR.responseText) {
-                    try {
-                        var resp = JSON.parse(jqXHR.responseText);
-                        if (resp && resp.error) {
-                            errorMessage = resp.error;
-                        }
-                    } catch (e) {
-                        console.error("Error parsing server response:", e);
-                    }
-                }
-                showToast(errorMessage, "error");  // Show the custom error message
-            },
-            beforeSend: function() {
-                console.log("Sending delete request to /api/userdelete.");
-            },
-            complete: function(jqXHR, textStatus) {
-                console.log("Delete request completed with status:", textStatus);
-                $('#deleteModal').modal('hide'); // Hide the modal after completion
-            }
-        });
-    });
-</script>
-{{end}}
-
 {{define "updateTable"}}
 <script>
     function updateTable(response, manufacturers) {
@@ -1172,6 +1111,65 @@ function showToast(message, type) {
 
 {{define "updateUserTable"}}
 <script>
+    // Delete function for Users
+    var currentItemToDelete; // Global variable to store the current item to delete
+
+    // Event handler for delete button clicks
+    $(document).on('click', '.delete-button', function() {
+        var itemId = $(this).data('item-id');
+        currentItemToDelete = itemId;
+
+        // Show the delete modal
+        var deleteModal = new bootstrap.Modal(document.getElementById('deleteModal'));
+        $('#deleteItemID').text(itemId);
+        $('#deleteModalLabel').text("Confirm User Delete");
+        $('#deleteModalText').text("Are you sure you want to delete User: ");
+            deleteModal.show();
+    });
+
+    // Event handler for the confirm delete action
+    $('#confirmDelete').click(function() {
+        console.log("Initiating delete request for user:", currentItemToDelete);
+
+        $.ajax({
+            url: '/api-handler?targetAPI=/api/userdelete',
+            type: 'POST',
+            contentType: 'application/json',  // Ensure JSON content type
+            dataType: 'json',
+            data: JSON.stringify({ usercode: currentItemToDelete }), // Send usercode for deletion
+            success: function(response) {
+                console.log("User deleted successfully:", response);
+                showToast("User deleted successfully.", "info");
+                fetchAndUpdateTable();  // Refresh the user table
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                console.error("Error during the request:", textStatus, errorThrown, jqXHR);
+                var errorMessage = "Error during the request.";
+                
+                // Try to parse and use the custom error message from the server if available
+                if (jqXHR.responseText) {
+                    try {
+                        var resp = JSON.parse(jqXHR.responseText);
+                        if (resp && resp.error) {
+                            errorMessage = resp.error;
+                        }
+                    } catch (e) {
+                        console.error("Error parsing server response:", e);
+                    }
+                }
+                showToast(errorMessage, "error");  // Show the custom error message
+            },
+            beforeSend: function() {
+                console.log("Sending delete request to /api/userdelete.");
+            },
+            complete: function(jqXHR, textStatus) {
+                console.log("Delete request completed with status:", textStatus);
+                $('#deleteModal').modal('hide'); // Hide the modal after completion
+            }
+        });
+    });
+</script>
+<script>
     function generateTableRow(user, index) {
         // Constructing the row HTML
         var rowHtml = `
@@ -1233,8 +1231,6 @@ function showToast(message, type) {
 
     console.log("Fetching data from " + apiUrl);
 
-    apicall(apiUrl);
-
     function updateTable(customers) {
         var tableBody = $('#contentTableBody');
         tableBody.empty(); // Clear existing data
@@ -1249,6 +1245,8 @@ function showToast(message, type) {
             tableBody.append(row);
         });
     }
+
+    apicall(apiUrl);
 }
 
     function generateTableRow(customer, index) {

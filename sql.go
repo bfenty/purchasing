@@ -15,6 +15,7 @@ import (
 	"strconv"
 
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -822,117 +823,117 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("User information updated successfully."))
 }
 
-func userUpdateHandler(w http.ResponseWriter, r *http.Request) {
+// func userUpdateHandler(w http.ResponseWriter, r *http.Request) {
 
-	//Test Connection
-	pingErr := db.Ping()
-	if pingErr != nil {
-		db, _ = opendb()
-		// return handleerror(pingErr)
-	}
+// 	//Test Connection
+// 	pingErr := db.Ping()
+// 	if pingErr != nil {
+// 		db, _ = opendb()
+// 		// return handleerror(pingErr)
+// 	}
 
-	// Get the form values from the request
-	username := r.FormValue("username")
-	usercode := r.FormValue("usercode")
-	role := r.FormValue("role")
-	manager := r.FormValue("manager")
-	var sorting int
-	if r.FormValue("sorting") == "true" {
-		sorting = 1
-	} else {
-		sorting = 0
-	}
-	// sorting, _ := strconv.ParseBool(r.FormValue("sorting"))
-	println(username, usercode, role, sorting)
+// 	// Get the form values from the request
+// 	username := r.FormValue("username")
+// 	usercode := r.FormValue("usercode")
+// 	role := r.FormValue("role")
+// 	manager := r.FormValue("manager")
+// 	var sorting int
+// 	if r.FormValue("sorting") == "true" {
+// 		sorting = 1
+// 	} else {
+// 		sorting = 0
+// 	}
+// 	// sorting, _ := strconv.ParseBool(r.FormValue("sorting"))
+// 	println(username, usercode, role, sorting)
 
-	// If usercode is empty, find the current max value and increment it
-	if usercode == "" {
-		var maxUsercode int
-		err := db.QueryRow("SELECT MAX(usercode) FROM orders.users").Scan(&maxUsercode)
-		if err != nil {
-			// Handle error
-			handleerror(err)
-		}
-		usercode = strconv.Itoa(maxUsercode + 1)
-	}
+// 	// If usercode is empty, find the current max value and increment it
+// 	if usercode == "" {
+// 		var maxUsercode int
+// 		err := db.QueryRow("SELECT MAX(usercode) FROM orders.users").Scan(&maxUsercode)
+// 		if err != nil {
+// 			// Handle error
+// 			handleerror(err)
+// 		}
+// 		usercode = strconv.Itoa(maxUsercode + 1)
+// 	}
 
-	// Prepare the SQL statement for inserting the data
-	//Logging
-	log.Info("Creating Query")
-	newquery := "REPLACE INTO orders.users (username, usercode, permissions, sorting,manager) VALUES (?, ?, ?, ?, ?)"
+// 	// Prepare the SQL statement for inserting the data
+// 	//Logging
+// 	log.Info("Creating Query")
+// 	newquery := "REPLACE INTO orders.users (username, usercode, permissions, sorting,manager) VALUES (?, ?, ?, ?, ?)"
 
-	// Execute the SQL statement with the form values
-	log.Info("Executing Query")
-	rows, err := db.Query(newquery, username, usercode, role, sorting, manager)
-	defer rows.Close()
+// 	// Execute the SQL statement with the form values
+// 	log.Info("Executing Query")
+// 	rows, err := db.Query(newquery, username, usercode, role, sorting, manager)
+// 	defer rows.Close()
 
-	if err != nil {
-		// Handle error
-		println(err)
-	}
+// 	if err != nil {
+// 		// Handle error
+// 		println(err)
+// 	}
 
-	// Redirect the user to the users page
-	http.Redirect(w, r, "/users", http.StatusSeeOther)
-}
+// 	// Redirect the user to the users page
+// 	http.Redirect(w, r, "/users", http.StatusSeeOther)
+// }
 
-func userDeleteHandler(w http.ResponseWriter, r *http.Request) {
-	// Get the usercode value from the form
-	usercode := r.FormValue("usercode")
+// func userDeleteHandler(w http.ResponseWriter, r *http.Request) {
+// 	// Get the usercode value from the form
+// 	usercode := r.FormValue("usercode")
 
-	// Prepare the SQL statement for deleting the user
-	stmt, err := db.Prepare("UPDATE orders.users SET active = 0 WHERE usercode = ?")
-	if err != nil {
-		// Handle error
-		println(err)
-		http.Error(w, "Failed to update user information.", http.StatusInternalServerError)
-		return
-	}
-	defer stmt.Close()
+// 	// Prepare the SQL statement for deleting the user
+// 	stmt, err := db.Prepare("UPDATE orders.users SET active = 0 WHERE usercode = ?")
+// 	if err != nil {
+// 		// Handle error
+// 		println(err)
+// 		http.Error(w, "Failed to update user information.", http.StatusInternalServerError)
+// 		return
+// 	}
+// 	defer stmt.Close()
 
-	// Execute the SQL statement with the usercode value
-	_, err = stmt.Exec(usercode)
-	if err != nil {
-		// Handle error
-		println(err)
-		http.Error(w, "Failed to update user information.", http.StatusInternalServerError)
-		return
-	}
+// 	// Execute the SQL statement with the usercode value
+// 	_, err = stmt.Exec(usercode)
+// 	if err != nil {
+// 		// Handle error
+// 		println(err)
+// 		http.Error(w, "Failed to update user information.", http.StatusInternalServerError)
+// 		return
+// 	}
 
-	// Redirect the user to the users page
-	w.Write([]byte("User information updated successfully."))
-}
+// 	// Redirect the user to the users page
+// 	w.Write([]byte("User information updated successfully."))
+// }
 
-func listorders(user User) (message Message, orders []Order) {
-	//Debug
-	log.WithFields(log.Fields{"username": user.Username}).Debug("Getting Orders...")
+// func listorders(user User) (message Message, orders []Order) {
+// 	//Debug
+// 	log.WithFields(log.Fields{"username": user.Username}).Debug("Getting Orders...")
 
-	//Test Connection
-	pingErr := db.Ping()
-	if pingErr != nil {
-		db, message = opendb()
-		return handleerror(pingErr), orders
-	}
-	//Build the Query
-	newquery := "SELECT ordernum,trackingnum,comments,manufacturer,status FROM `orders` WHERE 1"
+// 	//Test Connection
+// 	pingErr := db.Ping()
+// 	if pingErr != nil {
+// 		db, message = opendb()
+// 		return handleerror(pingErr), orders
+// 	}
+// 	//Build the Query
+// 	newquery := "SELECT ordernum,trackingnum,comments,manufacturer,status FROM `orders` WHERE 1"
 
-	//Run Query
-	rows, err := db.Query(newquery)
-	defer rows.Close()
-	if err != nil {
-		return handleerror(err), orders
-	}
+// 	//Run Query
+// 	rows, err := db.Query(newquery)
+// 	defer rows.Close()
+// 	if err != nil {
+// 		return handleerror(err), orders
+// 	}
 
-	//Pull Data
-	for rows.Next() {
-		var r Order
-		err := rows.Scan(&r.Ordernum, &r.Tracking, &r.Comments, &r.Manufacturer, &r.Status)
-		if err != nil {
-			return handleerror(err), orders
-		}
-		orders = append(orders, r)
-	}
-	return message, orders
-}
+// 	//Pull Data
+// 	for rows.Next() {
+// 		var r Order
+// 		err := rows.Scan(&r.Ordernum, &r.Tracking, &r.Comments, &r.Manufacturer, &r.Status)
+// 		if err != nil {
+// 			return handleerror(err), orders
+// 		}
+// 		orders = append(orders, r)
+// 	}
+// 	return message, orders
+// }
 
 // List of all sorting requests
 func listsortrequests(user User, action string, r *http.Request) (message Message, sortrequests []SortRequest) {
@@ -1335,14 +1336,11 @@ func Reorderlist(user User) (message Message, orders []Order) {
 // ListUsersAPI is an HTTP handler function that returns a list of users in JSON format
 // ListUsersAPI with pagination and search
 func ListUsersAPI(w http.ResponseWriter, r *http.Request) {
-	// Connect to the database
-	// db, err := sql.Open("mysql", "user:password@tcp(localhost:3306)/dbname")
-	// if err != nil {
-	// 	log.Println("Error connecting to the database: ", err)
-	// 	http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-	// 	return
-	// }
-	// defer db.Close()
+	log := logrus.WithFields(logrus.Fields{
+		"api":    "ListUsersAPI",
+		"method": r.Method,
+		"path":   r.URL.Path,
+	})
 
 	page, _ := strconv.Atoi(r.URL.Query().Get("page"))
 	limit, _ := strconv.Atoi(r.URL.Query().Get("limit"))
@@ -1353,49 +1351,39 @@ func ListUsersAPI(w http.ResponseWriter, r *http.Request) {
 		limit = 100
 	}
 
-	// Assuming permissions are stored in a separate table or as a JSON column in the users table
-	// Adjust the SQL based on your actual schema, especially how permissions are stored and queried
-
-	searchParams := map[string]interface{}{
+	searchParams := map[string]string{
 		"username":   r.URL.Query().Get("username"),
 		"usercode":   r.URL.Query().Get("usercode"),
 		"role":       r.URL.Query().Get("role"),
 		"sorting":    r.URL.Query().Get("sorting"),
 		"manager":    r.URL.Query().Get("manager"),
 		"management": r.URL.Query().Get("management"),
-		// Assuming permissions are a JSON string; you'll need to adjust if using a different method
-		"permissions": r.URL.Query().Get("permissions"),
+		"active":     r.URL.Query().Get("active"),
 	}
 
 	var queryParams []interface{}
-	query := `SELECT username, usercode, permissions, sorting, manager, management FROM orders.users WHERE 1=1`
-
+	var whereClauses []string
 	for key, value := range searchParams {
-		if value != "" && value != nil {
-			query += fmt.Sprintf(" AND %s = ?", key)
+		if value != "" {
+			whereClauses = append(whereClauses, fmt.Sprintf("%s = ?", key))
 			queryParams = append(queryParams, value)
 		}
 	}
 
-	// Handle pagination
-	var totalRecords int
-	countQuery := `SELECT COUNT(*) FROM (` + query + `) AS countQuery`
-	err := db.QueryRow(countQuery, queryParams...).Scan(&totalRecords)
-	if err != nil {
-		log.Println("Error executing count query:", err)
-		respondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Error counting records"})
-		return
+	whereClause := strings.Join(whereClauses, " AND ")
+	if whereClause != "" {
+		whereClause = " AND " + whereClause
 	}
 
-	totalPages := (totalRecords + limit - 1) / limit
-	offset := (page - 1) * limit
-	queryParams = append(queryParams, limit, offset)
-	query += " LIMIT ? OFFSET ?"
+	query := fmt.Sprintf("SELECT username, usercode, permissions, sorting, manager, management FROM orders.users WHERE 1=1%s LIMIT ? OFFSET ?", whereClause)
+	queryParams = append(queryParams, limit, (page-1)*limit)
+
+	log.WithField("query", query).Debug("Executing user query")
 
 	rows, err := db.Query(query, queryParams...)
 	if err != nil {
-		log.Println("Error executing query:", err)
-		respondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Error executing query"})
+		log.WithError(err).Error("Failed to execute user query")
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
 	defer rows.Close()
@@ -1403,24 +1391,36 @@ func ListUsersAPI(w http.ResponseWriter, r *http.Request) {
 	var users []User
 	for rows.Next() {
 		var user User
-		// var permissions string // Assuming permissions are stored as JSON
 		if err := rows.Scan(&user.Username, &user.Usercode, &user.Role, &user.Sorting, &user.Manager, &user.Management); err != nil {
-			log.Println("Error scanning user row:", err)
+			log.WithError(err).Error("Failed to scan user row")
 			continue
 		}
-		// if err := json.Unmarshal([]byte(permissions), &user.Permissions); err != nil {
-		// 	log.Println("Error unmarshalling permissions:", err)
-		// 	continue
-		// }
 		users = append(users, user)
 	}
 
-	respondWithJSON(w, http.StatusOK, map[string]interface{}{
-		"users":        users,
-		"currentPage":  page,
-		"totalPages":   totalPages,
-		"totalRecords": totalRecords,
-	})
+	if err := rows.Err(); err != nil {
+		log.WithError(err).Error("Error iterating user rows")
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	response := map[string]interface{}{
+		"users":       users,
+		"currentPage": page,
+		"totalPages":  (len(users) + limit - 1) / limit, // Simplified pagination logic
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		log.WithError(err).Error("Failed to encode response")
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+	}
+
+	log.WithFields(logrus.Fields{
+		"numUsers":    len(users),
+		"currentPage": page,
+		"totalPages":  (len(users) + limit - 1) / limit,
+	}).Info("Successfully retrieved user list")
 }
 
 // ListCustomersAPI godoc
@@ -1565,7 +1565,7 @@ func UserDeleteAPI(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// SQL DELETE statement
-	query := `UPDATE users SET active=0 WHERE usercode=?`
+	query := `UPDATE orders.users SET active=0 WHERE usercode=?`
 	_, err = db.Exec(query, user.Usercode)
 	if err != nil {
 		log.WithFields(log.Fields{"usercode": user.Usercode, "error": err}).Error("Error executing delete query")
