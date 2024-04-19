@@ -69,6 +69,7 @@
                             <option value='VK'>VK</option>
                             <option value='JCM'>JCM</option>
                             <option value='BMAS'>BMAS</option>
+                            <option value='BCV'>BCV</option>
                           </select>
                         </td>
                         {{end}}
@@ -173,6 +174,7 @@
                             <option value='VK' {{if eq .Manufacturer "VK"}}selected{{end}}>VK</option>
                             <option value='JCM' {{if eq .Manufacturer "JCM"}}selected{{end}}>JCM</option>
                             <option value='BMAS' {{if eq .Manufacturer "BMAS"}}selected{{end}}>BMAS</option>
+                            <option value='BCV' {{if eq .Manufacturer "BCV"}}selected{{end}}>BCV</option>
                           </select>
                         </td>{{end}}
                         {{if eq $permission "admin"}}<td><input class="form-control" type='text' id="processrequest" name="processrequest" value="{{.ProcessRequest}}"></td>{{end}}
