@@ -1555,7 +1555,7 @@ func ListCustomersAPI(w http.ResponseWriter, r *http.Request) {
 // @Failure 500 {object} map[string]string{"error": "Internal Server Error"}
 // @Router /api/userdelete [post]
 // UserDeleteAPI handles the deletion of a user
-func UserDeleteAPI(w http.ResponseWriter, r *http.Request) {
+func UserUpdateAPI(w http.ResponseWriter, r *http.Request) {
 	var user User
 	err := json.NewDecoder(r.Body).Decode(&user)
 	if err != nil {

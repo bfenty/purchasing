@@ -322,9 +322,9 @@ func APIHandler(w http.ResponseWriter, r *http.Request) {
 	case "users":
 		log.Debug("Calling ListUsersAPI function")
 		ListUsersAPI(w, r)
-	case "userdelete":
+	case "userupdate":
 		log.Debug("Calling UserDeleteAPI function")
-		UserDeleteAPI(w, r)
+		UserUpdateAPI(w, r)
 	case "customers":
 		log.Debug("Calling ListCustomersAPI function")
 		ListCustomersAPI(w, r)
