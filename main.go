@@ -188,8 +188,6 @@ func main() {
 	http.HandleFunc("/users", Users)
 	http.HandleFunc("/userdelete", userDeleteHandler)
 	http.HandleFunc("/lookuprequestid", LookupRequestID)
-	http.HandleFunc("/shiperror", ShipError)
-	http.HandleFunc("/error", ShipErrorEntry)
 	http.HandleFunc("/sorterror", SortError)
 	http.HandleFunc("/sorterrorlist", SortErrorList)
 	http.HandleFunc("/sorterrorupdate", sortErrorUpdate)
@@ -287,31 +285,6 @@ func SortError(w http.ResponseWriter, r *http.Request) {
 	//page.Message, page.Orders = listorders(page.Permission)
 	t, _ := template.ParseFiles("sorterror.html", "header.html", "login.js")
 	page.Title = "Sorting Errors"
-	t.Execute(w, page)
-}
-
-// Page of list of all orders
-func ShipError(w http.ResponseWriter, r *http.Request) {
-	var page Page
-	page.Permission = auth(w, r)
-	//page.Message, page.Orders = listorders(page.Permission)
-	t, _ := template.ParseFiles("error.html", "header.html", "login.js")
-	page.Title = "Sorting Errors"
-	t.Execute(w, page)
-}
-
-func ShipErrorEntry(w http.ResponseWriter, r *http.Request) {
-	var page Page
-	fmt.Println("Comment: ", r.FormValue("comment"))
-	fmt.Println("Issue: ", r.FormValue("issue"))
-	fmt.Println("orderid: ", r.FormValue("orderid"))
-	t, _ := template.ParseFiles("error.html", "header.html", "login.js")
-	page.Permission = auth(w, r)
-	page.Message = message(r)
-	page.Title = "Error Entry"
-	orderid, err := strconv.Atoi(r.FormValue("orderid"))
-	page.Message = handleerror(err)
-	page.Message = ErrorEnter(r.FormValue("comment"), r.FormValue("issue"), orderid)
 	t.Execute(w, page)
 }
 

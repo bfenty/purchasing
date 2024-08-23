@@ -247,31 +247,6 @@ func Efficiency(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func ErrorEnter(comment string, issue string, orderid int) (message Message) {
-	if orderid == 0 {
-		return message
-	}
-	fmt.Println("Entering error...")
-	pingErr := db.Ping()
-	if pingErr != nil {
-		fmt.Println(pingErr)
-		return handleerror(pingErr)
-	}
-
-	var newquery string = "REPLACE INTO orders.errors(comment,issue,orderid) VALUES (?,?,?)"
-	fmt.Println("Query: ", newquery)
-	rows, err := db.Query(newquery, comment, issue, orderid)
-	if err != nil {
-		fmt.Println(err)
-		return handleerror(err)
-	}
-	defer rows.Close()
-	message.Title = "Success"
-	message.Success = true
-	message.Body = "Successfully entered: " + strconv.Itoa(orderid) + " " + issue + " " + comment
-	return message
-}
-
 func LookupRequestID(w http.ResponseWriter, r *http.Request) {
 	requestID := r.URL.Query().Get("requestid")
 
