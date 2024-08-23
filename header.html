@@ -210,7 +210,7 @@ $('#myModal').on('shown.bs.modal', function () {
       <a class="nav-link active" href="/sorterror">Sort Errors<span class="sr-only">(current)</span></a>
     </li>
     {{end}}
-    {{if or (eq .Permission "admin") (eq .Permission "cs") (eq .Permission "manage")}}
+    {{if or (eq $permission "admin") (eq $permission "cs") (eq $permission "manage")}}
     <li class="nav-item active">
       <a class="nav-link active" href="/shiperror">Shipping Errors<span class="sr-only">(current)</span></a>
     </li>
