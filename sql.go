@@ -1075,6 +1075,7 @@ func listsortrequests(user User, action string, r *http.Request) (message Messag
 	for rows.Next() {
 		var r SortRequest
 		err := rows.Scan(&r.ID, &r.SKU, &r.Description, &r.Instructions, &r.Weightin, &r.Weightout, &r.Pieces, &r.Hours, &r.Checkout, &r.Checkin, &r.Sorter, &r.Status, &r.ManufacturerPart, &r.Priority)
+		r.Checkout = r.Checkout.Time.Format(("2006-01-02"))
 		if err != nil {
 			return handleerror(err), sortrequests
 		}
