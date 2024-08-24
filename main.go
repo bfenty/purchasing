@@ -34,8 +34,8 @@ type SortRequest struct {
 	DifferencePercent string
 	Pieces            *int
 	Hours             *float64
-	Checkout          *string
-	Checkin           *string
+	Checkout          *time.Time
+	Checkin           *time.Time
 	Sorter            string
 	Status            string
 	ManufacturerPart  *string
@@ -260,8 +260,20 @@ func Users(w http.ResponseWriter, r *http.Request) {
 	t.Execute(w, page)
 }
 
+// Custom Date formatter
+func formatDate(t *time.Time) string {
+	if t != nil {
+		return t.Format("2006-01-02")
+	}
+	return ""
+}
+
 // Page of list of all Sort Requests
 func Sorting(w http.ResponseWriter, r *http.Request) {
+	//Custom Date Formatting Code
+	funcMap := template.FuncMap{
+		"formatDate": formatDate,
+	}
 	var page Page
 	page.Permission = auth(w, r)
 	if page.Permission.Role == "receiving" {
@@ -275,17 +287,21 @@ func Sorting(w http.ResponseWriter, r *http.Request) {
 	// Set Page.Layout to the value of the 'layout' variable
 	page.Layout = layout
 
-	t, _ := template.ParseFiles("sorting.html", "header.html", "login.js")
+	t := template.Must(template.New("sorting.html").Funcs(funcMap).ParseFiles("sorting.html", "header.html", "login.js"))
 	page.Title = "Sorting"
 	t.Execute(w, page)
 }
 
 // Page of list of all orders
 func SortError(w http.ResponseWriter, r *http.Request) {
+	//Custom Date Formatting Code
+	funcMap := template.FuncMap{
+		"formatDate": formatDate,
+	}
 	var page Page
 	page.Permission = auth(w, r)
 	//page.Message, page.Orders = listorders(page.Permission)
-	t, _ := template.ParseFiles("sorterror.html", "header.html", "login.js")
+	t := template.Must(template.New("sorterror.html").Funcs(funcMap).ParseFiles("sorterror.html", "header.html", "login.js"))
 	page.Title = "Sorting Errors"
 	t.Execute(w, page)
 }
@@ -317,25 +333,33 @@ func ShipErrorEntry(w http.ResponseWriter, r *http.Request) {
 
 // Page to Check Out sorting
 func Checkout(w http.ResponseWriter, r *http.Request) {
+	//Custom Date Formatting Code
+	funcMap := template.FuncMap{
+		"formatDate": formatDate,
+	}
 	var page Page
 	page.Permission = auth(w, r)
 	currentTime := time.Now()
 	page.Date = currentTime.Format("2006-01-02")
 	page.Message, page.SortRequests = listsortrequests(page.Permission, "checkout", r)
 	page.Message, page.Users = listusers("sorting", page.Permission)
-	t, _ := template.ParseFiles("checkout.html", "header.html", "login.js")
+	t := template.Must(template.New("checkout.html").Funcs(funcMap).ParseFiles("checkout.html", "header.html", "login.js"))
 	page.Title = "Check Out"
 	t.Execute(w, page)
 }
 
 // Page to Check Out sorting
 func Checkin(w http.ResponseWriter, r *http.Request) {
+	//Custom Date Formatting Code
+	funcMap := template.FuncMap{
+		"formatDate": formatDate,
+	}
 	var page Page
 	page.Permission = auth(w, r)
 	currentTime := time.Now()
 	page.Date = currentTime.Format("2006-01-02")
 	page.Message, page.SortRequests2 = listsortrequests(page.Permission, "checkin", r)
-	t, _ := template.ParseFiles("checkin.html", "header.html", "login.js")
+	t := template.Must(template.New("checkin.html").Funcs(funcMap).ParseFiles("checkin.html", "header.html", "login.js"))
 	page.Title = "Check In"
 	t.Execute(w, page)
 }

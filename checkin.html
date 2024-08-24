@@ -107,9 +107,9 @@
               <input type="hidden" id="weightout" name="weightout" value="{{.Weightout}}">
             {{end}}
             {{if eq $permission "admin"}}
-              <td><input class="form-control" type='date' id="checkout" name="checkout" value="{{.Checkout}}" readonly></td>
+              <td><input class="form-control" type='date' id="checkout" name="checkout" value="{{ formatDate .Checkout}}" readonly></td>
             {{else}}
-              <input type="hidden" id="checkout" name="checkout" value="{{.Checkout}}">
+              <input type="hidden" id="checkout" name="checkout" value="{{ formatDate .Checkout}}">
             {{end}}
             {{if eq $permission "admin"}}
               <td><input class="form-control" type='text' id="sorter" name="sorter" value="{{.Sorter}}" readonly></td>
