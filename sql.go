@@ -1074,10 +1074,14 @@ func listsortrequests(user User, action string, r *http.Request) (message Messag
 	//Pull Data
 	for rows.Next() {
 		var r SortRequest
+
+		//Scan Rows
 		err := rows.Scan(&r.ID, &r.SKU, &r.Description, &r.Instructions, &r.Weightin, &r.Weightout, &r.Pieces, &r.Hours, &r.Checkout, &r.Checkin, &r.Sorter, &r.Status, &r.ManufacturerPart, &r.Priority)
 		if err != nil {
 			return handleerror(err), sortrequests
 		}
+
+		//Calculate Weight Difference
 		var a float64
 		var b float64
 		var c float64

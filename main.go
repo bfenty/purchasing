@@ -34,13 +34,15 @@ type SortRequest struct {
 	DifferencePercent string
 	Pieces            *int
 	Hours             *float64
-	Checkout          *string
-	Checkin           *string
+	Checkout          *time.Time
+	Checkin           *time.Time
 	Sorter            string
 	Status            string
 	ManufacturerPart  *string
 	Priority          int
 	Warn              bool
+	FormattedCheckout string
+	FormattedCheckin  string
 }
 
 type Product struct {
@@ -109,6 +111,14 @@ func message(r *http.Request) (messagebox Message) {
 	return messagebox
 }
 
+// Formatting for dates
+func formatDate(t *time.Time) string {
+	if t != nil {
+		return t.Format("2006-01-02")
+	}
+	return ""
+}
+
 func handleerror2(err error, w http.ResponseWriter) Message {
 	log.Error(err)
 	message := Message{Title: "Error", Body: err.Error(), Success: false}
@@ -119,11 +129,6 @@ func handleerror2(err error, w http.ResponseWriter) Message {
 	// set content type to JSON and send response
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(response)
-
-	// Log the response JSON for debugging
-	// log.WithFields(log.Fields{
-	// 	"responseJSON": string(response),
-	// }).Debug("Error response sent to client")
 
 	return message
 }
@@ -262,6 +267,12 @@ func Users(w http.ResponseWriter, r *http.Request) {
 
 // Page of list of all Sort Requests
 func Sorting(w http.ResponseWriter, r *http.Request) {
+
+	// Define the FuncMap for date function
+	funcMap := template.FuncMap{
+		"formatDate": formatDate,
+	}
+
 	var page Page
 	page.Permission = auth(w, r)
 	if page.Permission.Role == "receiving" {
@@ -275,7 +286,7 @@ func Sorting(w http.ResponseWriter, r *http.Request) {
 	// Set Page.Layout to the value of the 'layout' variable
 	page.Layout = layout
 
-	t, _ := template.ParseFiles("sorting.html", "header.html", "login.js")
+	t := template.Must(template.New("sorting.html").Funcs(funcMap).ParseFiles("sorting.html", "header.html", "login.js"))
 	page.Title = "Sorting"
 	t.Execute(w, page)
 }
