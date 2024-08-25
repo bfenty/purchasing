@@ -328,25 +328,36 @@ func ShipErrorEntry(w http.ResponseWriter, r *http.Request) {
 
 // Page to Check Out sorting
 func Checkout(w http.ResponseWriter, r *http.Request) {
+
+	// Define the FuncMap for date function
+	funcMap := template.FuncMap{
+		"formatDate": formatDate,
+	}
+
 	var page Page
 	page.Permission = auth(w, r)
 	currentTime := time.Now()
 	page.Date = currentTime.Format("2006-01-02")
 	page.Message, page.SortRequests = listsortrequests(page.Permission, "checkout", r)
 	page.Message, page.Users = listusers("sorting", page.Permission)
-	t, _ := template.ParseFiles("checkout.html", "header.html", "login.js")
+	t := template.Must(template.New("checkout.html").Funcs(funcMap).ParseFiles("checkout.html", "header.html", "login.js"))
 	page.Title = "Check Out"
 	t.Execute(w, page)
 }
 
 // Page to Check Out sorting
 func Checkin(w http.ResponseWriter, r *http.Request) {
+
+	// Define the FuncMap for date function
+	funcMap := template.FuncMap{
+		"formatDate": formatDate,
+	}
 	var page Page
 	page.Permission = auth(w, r)
 	currentTime := time.Now()
 	page.Date = currentTime.Format("2006-01-02")
 	page.Message, page.SortRequests2 = listsortrequests(page.Permission, "checkin", r)
-	t, _ := template.ParseFiles("checkin.html", "header.html", "login.js")
+	t := template.Must(template.New("checkin.html").Funcs(funcMap).ParseFiles("checkin.html", "header.html", "login.js"))
 	page.Title = "Check In"
 	t.Execute(w, page)
 }
