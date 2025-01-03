@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"purchasing/handler"
+	"purchasing/models"
 	"strconv"
 	"time"
 
@@ -14,7 +16,7 @@ import (
 )
 
 // Build an exported Excel file
-func excel(name string, products []Product) (message Message, filename string) {
+func excel(name string, products []models.Product) (message models.Message, filename string) {
 
 	fmt.Println("Creating Excel File...")
 	f := excelize.NewFile()
@@ -67,7 +69,7 @@ func excel(name string, products []Product) (message Message, filename string) {
 	fmt.Println("Saving Excel File...")
 	filename = "./orders/" + name + ".xlsx"
 	if err := f.SaveAs(filename); err != nil {
-		handleerror(err)
+		handler.Handleerror(err)
 		return message, filename
 	}
 	return message, filename
@@ -75,24 +77,24 @@ func excel(name string, products []Product) (message Message, filename string) {
 
 func importfile(file string) {
 	f, err := excelize.OpenFile(file)
-	handleerror(err)
+	handler.Handleerror(err)
 	defer func() {
 		// Close the spreadsheet.
 		if err := f.Close(); err != nil {
-			handleerror(err)
+			handler.Handleerror(err)
 		}
 	}()
 	// Get value from cell by given worksheet name and cell reference.
 	cell, err := f.GetCellValue("Sheet1", "B2")
 	if err != nil {
-		handleerror(err)
+		handler.Handleerror(err)
 		return
 	}
 	fmt.Println(cell)
 	// Get all the rows in the Sheet1.
 	rows, err := f.GetRows("Sheet1")
 	if err != nil {
-		handleerror(err)
+		handler.Handleerror(err)
 		return
 	}
 	for _, row := range rows {
@@ -107,7 +109,7 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 	// of the file input on the frontend
 	file, fileHeader, err := r.FormFile("file")
 	if err != nil {
-		handleerror(err)
+		handler.Handleerror(err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}

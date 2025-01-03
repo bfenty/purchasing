@@ -58,3 +58,86 @@
   {{template "footer" .}}
 </body>
 </html>
+
+{{define "searchCustomerRow"}}
+<script>
+    function GenerateTopRow() {
+        console.log("Generating Search Row")
+
+        // Generate the Insert Row
+        var insertRow = `
+        <tr class="search-row">
+            <td><input class="form-control" type="text" id="customer_email" ></td>
+            <td><input class="form-control" type="text" id="first_name" </td>
+            <td><input class="form-control" type="text" id="last_name" ></td>
+            <td><input class="form-control" type="text" id="country" ></td>
+            <td><input class="form-control" type="text" id="rebill_day" ></td>
+            <td><input class="form-control" type="text" id="rebill_months" ></td>
+            <td><input class="form-control" type="text" id="autorenew" ></td>
+            <td><input class="form-control" type="text" id="cratejoy_status" ></td>
+            <td><input class="form-control" type="text" id="start_date" ></td>
+            <td><input class="form-control" type="text" id="end_date" ></td>
+            <td><input class="form-control" type="text" id="mailchimp_status"></td>
+            <td><button class="btn btn-primary" id="btnSearch">Search</button></td>
+            <td></td>
+        </tr>
+        `;
+
+        // Returning the row HTML
+        return insertRow;
+    }
+</script>
+{{end}}
+
+{{define "updateCustomerTable"}}
+<script>
+    function fetchAndUpdateTable(page, limit, searchParams) {
+    var queryParams = $.param(searchParams); // Convert search parameters to query string
+    var apiUrl = `/api-handler?targetAPI=/api/customers&page=${page}&limit=${limit}&${queryParams}`;
+    console.log("Fetching data with search parameters:", searchParams);
+
+    console.log("Fetching data from " + apiUrl);
+
+    function updateTable(customers) {
+        var tableBody = $('#contentTableBody');
+        tableBody.empty(); // Clear existing data
+
+        // Add the insert row at the beginning
+        var insertRow = GenerateTopRow();
+        tableBody.append(insertRow);
+
+        // Loop through the rows
+        customers.forEach(function(customer) {
+            var row = generateTableRow(customer);
+            tableBody.append(row);
+        });
+    }
+
+    apicall(apiUrl);
+}
+
+    function generateTableRow(customer, index) {
+        // Constructing the row HTML
+        var rowHtml = `
+        <tr>
+            <td><input class="form-control" type="text" id="customer_email" value="${customer.customer_email}" readonly></td>
+            <td><input class="form-control" type="text" id="first_name" value="${customer.first_name.String}" readonly></td>
+            <td><input class="form-control" type="text" id="last_name" value="${customer.last_name.String}" readonly></td>
+            <td><input class="form-control" type="text" id="country" value="${customer.country.String}" readonly></td>
+            <td><input class="form-control" type="text" id="rebill_day" value="${customer.rebill_day.Int32}" readonly></td>
+            <td><input class="form-control" type="text" id="rebill_months" value="${customer.rebill_months.Int32}" readonly></td>
+            <td><input class="form-control" type="text" id="autorenew" value="${customer.autorenew}" readonly></td>
+            <td><input class="form-control" type="text" id="cratejoy_status" value="${customer.cratejoy_status.String}" readonly></td>
+            <td><input class="form-control" type="text" id="start_date" value="${customer.start_date.String.substring(0, 10)}" readonly></td>
+            <td><input class="form-control" type="text" id="end_date" value="${customer.end_date.String.substring(0, 10)}" readonly></td>
+            <td><input class="form-control" type="text" id="mailchimp_status" value="${customer.mailchimp_status.String}" readonly></td>
+            <td><button class="btn btn-primary update-button" data-customer-email="${customer.customer_email}">Update</button></td>
+            <td><button class="btn btn-danger delete-button" data-customer-email="${customer.customer_email}" data-bs-toggle="modal" data-bs-target="#ModalDelete${index}">Delete</button></td>
+        </tr>
+        `;
+
+        // Returning the row HTML
+        return rowHtml;
+    }
+</script>
+{{end}}
