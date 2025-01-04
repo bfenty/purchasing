@@ -1,6 +1,7 @@
 package api
 
 import (
+	"encoding/json"
 	"math"
 	"purchasing/config"
 	"purchasing/handler"
@@ -111,7 +112,7 @@ func ListSortRequestsAPI(w http.ResponseWriter, r *http.Request) {
 
 	// Append limit and offset to the query
 	queryArgs = append(queryArgs, limit, offset)
-	query := queryBuilder.String() + " ORDER BY 1 DESC LIMIT ? OFFSET ? "
+	query := queryBuilder.String() + " ORDER BY requestid DESC LIMIT ? OFFSET ? "
 
 	// Execute query
 	rows, err := config.DB.Query(query, queryArgs...)
@@ -171,6 +172,121 @@ func ListSortRequestsAPI(w http.ResponseWriter, r *http.Request) {
 		"totalPages":   totalPages,
 		"totalRecords": totalRecords,
 	})
+}
+
+// UpdateSortRequestAPI godoc
+// @Summary Update a sort request
+// @Description Update an existing sort request based on the provided request data
+// @Tags sortrequests
+// @Accept  json
+// @Produce  json
+// @Param request body models.SortRequest true "Sort Request Data"
+// @Success 200 {object} map[string]string "Sort request updated successfully"
+// @Failure 400 {object} map[string]string "Invalid request data"
+// @Failure 500 {object} map[string]string "Internal Server Error"
+// @Router /api/sorterrorupdate [post]
+func UpdateSortRequestAPI(w http.ResponseWriter, r *http.Request) {
+	var sortRequest models.SortRequest
+
+	// Parse the request body
+	err := json.NewDecoder(r.Body).Decode(&sortRequest)
+	if err != nil {
+		log.WithError(err).Error("Failed to parse request body")
+		handler.RespondWithJSON(w, http.StatusBadRequest, map[string]string{"message": "Invalid request data"})
+		return
+	}
+
+	log.WithFields(log.Fields{
+		"requestid": sortRequest.ID,
+		"sku":       sortRequest.SKU,
+	}).Debug("Parsed sort request")
+
+	// Validate required fields
+	if sortRequest.ID == 0 {
+		log.Error("Request ID is missing or invalid")
+		handler.RespondWithJSON(w, http.StatusBadRequest, map[string]string{"message": "Request ID is required"})
+		return
+	}
+
+	// Dynamically build the update query based on non-nil fields
+	var queryBuilder strings.Builder
+	var args []interface{}
+	queryBuilder.WriteString("UPDATE purchasing.sortrequest SET ")
+
+	if sortRequest.SKU != "" {
+		queryBuilder.WriteString("sku = ?, ")
+		args = append(args, sortRequest.SKU)
+	}
+	if sortRequest.Description != nil {
+		queryBuilder.WriteString("description = ?, ")
+		args = append(args, *sortRequest.Description)
+	}
+	if sortRequest.ManufacturerPart != nil {
+		queryBuilder.WriteString("sku_manufacturer = ?, ")
+		args = append(args, *sortRequest.ManufacturerPart)
+	}
+	if sortRequest.Instructions != nil {
+		queryBuilder.WriteString("instructions = ?, ")
+		args = append(args, *sortRequest.Instructions)
+	}
+	if sortRequest.Weightin != nil {
+		queryBuilder.WriteString("weightin = ?, ")
+		args = append(args, *sortRequest.Weightin)
+	}
+	if sortRequest.Weightout != nil {
+		queryBuilder.WriteString("weightout = ?, ")
+		args = append(args, *sortRequest.Weightout)
+	}
+	if sortRequest.Pieces != nil {
+		queryBuilder.WriteString("pieces = ?, ")
+		args = append(args, *sortRequest.Pieces)
+	}
+	if sortRequest.Hours != nil {
+		queryBuilder.WriteString("hours = ?, ")
+		args = append(args, *sortRequest.Hours)
+	}
+	if sortRequest.Checkout != nil {
+		queryBuilder.WriteString("checkout = ?, ")
+		args = append(args, *sortRequest.Checkout)
+	}
+	if sortRequest.Checkin != nil {
+		queryBuilder.WriteString("checkint = ?, ")
+		args = append(args, *sortRequest.Checkin)
+	}
+	if sortRequest.Sorter != "" {
+		queryBuilder.WriteString("sorter = ?, ")
+		args = append(args, sortRequest.Sorter)
+	}
+	if sortRequest.Status != "" {
+		queryBuilder.WriteString("status = ?, ")
+		args = append(args, sortRequest.Status)
+	}
+	if sortRequest.Priority != 0 {
+		queryBuilder.WriteString("prty = ?, ")
+		args = append(args, sortRequest.Priority)
+	}
+
+	// Remove the trailing comma and space
+	query := strings.TrimSuffix(queryBuilder.String(), ", ")
+	query += " WHERE requestid = ?"
+	args = append(args, sortRequest.ID)
+
+	log.WithFields(log.Fields{
+		"query": query,
+		"args":  args,
+	}).Debug("Executing update query")
+
+	// Execute the query
+	_, err = config.DB.Exec(query, args...)
+	if err != nil {
+		log.WithError(err).Error("Failed to update sort request")
+		handler.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"message": "Error updating sort request"})
+		return
+	}
+
+	// Respond with success
+	log.WithFields(log.Fields{"requestID": sortRequest.ID}).Info("Sort request updated successfully")
+	handler.RespondWithJSON(w, http.StatusOK, map[string]string{"message": "Sort request updated successfully"})
 }
 
 // func LookupRequestID(w http.ResponseWriter, r *http.Request) {
