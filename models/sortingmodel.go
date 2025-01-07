@@ -18,4 +18,5 @@ type SortRequest struct {
 	ManufacturerPart  *string
 	Priority          int
 	Warn              bool
+	Active            int
 }

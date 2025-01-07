@@ -98,7 +98,7 @@
           </div>
             <div class="modal-footer">
               <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-              <button type="button" class="btn btn-danger" id="confirmArchiveRequest">Archive Request</button>
+              <button type="button" class="btn btn-danger archive-confirm" id="confirmArchiveRequest">Archive Request</button>
             </div>
           </div>
         </div>
@@ -368,58 +368,63 @@
 {{define "btnupdateSortTable"}}
 <script>
     // Event listener for the archive button
-    $('#contentTableBody').on('click', '.archive-request', function () {
-        var requestID = $(this).data('requestid'); // Retrieve the request ID from the button's data attribute
-        console.log("Opening archive modal for request ID:", requestID);
+      $('#contentTableBody').on('click', '.archive-request', function () {
+          var requestID = $(this).data('requestid'); // Retrieve the request ID from the button's data attribute
+          console.log("Opening archive modal for request ID:", requestID);
 
-        // Update the modal with the request ID
-        $('#archiveRequestID').text(requestID);
-        $('#confirmArchiveRequest').data('requestid', requestID); // Pass the request ID to the confirm button
+          // Update the modal with the request ID
+          $('#archiveRequestID').text(requestID);
+          $('#confirmArchiveRequest').data('requestid', requestID); // Pass the request ID to the confirm button
 
-        // Show the modal
-        $('#archiveRequestModal').modal('show');
-    });
-    // Use event delegation for the confirmArchiveRequest button
-$('#archiveRequestModal').on('click', '#confirmArchiveRequest', function () {
-    var requestID = $(this).data('requestid'); // Retrieve the request ID from the button's data attribute
-    console.log("Archiving request ID:", requestID);
+          // Show the modal
+          $('#archiveRequestModal').modal('show');
+      });
 
-    if (!requestID) {
-        console.error("No request ID found for archiving");
-        showToast("Error: No request ID found", "error");
-        return;
-    }
+      $(document).on('click', '#confirmArchiveRequest', function () {
+      var requestID = $(this).data('requestid'); // Retrieve the request ID from the button's data attribute
+      console.log("Archiving request ID using sortingupdate API:", requestID);
 
-    // AJAX call to archive the request
-    $.ajax({
-        url: '/api-handler?targetAPI=/api/sortrequest/archive', // Adjust to your API endpoint
-        type: 'POST',
-        contentType: 'application/json',
-        data: JSON.stringify({ requestid: requestID, active: 0 }), // Set active to 0
-        success: function (response) {
-            console.log("Request archived successfully:", response);
-            showToast("Request archived successfully", "success");
-            $('#archiveRequestModal').modal('hide'); // Close the modal
-            fetchAndUpdateTable(); // Refresh the table
-        },
-        error: function (jqXHR, textStatus, errorThrown) {
-            console.error("Error archiving request:", textStatus, errorThrown);
-            var errorMessage = "Error archiving request.";
-            if (jqXHR.responseText) {
-                try {
-                    var resp = JSON.parse(jqXHR.responseText);
-                    if (resp && resp.error) {
-                        errorMessage = resp.error;
-                    }
-                } catch (e) {
-                    console.error("Error parsing server response:", e);
-                }
-            }
-            showToast(errorMessage, "error");
-        }
-    });
-});
+      if (!requestID) {
+          console.error("No request ID found for archiving");
+          showToast("Error: No request ID found", "error");
+          return;
+      }
 
+      // Declare and define the payload object
+      var payload = {
+          ID: requestID,
+          Active: 0 // Mark as archived
+      };
+
+      // AJAX call to update the request
+      $.ajax({
+          url: '/api-handler?targetAPI=/api/sortingupdate', // Use the sortingupdate API endpoint
+          type: 'POST',
+          contentType: 'application/json',
+          data: JSON.stringify(payload),
+          success: function (response) {
+              console.log("Request archived successfully:", response);
+              showToast("Request archived successfully", "success");
+              $('#archiveRequestModal').modal('hide'); // Close the modal
+              fetchAndUpdateTable(); // Refresh the table
+          },
+          error: function (jqXHR, textStatus, errorThrown) {
+              console.error("Error archiving request:", textStatus, errorThrown);
+              var errorMessage = "Error archiving request.";
+              if (jqXHR.responseText) {
+                  try {
+                      var resp = JSON.parse(jqXHR.responseText);
+                      if (resp && resp.error) {
+                          errorMessage = resp.error;
+                      }
+                  } catch (e) {
+                      console.error("Error parsing server response:", e);
+                  }
+              }
+              showToast(errorMessage, "error");
+          }
+      });
+  });
 
 
     // Event listener for the update button click

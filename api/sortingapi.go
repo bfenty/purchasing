@@ -265,6 +265,11 @@ func UpdateSortRequestAPI(w http.ResponseWriter, r *http.Request) {
 		queryBuilder.WriteString("prty = ?, ")
 		args = append(args, sortRequest.Priority)
 	}
+	// Include the Active field
+	if sortRequest.Active != nil {
+		queryBuilder.WriteString("active = ?, ")
+		args = append(args, *sortRequest.Active)
+	}
 
 	// Remove the trailing comma and space
 	query := strings.TrimSuffix(queryBuilder.String(), ", ")
