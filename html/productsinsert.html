@@ -1,164 +1,4 @@
-<html>
-<head>
-{{template "header"}}
-</head>
-<body>
-  {{template "navigation" .}}
-  {{$permission := .Permission.Role}}
-  <br> 
-  {{template "toastBox" .}}
-  {{template "modalImage" .}}
-  {{template "modalDelete" .}}   
-  {{template "pageControls" .}}   
-        <!-- Main Table -->
-        <table class="table table-striped table-hover">
-            <thead class="table-dark" style="position: sticky; top: 0; z-index: 1;">
-                <tr>
-                    <th></th>
-                    <th scope="col">SKU</th>
-                    <th scope="col">Manufacturer Part #</th>
-                    <th scope="col">Product Option</th>
-                    {{if eq $permission "admin"}}<th scope="col">Manufacturer</th>{{end}}
-                    {{if eq $permission "admin"}}<th scope="col">Processing Request</th>{{end}}
-                    <th scope="col">Unit</th>
-                    {{if eq $permission "admin"}}<th scope="col">Unit Price</th>{{end}}
-                    {{if eq $permission "admin"}}<th scope="col">Currency</th>{{end}}
-                    {{if eq $permission "admin"}}<th scope="col">Order Qty</th>{{end}}
-                    {{if eq $permission "admin"}}<th scope="col">Reorder</th>{{end}}
-                    <th scope="col">Season</th>
-                    <th scope="col">Inventory</th>
-                    <th></th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody id="contentTableBody">
-            </tbody>
-        </table>
-
-        <script>
-            // Setup Page Variables
-            var currentPage = 1; // keep track of the current page
-            var totalPages = 0; // total number of pages, you might get this from the server
-            var limit = 10; // set page size limit
-            $(document).ready(function() {
-              console.log("Document ready. Initializing table data fetch.");
-              fetchAndUpdateTable(currentPage,10);
-
-              // Event handler for image clicks
-              $(document).on('click', '.image-link', function() {
-                  var standardUrl = $(this).data('standard-url');
-                  var sku = $(this).data('sku');
-
-                  $('#imageModalLabel').text(sku);
-                  $('#modalImage').attr('src', standardUrl);
-                  $('#imageModal').modal('show');
-              });
-            });
-      </script>
-      
-      {{template "toast" .}}
-      {{template "fetchmanufacturers" .}}
-      {{template "updateTable" .}}
-      {{template "insertProductRow" .}}
-      {{template "tableProductRow" .}}
-      {{template "btninsertProduct" .}}
-      {{template "btnupdateProduct" .}}
-      {{template "btnDeleteSKU" .}}
-      
-  {{template "footer" .}}
-</body>
-</html>
-
-{{define "insertProductRow"}}
-{{$permission := .Permission.Role}}
-<script>
-    function GenerateTopRow(manufacturers, currencies, seasons) {
-        console.log("Generating Insert Row")
-        
-        // Manufacturer dropdown options
-        var manufacturerOptions = '<option value="" selected>Select Manufacturer</option>';
-        manufacturers.forEach(function(manufacturer) {
-            manufacturerOptions += `<option value="${manufacturer.name}">${manufacturer.name}</option>`;
-        });
-        
-        // Generate Currency Options
-        var currencyOptions = '<option value="" selected>Select Currency</option>';
-        currencies.forEach(function(currency) {
-            currencyOptions += `<option value="${currency}">${currency}</option>`;
-        });
-
-        // Generate Seasons Options
-        var seasonOptions = '<option value="None" selected>None</option>';
-        seasons.forEach(function(season) {
-            seasonOptions += `<option value="${season}">${season}</option>`;
-        });
-
-        // Generate the Insert Row
-        var insertRow = `<tr class="table-info">
-            <td></td>
-            <td><input class="form-control" type='text' id="new_sku"></td>
-            <td><input class="form-control" type='text' id="new_manufacturerpart"></td>
-            <td><input class="form-control" type='text' id="new_description"></td>
-            {{if eq $permission "admin"}}<td><select class="form-select" id="new_manufacturer">${manufacturerOptions}</select></td>{{end}}
-            {{if eq $permission "admin"}}<td><input class="form-control" type='text' id="new_processrequest"></td>{{end}}
-            <td><input class="form-control" type='text' id="new_unit"></td>
-            {{if eq $permission "admin"}}<td><input class="form-control" type='text' id="new_unitprice"></td>{{end}}
-            {{if eq $permission "admin"}}<td><select class="form-select" id="new_currency">${currencyOptions}</select></td>{{end}}
-            {{if eq $permission "admin"}}<td><input class="form-control" type='text' id="new_orderqty"></td>{{end}}
-            {{if eq $permission "admin"}}<td><input class="form-check-input" type='checkbox' id="new_reorder" name="new_reorder" checked></td>{{end}}
-            <td><select class="form-select" id="new_season">${seasonOptions}</select></td>
-            <td><input class="form-control" type='text' id="new_inventoryqty"></td>
-            <td><button class="btn btn-primary" id="btnInsertNew">Insert</button></td>
-            <td></td>
-        </tr>`;
-        return insertRow
-    }
-</script>
-{{end}}
-
-{{define "tableProductRow"}}
-{{$permission := .Permission.Role}}
-<script>
-    function generateTableRow(item, index, manufacturers, currencies, seasons) {
-        // console.log("Processing item:", index, item);
-        //create a map of acceptable currencies and select the correct one
-        var currencyOptions = currencies.map(function(currency) {
-            return `<option value="${currency}" ${currency === item.Currency ? 'selected' : ''}>${currency}</option>`;
-        }).join('');
-
-        //Create a map of all manufacturers
-        var manufacturerOptions = manufacturers.map(function(manufacturer) {
-            return `<option value="${manufacturer.name}" ${manufacturer.name === item.Manufacturer ? 'selected' : ''}>${manufacturer.name}</option>`;
-        }).join('');
-        
-        // Season dropdown options
-        let seasonOptions = `<option value="" ${!seasons.includes(item.Season) ? 'selected' : ''}></option>` +
-            seasons.map(season => {
-                return `<option value="${season}" ${item.Season === season ? 'selected' : ''}>${season}</option>`;
-            }).join('');
-
-
-        var row = `<tr>
-                    <td><a role="button" class="image-link" data-standard-url="${item.Image.url_standard}" data-sku="${item.SKU}"><img class="img-rounded" data-bs-toggle="modal" data-bs-target="#ModalImage0" src="${item.Image.url_tiny}" height="45px"></a></td>
-                    <td><input class="form-control" type='text' id="sku" name="sku" value="${item.SKU}"></td>
-                    <td><input class="form-control" type='text' id="manufacturerpart" name="manufacturerpart" value="${item.ManufacturerPart}"></td>
-                    <td><input class="form-control" type='text' id="description" name="description" value="${item.Description}"></td>
-                    {{if eq $permission "admin"}}<td><select class="form-select" id="manufacturer" name="manufacturer">${manufacturerOptions}</select></td>{{end}}
-                    {{if eq $permission "admin"}}<td><input class="form-control" type='text' id="processrequest" name="processrequest" value="${item.ProcessRequest}"></td>{{end}}
-                    <td><input class="form-control" type='text' id="unit" name="unit" value="${item.Unit}"></td>
-                    {{if eq $permission "admin"}}<td><input class="form-control" type='text' id="unitprice" name="unitprice" value="${item.UnitPrice}"></td>{{end}}
-                    {{if eq $permission "admin"}}<td><select class="form-select" id="currency" name="currency">${currencyOptions}</select></td>{{end}}
-                    {{if eq $permission "admin"}}<td><input class="form-control" type='text' id="orderqty" name="orderqty" value="${item.OrderQty}"></td>{{end}}
-                    {{if eq $permission "admin"}}<td><input class="form-check-input" type='checkbox' id="reorder" name="reorder" ${item.Reorder ? 'checked' : ''}></td>{{end}}
-                    <td><select class="form-select" id="season" name="season">${seasonOptions}</select></td>
-                    <td><input class="form-control" type='text' id="inventoryqty" name="inventoryqty" value="${item.InventoryQty}"></td>
-                    <td><input type='button' value='Update' class='btn btn-primary update-button' data-item-id='${item.SKU}'></td>
-                    <td><button type="button" class="btn btn-danger delete-button" data-item-id="${item.SKU}" data-bs-toggle="modal">Delete</button></td>
-                    </tr>`;
-        return row
-    }
-</script>
-{{end}}
+<!-- TODO: move templates to external file -->
 
 {{define "btninsertProduct"}}
 <script>
@@ -391,3 +231,166 @@
     });
 </script>
 {{end}}
+
+{{define "insertProductRow"}}
+{{$permission := .Permission.Role}}
+<script>
+    function GenerateTopRow(manufacturers, currencies, seasons) {
+        console.log("Generating Insert Row")
+        
+        // Manufacturer dropdown options
+        var manufacturerOptions = '<option value="" selected>Select Manufacturer</option>';
+        manufacturers.forEach(function(manufacturer) {
+            manufacturerOptions += `<option value="${manufacturer.name}">${manufacturer.name}</option>`;
+        });
+        
+        // Generate Currency Options
+        var currencyOptions = '<option value="" selected>Select Currency</option>';
+        currencies.forEach(function(currency) {
+            currencyOptions += `<option value="${currency}">${currency}</option>`;
+        });
+
+        // Generate Seasons Options
+        var seasonOptions = '<option value="None" selected>None</option>';
+        seasons.forEach(function(season) {
+            seasonOptions += `<option value="${season}">${season}</option>`;
+        });
+
+        // Generate the Insert Row
+        var insertRow = `<tr class="table-info">
+            <td></td>
+            <td><input class="form-control" type='text' id="new_sku"></td>
+            <td><input class="form-control" type='text' id="new_manufacturerpart"></td>
+            <td><input class="form-control" type='text' id="new_description"></td>
+            {{if eq $permission "admin"}}<td><select class="form-select" id="new_manufacturer">${manufacturerOptions}</select></td>{{end}}
+            {{if eq $permission "admin"}}<td><input class="form-control" type='text' id="new_processrequest"></td>{{end}}
+            <td><input class="form-control" type='text' id="new_unit"></td>
+            {{if eq $permission "admin"}}<td><input class="form-control" type='text' id="new_unitprice"></td>{{end}}
+            {{if eq $permission "admin"}}<td><select class="form-select" id="new_currency">${currencyOptions}</select></td>{{end}}
+            {{if eq $permission "admin"}}<td><input class="form-control" type='text' id="new_orderqty"></td>{{end}}
+            {{if eq $permission "admin"}}<td><input class="form-check-input" type='checkbox' id="new_reorder" name="new_reorder" checked></td>{{end}}
+            <td><select class="form-select" id="new_season">${seasonOptions}</select></td>
+            <td><input class="form-control" type='text' id="new_inventoryqty"></td>
+            <td><button class="btn btn-primary" id="btnInsertNew">Insert</button></td>
+            <td></td>
+        </tr>`;
+        return insertRow
+    }
+</script>
+{{end}}
+
+{{define "tableProductRow"}}
+{{$permission := .Permission.Role}}
+<script>
+    function generateTableRow(item, index, manufacturers, currencies, seasons) {
+        // console.log("Processing item:", index, item);
+        //create a map of acceptable currencies and select the correct one
+        var currencyOptions = currencies.map(function(currency) {
+            return `<option value="${currency}" ${currency === item.Currency ? 'selected' : ''}>${currency}</option>`;
+        }).join('');
+
+        //Create a map of all manufacturers
+        var manufacturerOptions = manufacturers.map(function(manufacturer) {
+            return `<option value="${manufacturer.name}" ${manufacturer.name === item.Manufacturer ? 'selected' : ''}>${manufacturer.name}</option>`;
+        }).join('');
+        
+        // Season dropdown options
+        let seasonOptions = `<option value="" ${!seasons.includes(item.Season) ? 'selected' : ''}></option>` +
+            seasons.map(season => {
+                return `<option value="${season}" ${item.Season === season ? 'selected' : ''}>${season}</option>`;
+            }).join('');
+
+
+        var row = `<tr>
+                    <td><a role="button" class="image-link" data-standard-url="${item.Image.url_standard}" data-sku="${item.SKU}"><img class="img-rounded" data-bs-toggle="modal" data-bs-target="#ModalImage0" src="${item.Image.url_tiny}" height="45px"></a></td>
+                    <td><input class="form-control" type='text' id="sku" name="sku" value="${item.SKU}"></td>
+                    <td><input class="form-control" type='text' id="manufacturerpart" name="manufacturerpart" value="${item.ManufacturerPart}"></td>
+                    <td><input class="form-control" type='text' id="description" name="description" value="${item.Description}"></td>
+                    {{if eq $permission "admin"}}<td><select class="form-select" id="manufacturer" name="manufacturer">${manufacturerOptions}</select></td>{{end}}
+                    {{if eq $permission "admin"}}<td><input class="form-control" type='text' id="processrequest" name="processrequest" value="${item.ProcessRequest}"></td>{{end}}
+                    <td><input class="form-control" type='text' id="unit" name="unit" value="${item.Unit}"></td>
+                    {{if eq $permission "admin"}}<td><input class="form-control" type='text' id="unitprice" name="unitprice" value="${item.UnitPrice}"></td>{{end}}
+                    {{if eq $permission "admin"}}<td><select class="form-select" id="currency" name="currency">${currencyOptions}</select></td>{{end}}
+                    {{if eq $permission "admin"}}<td><input class="form-control" type='text' id="orderqty" name="orderqty" value="${item.OrderQty}"></td>{{end}}
+                    {{if eq $permission "admin"}}<td><input class="form-check-input" type='checkbox' id="reorder" name="reorder" ${item.Reorder ? 'checked' : ''}></td>{{end}}
+                    <td><select class="form-select" id="season" name="season">${seasonOptions}</select></td>
+                    <td><input class="form-control" type='text' id="inventoryqty" name="inventoryqty" value="${item.InventoryQty}"></td>
+                    <td><input type='button' value='Update' class='btn btn-primary update-button' data-item-id='${item.SKU}'></td>
+                    <td><button type="button" class="btn btn-danger delete-button" data-item-id="${item.SKU}" data-bs-toggle="modal">Delete</button></td>
+                    </tr>`;
+        return row
+    }
+</script>
+{{end}}
+
+<html>
+<head>
+{{template "header"}}
+</head>
+<body>
+  {{template "navigation" .}}
+  {{$permission := .Permission.Role}}
+  <br> 
+  {{template "toastBox" .}}
+  {{template "modalImage" .}}
+  {{template "modalDelete" .}}   
+  {{template "pageControls" .}}   
+        <!-- Main Table -->
+        <table class="table table-striped table-hover">
+            <thead class="table-dark" style="position: sticky; top: 0; z-index: 1;">
+                <tr>
+                    <th></th>
+                    <th scope="col">SKU</th>
+                    <th scope="col">Manufacturer Part #</th>
+                    <th scope="col">Product Option</th>
+                    {{if eq $permission "admin"}}<th scope="col">Manufacturer</th>{{end}}
+                    {{if eq $permission "admin"}}<th scope="col">Processing Request</th>{{end}}
+                    <th scope="col">Unit</th>
+                    {{if eq $permission "admin"}}<th scope="col">Unit Price</th>{{end}}
+                    {{if eq $permission "admin"}}<th scope="col">Currency</th>{{end}}
+                    {{if eq $permission "admin"}}<th scope="col">Order Qty</th>{{end}}
+                    {{if eq $permission "admin"}}<th scope="col">Reorder</th>{{end}}
+                    <th scope="col">Season</th>
+                    <th scope="col">Inventory</th>
+                    <th></th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody id="contentTableBody">
+            </tbody>
+        </table>
+
+        <script>
+            // Setup Page Variables
+            var currentPage = 1; // keep track of the current page
+            var totalPages = 0; // total number of pages, you might get this from the server
+            var limit = 10; // set page size limit
+            $(document).ready(function() {
+              console.log("Document ready. Initializing table data fetch.");
+              fetchAndUpdateTable(currentPage,10);
+
+              // Event handler for image clicks
+              $(document).on('click', '.image-link', function() {
+                  var standardUrl = $(this).data('standard-url');
+                  var sku = $(this).data('sku');
+
+                  $('#imageModalLabel').text(sku);
+                  $('#modalImage').attr('src', standardUrl);
+                  $('#imageModal').modal('show');
+              });
+            });
+      </script>
+      
+      {{template "toast" .}}
+      {{template "fetchmanufacturers" .}}
+      {{template "updateTable" .}}
+      {{template "insertProductRow" .}}
+      {{template "tableProductRow" .}}
+      {{template "btninsertProduct" .}}
+      {{template "btnupdateProduct" .}}
+      {{template "btnDeleteSKU" .}}
+      
+  {{template "footer" .}}
+</body>
+</html>
+

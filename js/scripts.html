@@ -123,7 +123,7 @@ function showToast(message, type) {
     $('#contentTableBody').on('click', '#btnSearch', function() {
         console.log("Search button clicked");
         // Construct searchParams object from input values
-        $('#btnSearch').closest('tr').find('input').each(function() {
+        $('#btnSearch').closest('tr').find('input,select').each(function() {
             // Use the input's id as the key and the input's value as the value
             var key = $(this).attr('id');
             var value = $(this).val();

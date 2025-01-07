@@ -112,6 +112,16 @@
 {{$admin := .Permission.Permissions.Admin}}
 {{$mgmt := .Permission.Permissions.Mgmt}}
 <script>
+  function formatDateForDatePicker(dateString) {
+    if (!dateString) return ""; // Handle null or undefined dates
+    const date = new Date(dateString); // Convert ISO string to a Date object
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0'); // Month is zero-based
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`; // Return in YYYY-MM-DD format
+}
+</script>
+<script>
     // Fetch users
     async function fetchUsers() {
         return new Promise((resolve, reject) => {
@@ -179,6 +189,13 @@
 
         // Loop through the rows
         response.sortRequests.forEach(function(sortRequest) {
+        // Format the Checkin date for the date picker
+        if (sortRequest.Checkin) {
+            sortRequest.Checkin = formatDateForDatePicker(sortRequest.Checkin);
+        }
+        if (sortRequest.Checkout) {
+            sortRequest.Checkout = formatDateForDatePicker(sortRequest.Checkout);
+        }
             var row = generateTableRow(sortRequest,users);
             tableBody.append(row);
         });

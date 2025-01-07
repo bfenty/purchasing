@@ -59,8 +59,7 @@ func ProductList(w http.ResponseWriter, r *http.Request) {
 		"unit_price":         r.URL.Query().Get("unitprice"),
 		"currency":           r.URL.Query().Get("currency"),
 		"order_qty":          r.URL.Query().Get("orderqty"),
-		// "reorder":            r.URL.Query().Get("reorder"),
-		"season": r.URL.Query().Get("season"),
+		"season":             r.URL.Query().Get("season"),
 	}
 
 	// Pagination parameters
@@ -89,7 +88,7 @@ func ProductList(w http.ResponseWriter, r *http.Request) {
 	var queryArgs []interface{}
 	var queryBuilder strings.Builder
 
-	queryBuilder.WriteString("SELECT `sku_internal`,`manufacturer_code`,`sku_manufacturer`,`product_option`,`processing_request`,`sorting_request`,`unit`,`unit_price`,`Currency`,`order_qty`,`modified`,`reorder`,`inventory_qty`,season,url_standard,url_thumb,url_tiny FROM purchasing.skus WHERE 1")
+	queryBuilder.WriteString("SELECT `sku_internal`,`manufacturer_code`,`sku_manufacturer`,`product_option`,`processing_request`,`sorting_request`,`unit`,`unit_price`,`Currency`,`order_qty`,`modified`,`reorder`,`inventory_qty`,season,url_standard,url_thumb,url_tiny,`man_url` FROM purchasing.skus WHERE 1")
 
 	for param, value := range queryParams {
 		if value != "" && param != "limit" { // Exclude 'limit' from filtering
@@ -115,7 +114,7 @@ func ProductList(w http.ResponseWriter, r *http.Request) {
 	var products []models.Product
 	for rows.Next() {
 		var p models.Product
-		if err := rows.Scan(&p.SKU, &p.Manufacturer, &p.ManufacturerPart, &p.Description, &p.ProcessRequest, &p.SortingRequest, &p.Unit, &p.UnitPrice, &p.Currency, &p.OrderQty, &p.Modified, &p.Reorder, &p.InventoryQty, &p.Season, &p.Image.URL_Standard, &p.Image.URL_Thumb, &p.Image.URL_Tiny); err != nil {
+		if err := rows.Scan(&p.SKU, &p.Manufacturer, &p.ManufacturerPart, &p.Description, &p.ProcessRequest, &p.SortingRequest, &p.Unit, &p.UnitPrice, &p.Currency, &p.OrderQty, &p.Modified, &p.Reorder, &p.InventoryQty, &p.Season, &p.Image.URL_Standard, &p.Image.URL_Thumb, &p.Image.URL_Tiny, &p.ManURL); err != nil {
 			log.WithFields(log.Fields{"error": err}).Error("Error scanning row")
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 			return

@@ -43,6 +43,7 @@ type Product struct {
 	InventoryQty     *int
 	Season           *string
 	Image            Image
+	ManURL           *string
 }
 
 type Image struct {
