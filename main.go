@@ -185,6 +185,9 @@ func APIHandler(w http.ResponseWriter, r *http.Request) {
 	case "sorterrorupdate":
 		log.Debug("Calling sortErrorUpdate function")
 		SortErrorUpdate(w, r)
+	case "export":
+		log.Debug("Calling export function")
+		api.ExportDataAPI(w, r)
 	// Add other cases as needed
 	default:
 		log.WithFields(log.Fields{

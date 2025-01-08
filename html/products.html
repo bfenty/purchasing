@@ -7,6 +7,7 @@
 {{$permission := .Permission.Role}}
 {{$layout := .Layout}}
 <br>
+<button id="exportData" class="btn btn-secondary" data-dataset="products">Export Data</button>
     {{template "toastBox" .}}
     {{template "modalImage" .}}
     {{template "modalDelete" .}}
@@ -71,6 +72,7 @@
       {{template "btnDeleteSKU" .}}
       {{template "nedry" .}}
       {{template "spinner" .}}
+      {{template "exportbtn" .}}
       
   {{template "footer" .}}
 </body>

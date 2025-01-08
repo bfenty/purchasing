@@ -1,3 +1,52 @@
+{{define "exportbtn"}}
+<script>
+$(document).ready(function () {
+    // Event listener for the export button
+    $('#exportData').click(function () {
+        console.log("Export button clicked");
+
+        // Get the dataset name from the button's data attribute
+        let dataset = $(this).data('dataset');
+        if (!dataset) {
+            console.error("Dataset name is missing");
+            showToast("Error: Dataset name is missing", "error");
+            return;
+        }
+
+        // Collect current filters
+        let filters = {};
+        $('.search-row input, .search-row select').each(function () {
+            let key = $(this).attr('name'); // Use the 'name' attribute for consistency
+            let value = $(this).val();
+            if (value) {
+                filters[key] = value;
+            }
+        });
+
+        // Convert filters object into a query string
+        let filterParams = $.param(filters);
+
+        // Specify columns to export (optional, or make dynamic based on the page)
+        let columns = "sku_internal,manufacturer_code,sku_manufacturer,product_option";
+
+        // Construct the API URL
+        let exportUrl = `/api-handler?targetAPI=/api/export&dataset=${dataset}&filters=${filterParams}&columns=${columns}`;
+
+        console.log("Export URL:", exportUrl);
+
+        // Trigger the download by creating an anchor element and clicking it
+        let link = document.createElement("a");
+        link.href = exportUrl;
+        link.download = `${dataset}.csv`; // Suggest a filename for the download
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link); // Clean up the DOM
+    });
+});
+</script>
+{{end}}
+
+
 {{define "toast"}}
 <script>
 //Show messages to the user

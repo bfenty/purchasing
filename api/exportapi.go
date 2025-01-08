@@ -31,9 +31,9 @@ func ExportDataAPI(w http.ResponseWriter, r *http.Request) {
 	}
 
 	filters := r.URL.Query().Get("filters")
-	columns := r.URL.Query().Get("columns")
+	columns := r.URL.Query().Get("columns") // Query parameter for user-specified columns
 
-	// Build the query dynamically based on dataset and filters
+	// Build the query dynamically
 	var query string
 	var args []interface{}
 
@@ -55,10 +55,10 @@ func ExportDataAPI(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Select specific columns if provided
+	// Add columns to the query if provided
 	if columns != "" {
-		cols := strings.Split(columns, ",")
-		query = strings.Replace(query, "*", strings.Join(cols, ", "), 1)
+		selectedColumns := strings.Split(columns, ",")
+		query = strings.Replace(query, "*", strings.Join(selectedColumns, ", "), 1)
 	}
 
 	// Execute the query
@@ -78,19 +78,21 @@ func ExportDataAPI(w http.ResponseWriter, r *http.Request) {
 	writer := csv.NewWriter(w)
 	defer writer.Flush()
 
-	// Write headers
-	columns, err := rows.Columns()
+	// Retrieve column names from the result set
+	tableColumns, err := rows.Columns() // Renamed for clarity
 	if err != nil {
-		log.WithError(err).Error("Error getting columns")
+		log.WithError(err).Error("Error getting column names")
 		http.Error(w, "Error fetching data", http.StatusInternalServerError)
 		return
 	}
-	writer.Write(columns)
 
-	// Write rows
+	// Write column headers to the CSV
+	writer.Write(tableColumns)
+
+	// Write rows to the CSV
 	for rows.Next() {
-		values := make([]interface{}, len(columns))
-		valuePtrs := make([]interface{}, len(columns))
+		values := make([]interface{}, len(tableColumns))
+		valuePtrs := make([]interface{}, len(tableColumns))
 		for i := range values {
 			valuePtrs[i] = &values[i]
 		}
@@ -101,7 +103,7 @@ func ExportDataAPI(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		record := make([]string, len(columns))
+		record := make([]string, len(tableColumns))
 		for i, value := range values {
 			if value != nil {
 				record[i] = fmt.Sprintf("%v", value)
