@@ -34,32 +34,53 @@ func ExportDataAPI(w http.ResponseWriter, r *http.Request) {
 	columns := r.URL.Query().Get("columns") // Query parameter for user-specified columns
 
 	// Build the query dynamically
-	var query string
+	var queryBuilder strings.Builder
 	var args []interface{}
 
 	switch dataset {
 	case "products":
-		query = "SELECT sku_internal, manufacturer_code, sku_manufacturer, product_option FROM purchasing.skus"
-		if filters != "" {
-			query += " WHERE " + strings.ReplaceAll(filters, "=", " LIKE ?")
-			args = append(args, "%"+strings.Split(filters, "=")[1]+"%")
-		}
+		queryBuilder.WriteString("SELECT sku_internal, manufacturer_code, sku_manufacturer, product_option FROM purchasing.skus")
 	case "sort_requests":
-		query = "SELECT requestid, sku, description, status FROM purchasing.sortrequest"
-		if filters != "" {
-			query += " WHERE " + strings.ReplaceAll(filters, "=", " LIKE ?")
-			args = append(args, "%"+strings.Split(filters, "=")[1]+"%")
-		}
+		queryBuilder.WriteString("SELECT requestid, sku, description, status FROM purchasing.sortrequest")
 	default:
 		http.Error(w, "Unsupported dataset", http.StatusBadRequest)
 		return
 	}
 
-	// Add columns to the query if provided
+	// Parse and add filters dynamically
+	if filters != "" {
+		filterParts := strings.Split(filters, "&") // Split the filters into key-value pairs
+		if len(filterParts) > 0 {
+			queryBuilder.WriteString(" WHERE ")
+			for i, filter := range filterParts {
+				keyValue := strings.Split(filter, "=")
+				if len(keyValue) == 2 {
+					if i > 0 {
+						queryBuilder.WriteString(" AND ")
+					}
+					queryBuilder.WriteString(fmt.Sprintf("%s LIKE ?", keyValue[0]))
+					args = append(args, "%"+keyValue[1]+"%")
+				}
+			}
+		}
+	}
+
+	// Store the base query before modifying it for custom columns
+	baseQuery := queryBuilder.String()
+
+	// Add user-specified columns if provided
 	if columns != "" {
 		selectedColumns := strings.Split(columns, ",")
-		query = strings.Replace(query, "*", strings.Join(selectedColumns, ", "), 1)
+		columnList := strings.Join(selectedColumns, ", ")
+		queryBuilder.Reset() // Clear the existing query
+		queryBuilder.WriteString(fmt.Sprintf("SELECT %s FROM (%s) AS subquery", columnList, baseQuery))
+	} else {
+		queryBuilder.WriteString(baseQuery)
 	}
+
+	query := queryBuilder.String()
+
+	log.WithFields(log.Fields{"query": query, "args": args}).Debug("Executing query")
 
 	// Execute the query
 	rows, err := config.DB.Query(query, args...)
@@ -79,7 +100,7 @@ func ExportDataAPI(w http.ResponseWriter, r *http.Request) {
 	defer writer.Flush()
 
 	// Retrieve column names from the result set
-	tableColumns, err := rows.Columns() // Renamed for clarity
+	tableColumns, err := rows.Columns()
 	if err != nil {
 		log.WithError(err).Error("Error getting column names")
 		http.Error(w, "Error fetching data", http.StatusInternalServerError)
@@ -105,8 +126,13 @@ func ExportDataAPI(w http.ResponseWriter, r *http.Request) {
 
 		record := make([]string, len(tableColumns))
 		for i, value := range values {
-			if value != nil {
-				record[i] = fmt.Sprintf("%v", value)
+			switch v := value.(type) {
+			case []byte:
+				record[i] = string(v) // Convert byte slice to string
+			case nil:
+				record[i] = "" // Handle NULL values
+			default:
+				record[i] = fmt.Sprintf("%v", v) // Default string conversion
 			}
 		}
 		writer.Write(record)

@@ -177,7 +177,7 @@ func APIHandler(w http.ResponseWriter, r *http.Request) {
 		log.Debug("Calling ListCustomersAPI function")
 		api.ListCustomersAPI(w, r)
 	case "sortinglist":
-		log.Debug("Calling ListCustomersAPI function")
+		log.Debug("Calling ListSortingsAPI function")
 		api.ListSortRequestsAPI(w, r)
 	case "sortingupdate":
 		log.Debug("Calling UpdateSortRequestAPI function")

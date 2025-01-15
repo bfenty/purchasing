@@ -213,8 +213,8 @@ $('#myModal').on('shown.bs.modal', function () {
             <li><a class="dropdown-item" href="/sorting?layout=receiving">Receiving</a></li>
             {{if or (eq $permission "admin") (eq $permission "purchasing")}}<li><a class="dropdown-item" href="/sorting?layout=full">Sort Requests</a></li>{{end}}
             {{if or (eq $permission "admin") (eq $permission "purchasing")}}<li><a class="dropdown-item" href="/sorting?layout=mgmt">Management</a></li>{{end}}
-            <li><a class="dropdown-item" href="/checkout">Checkout</a></li>
-            <li><a class="dropdown-item" href="/checkin">Checkin</a></li>
+            <li><a class="dropdown-item" href="/sorting?layout=checkout">Checkout</a></li>
+            <li><a class="dropdown-item" href="/sorting?layout=checkin">Checkin</a></li>
             {{if or (eq $permission "admin") (eq $permission "purchasing")}}
               <li><a class="dropdown-item" href="/sorterror">Sort Errors<span class="sr-only">(current)</span></a></li>
               {{end}}

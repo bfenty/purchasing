@@ -46,10 +46,10 @@ func RespondWithJSON(w http.ResponseWriter, statusCode int, payload interface{})
 	}
 
 	// Log the successful response
-	log.WithFields(log.Fields{
-		"statusCode": statusCode,
-		"response":   string(response),
-	}).Debug("JSON response sent successfully")
+	// log.WithFields(log.Fields{
+	// 	"statusCode": statusCode,
+	// 	"response":   string(response),
+	// }).Debug("JSON response sent successfully")
 }
 
 // jsonLoad retrieves product data from the specified URL and unmarshals it into a 'product' struct.

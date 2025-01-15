@@ -23,21 +23,21 @@
             <thead class="table-dark" style="position: sticky; top: 0; z-index: 1;">
               <tr>
                 <th scope="col">Request ID</th>
-                {{if or (eq $layout "receiving") (eq $layout "full") (eq $layout "dataentry") (eq $layout "mgmt")}}<th scope="col">SKU</th>{{end}}
-                {{if or (eq $layout "receiving") (eq $layout "full") (eq $layout "dataentry")}}<th scope="col">Description</th>{{end}}
+                {{if or (eq $layout "receiving") (eq $layout "full") (eq $layout "dataentry") (eq $layout "mgmt") (eq $layout "checkout")}}<th scope="col">SKU</th>{{end}}
+                {{if or (eq $layout "receiving") (eq $layout "full") (eq $layout "dataentry") (eq $layout "checkout")}}<th scope="col">Description</th>{{end}}
                 {{if or (eq $layout "full") (eq $layout "dataentry")}}<th scope="col">Manufacturer Part</th>{{end}}
-                {{if or (eq $layout "receiving") (eq $layout "full") (eq $layout "dataentry") (eq $layout "mgmt")}}<th scope="col">Pcs/Bag</th>{{end}}
+                {{if or (eq $layout "receiving") (eq $layout "full") (eq $layout "dataentry") (eq $layout "mgmt") (eq $layout "checkout")}}<th scope="col">Pcs/Bag</th>{{end}}
                 {{if or (eq $layout "receiving") (eq $layout "full") (eq $layout "dataentry")}}<th scope="col">Weight Out</th>{{end}}
                 {{if or (eq $layout "receiving") (eq $layout "full")}}<th scope="col">Weight In</th>{{end}}
                 {{if or (eq $layout "receiving") (eq $layout "full")}}<th scope="col">Difference</th>{{end}}
                 {{if or (eq $layout "receiving") (eq $layout "full")}}<th scope="col">%</th>{{end}}
                 {{if or (eq $layout "receiving") (eq $layout "full") (eq $layout "mgmt")}}<th scope="col">Units</th>{{end}}
                 {{if or (eq $layout "receiving") (eq $layout "full") (eq $layout "mgmt")}}<th scope="col">Hours</th>{{end}}
-                {{if or (eq $layout "full") (eq $layout "mgmt")}}<th scope="col">Check Out</th>{{end}}
+                {{if or (eq $layout "full") (eq $layout "mgmt") (eq $layout "checkout")}}<th scope="col">Check Out</th>{{end}}
                 {{if or (eq $layout "full") (eq $layout "mgmt")}}<th scope="col">Check In</th>{{end}}
-                {{if or (eq $layout "full") (eq $layout "mgmt")}}<th scope="col">Sorter</th>{{end}}
+                {{if or (eq $layout "full") (eq $layout "mgmt") (eq $layout "checkout")}}<th scope="col">Sorter</th>{{end}}
                 {{if or (eq $layout "full")}}<th scope="col">Status</th>{{end}}
-                {{if or (eq $layout "full") (eq $layout "dataentry")}}<th scope="col">Priority</th>{{end}}
+                {{if or (eq $layout "full") (eq $layout "dataentry") (eq $layout "checkout")}}<th scope="col">Priority</th>{{end}}
                 {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "dataentry") (eq $layout "mgmt")}}<th scope="col" class="btn-col"></th>{{end}}
                 {{if or (eq $layout "full") (eq $layout "mgmt")}}<th scope="col" class="btn-col"></th>{{end}}
                 {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "mgmt")}}<th scope="col" class="btn-col"></th>{{end}}
@@ -166,7 +166,7 @@
             // Construct the query string from search parameters
             var limit = $('#limitSelect').val();
             var queryParams = $.param(searchParams); // Convert search parameters to query string
-            var apiUrl = `/api-handler?targetAPI=/api/sortinglist&page=${currentPage}&limit=${limit}{{if eq $layout "receiving"}}&search-checkin=NOT_NULL{{end}}&${queryParams}`;
+            var apiUrl = `/api-handler?targetAPI=/api/sortinglist&page=${currentPage}&limit=${limit}{{if eq $layout "receiving"}}&search-checkin=NOT_NULL{{end}}{{if eq $layout "checkout"}}&search-checkout=IS_NULL{{end}}&${queryParams}`;
             console.log("Fetching data with search parameters:", searchParams);
 
             console.log("Fetching data from " + apiUrl);
@@ -212,8 +212,8 @@
         
         // Generate the Search Row
         var rowHtml = `
-            <tr>
-                <td><input type="text" class="form-control" name="search-requestid" placeholder="Request ID"></td>`;
+            <tr>`
+                {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "dataentry") (eq $layout "mgmt")}}rowHtml += `<td><input type="text" class="form-control" name="search-requestid" placeholder="Request ID"></td>`;{{end}}
                 {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "dataentry") (eq $layout "mgmt")}}rowHtml += `<td class="col-sku"><input type="text" class="form-control" name="search-sku" placeholder="SKU"></td>`;{{end}}
                 {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "dataentry")}}rowHtml += `<td><input type="text" class="form-control" name="search-description" placeholder="Description"></td>`;{{end}}
                 {{if or (eq $layout "full") (eq $layout "dataentry")}}rowHtml += `<td><input type="text" class="form-control" name="search-manufacturerpart" placeholder="Manufacturer Part"></td>`;{{end}}
@@ -333,19 +333,19 @@
         // Constructing the row HTML
         var rowHtml = `<tr class="${rowClass}">`
             rowHtml += `<td><input type="text" class="form-control requestid" id="requestid" name="requestid" value="${sortRequest.ID}" readonly></td>`
-                  {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "dataentry") (eq $layout "mgmt")}}rowHtml += `<td class="col-sku"><input type="text" class="form-control sku" id="sku" name="sku" value="${sortRequest.SKU}"></td>`{{end}}
-                  {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "dataentry")}}rowHtml += `<td><input type="text" class="form-control description" id="description" name="description" value="${sortRequest.Description}"></td>`{{end}}
+                  {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "dataentry") (eq $layout "mgmt") (eq $layout "checkout")}}rowHtml += `<td class="col-sku"><input type="text" class="form-control sku" id="sku" name="sku" value="${sortRequest.SKU}" {{if ne $mgmt true}}readonly{{end}}></td>`{{end}}
+                  {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "dataentry") (eq $layout "checkout")}}rowHtml += `<td><input type="text" class="form-control description" id="description" name="description" value="${sortRequest.Description}" {{if ne $mgmt true}}readonly{{end}}></td>`{{end}}
                   {{if or (eq $layout "full") (eq $layout "dataentry")}}rowHtml += `<td><input type="text" class="form-control manufacturerpart" id="manufacturerpart" name="manufacturerpart" value="${sortRequest.ManufacturerPart}"></td>`{{end}}
-                  {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "dataentry") (eq $layout "mgmt")}}rowHtml += `<td><div class="input-group"><input type="text" class="form-control instructions" id="instructions" name="instructions" pattern="[0-9]+(\.[0-9]+)?" title="Please enter a valid decimal number" value="${sortRequest.Instructions}"></div></td>`{{end}}
+                  {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "dataentry") (eq $layout "mgmt") (eq $layout "checkout")}}rowHtml += `<td><div class="input-group"><input type="text" class="form-control instructions" id="instructions" name="instructions" pattern="[0-9]+(\.[0-9]+)?" title="Please enter a valid decimal number" value="${sortRequest.Instructions}" {{if ne $mgmt true}}readonly{{end}}></div></td>`{{end}}
                   {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "dataentry")}}rowHtml += `<td><div class="input-group"><input type="text" class="form-control weightout" id="weightout" name="weightout" value="${sortRequest.Weightout}"></div></td>`{{end}}
                   {{if or (eq $layout "full") (eq $layout "receiving")}}rowHtml += `<td><div class="input-group"><input type="text" class="form-control weightin" id="weightin" name="weightin" value="${sortRequest.Weightin}"></div></td>`{{end}}
                   {{if or (eq $layout "full") (eq $layout "receiving")}}rowHtml += `<td><div class="input-group"><input type="text" class="form-control difference" id="difference" name="difference" value="${sortRequest.Difference}" readonly></div></td>`{{end}}
                   {{if or (eq $layout "full") (eq $layout "receiving")}}rowHtml += `<td><div class="input-group"><input type="text" class="form-control differencepercent" id="differencepercent" name="differencepercent" value="${sortRequest.DifferencePercent}" readonly percent></div></td>`{{end}}
                   {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "mgmt")}}rowHtml += `<td><div class="input-group"><input type="text" class="form-control pieces" id="pieces" name="pieces" pattern="[0-9]+(\.[0-9]+)?" title="Please enter a valid decimal number" value="${sortRequest.Pieces}"></div></td>`{{end}}
                   {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "mgmt")}}rowHtml += `<td><input type="text" class="form-control hours" id="hours" name="hours" value="${sortRequest.Hours}"></td>`{{end}}
-                  {{if or (eq $layout "full") (eq $layout "mgmt")}}rowHtml += `<td><input type="date" class="form-control checkout" id="checkout" name="checkout" value="${sortRequest.Checkout}"></td>`{{end}}
+                  {{if or (eq $layout "full") (eq $layout "mgmt") (eq $layout "checkout")}}rowHtml += `<td><input type="date" class="form-control checkout" id="checkout" name="checkout" value="${sortRequest.Checkout}"{{if ne $mgmt true}}readonly{{end}}></td>`{{end}}
                   {{if or (eq $layout "full") (eq $layout "mgmt")}}rowHtml += `<td><input type="date" class="form-control checkin" id="checkin" name="checkin" value="${sortRequest.Checkin}"></td>`{{end}}
-                  {{if or (eq $layout "full") (eq $layout "mgmt")}}
+                  {{if or (eq $layout "full") (eq $layout "mgmt") (eq $layout "checkout")}}
                   rowHtml += `<td>
                     <select class="form-select" id="sorter" name="sorter">
                             ${userOptions}
@@ -365,9 +365,9 @@
                       {{end}}
                   rowHtml += `</td>`
                   {{end}}
-                  {{if or (eq $layout "full") (eq $layout "dataentry")}}
+                  {{if or (eq $layout "full") (eq $layout "dataentry") (eq $layout "checkout")}}
                   rowHtml += `<td>
-                    <select class="form-select" id="prty" name="prty">
+                    <select class="form-select" id="prty" name="prty" {{if ne $mgmt true}}disabled{{end}}>
                       <option value="0">Normal</option>
                       <option value="1">High</option>
                     </select>
