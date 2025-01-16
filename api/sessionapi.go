@@ -96,7 +96,7 @@ func Signin(w http.ResponseWriter, r *http.Request) {
 		// Handling redirects based on role
 		redirectURL := "/products?layout=insert" // Default redirect
 		if user.Role == "sorting" {
-			redirectURL = "/checkout"
+			redirectURL = "/sorting?layout=checkout"
 		} else if user.Role == "receiving" {
 			redirectURL = "/products"
 		}

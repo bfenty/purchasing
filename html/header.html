@@ -240,7 +240,7 @@ $('#myModal').on('shown.bs.modal', function () {
       {{if or (eq $permission "admin")}}<li class="nav-item active"><a class="nav-link active" href="/users">Users<span class="sr-only">(current)</span></a></li>{{end}}
       {{if or (eq $permission "admin") (eq $permission "receiving") (eq $permission "purchasing") (eq $permission "sorting") (ne $permission "")}}
       <li class="nav-item active">
-        <a class="nav-link active" href="/logout">Logout <span class="sr-only">(current)</span></a>
+        <a class="nav-link active" href="/api-handler?targetAPI=/api/logout">Logout <span class="sr-only">(current)</span></a>
       </li>
       {{end}}
   </ul>

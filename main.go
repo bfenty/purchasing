@@ -152,6 +152,9 @@ func APIHandler(w http.ResponseWriter, r *http.Request) {
 	case "signin":
 		log.Debug("Calling Signin function")
 		api.Signin(w, r)
+	case "logout":
+		log.Debug("Calling Signin function")
+		api.Logout(w, r)
 	case "products":
 		log.Debug("Calling ProductList function")
 		api.ProductList(w, r)
