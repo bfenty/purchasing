@@ -21,6 +21,7 @@ import (
 	"purchasing/api"
 	"purchasing/config"
 	"purchasing/models"
+	"purchasing/sql"
 	"strings"
 
 	"github.com/sirupsen/logrus"
@@ -187,7 +188,7 @@ func APIHandler(w http.ResponseWriter, r *http.Request) {
 		api.UpdateSortRequestAPI(w, r)
 	case "sorterrorupdate":
 		log.Debug("Calling sortErrorUpdate function")
-		SortErrorUpdate(w, r)
+		sql.SortErrorUpdate(w, r)
 	case "export":
 		log.Debug("Calling export function")
 		api.ExportDataAPI(w, r)

@@ -60,7 +60,7 @@ func Signin(w http.ResponseWriter, r *http.Request) {
 	default:
 
 		// Create a new random session token
-		// we use the "github.com/google/uuid" library to generate UUIDs
+		// use the "github.com/google/uuid" library to generate UUIDs
 		sessionToken := uuid.NewString()
 		expiresAt := time.Now().Add(1800 * time.Second)
 		// log.Debug("Authorized")
@@ -84,8 +84,8 @@ func Signin(w http.ResponseWriter, r *http.Request) {
 			Name:     "session_token",
 			Value:    sessionToken,
 			Expires:  expiresAt,
-			Path:     "/",  // Setting the path to root
-			HttpOnly: true, // Recommended to mitigate the risk of client side script accessing the protected cookie
+			Path:     "/", // Setting the path to root
+			HttpOnly: true,
 		})
 
 		log.WithFields(log.Fields{
