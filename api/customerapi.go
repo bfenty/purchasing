@@ -13,20 +13,28 @@ import (
 )
 
 // ListCustomersAPI godoc
-// @Summary List customers
-// @Description List customers with optional search filters and pagination
-// @Tags customers
-// @Accept  json
-// @Produce  json
-// @Param customer_email query string false "Customer Email"
-// @Param first_name query string false "First Name"
-// @Param last_name query string false "Last Name"
-// @Param country query string false "Country"
-// @Param page query int false "Page number"
-// @Param limit query int false "Limit per page"
-// @Success 200 {object} map[string]interface{} "Customers listed successfully"
-// @Failure 500 {object} map[string]string "Internal Server Error"
-// @Router /api/customers [get]
+//	@Summary		List customers
+//	@Description	Retrieves a list of customers with optional search filters and pagination
+//	@Tags			customers
+//	@Accept			json
+//	@Produce		json
+//	@Param			customer_email		query		string					false	"Filter by customer email"
+//	@Param			first_name			query		string					false	"Filter by first name"
+//	@Param			last_name			query		string					false	"Filter by last name"
+//	@Param			country				query		string					false	"Filter by country"
+//	@Param			rebill_day			query		string					false	"Filter by rebill day"
+//	@Param			rebill_months		query		string					false	"Filter by rebill months"
+//	@Param			autorenew			query		string					false	"Filter by autorenew status"
+//	@Param			cratejoy_status		query		string					false	"Filter by Cratejoy subscription status"
+//	@Param			start_date			query		string					false	"Filter by subscription start date"
+//	@Param			end_date			query		string					false	"Filter by subscription end date"
+//	@Param			mailchimp_status	query		string					false	"Filter by Mailchimp subscription status"
+//	@Param			page				query		int						false	"Page number (default: 1)"
+//	@Param			limit				query		int						false	"Number of records per page (default: 10)"
+//	@Success		200					{object}	map[string]interface{}	"Customers listed successfully with pagination info"
+//	@Failure		500					{object}	map[string]string		"Internal Server Error"
+//	@Router			/api/customers [get]
+
 func ListCustomersAPI(w http.ResponseWriter, r *http.Request) {
 
 	// Test database connection

@@ -18,27 +18,31 @@ import (
 )
 
 // ListSortRequestsAPI godoc
-// @Summary List sort requests
-// @Description List sort requests with optional search filters
-// @Tags sortrequests
-// @Accept  json
-// @Produce  json
-// @Param sku query string false "SKU"
-// @Param description query string false "Description"
-// @Param manufacturer_part query string false "Manufacturer Part"
-// @Param instructions query string false "Instructions"
-// @Param weightout query string false "Weight Out"
-// @Param weightin query string false "Weight In"
-// @Param pieces query string false "Pieces"
-// @Param hours query string false "Hours"
-// @Param checkout query string false "Checkout"
-// @Param checkin query string false "Checkin"
-// @Param sorter query string false "Sorter"
-// @Param status query string false "Status"
-// @Param priority query string false "Priority"
-// @Success 200 {object} map[string]interface{} "Sort requests listed successfully"
-// @Failure 500 {object} map[string]string "Internal Server Error"
-// @Router /api/sortrequests [get]
+//	@Summary		List sort requests
+//	@Description	Retrieves a list of sort requests with optional filtering parameters
+//	@Tags			sortrequests
+//	@Accept			json
+//	@Produce		json
+//	@Param			requestid			query		string					false	"Filter by Request ID"
+//	@Param			sku					query		string					false	"Filter by SKU"
+//	@Param			description			query		string					false	"Filter by Description"
+//	@Param			manufacturer_part	query		string					false	"Filter by Manufacturer Part"
+//	@Param			instructions		query		string					false	"Filter by Instructions"
+//	@Param			weightout			query		string					false	"Filter by Weight Out"
+//	@Param			weightin			query		string					false	"Filter by Weight In"
+//	@Param			pieces				query		string					false	"Filter by Pieces"
+//	@Param			hours				query		string					false	"Filter by Hours"
+//	@Param			checkout			query		string					false	"Filter by Checkout"
+//	@Param			checkin				query		string					false	"Filter by Checkin"
+//	@Param			sorter				query		string					false	"Filter by Sorter"
+//	@Param			status				query		string					false	"Filter by Status"
+//	@Param			priority			query		string					false	"Filter by Priority"
+//	@Param			page				query		int						false	"Page number (default: 1)"
+//	@Param			limit				query		int						false	"Number of records per page (default: 100)"
+//	@Success		200					{object}	map[string]interface{}	"List of sort requests with pagination"
+//	@Failure		500					{object}	map[string]string		"Internal Server Error"
+//	@Router			/api/sortrequests [get]
+
 func ListSortRequestsAPI(w http.ResponseWriter, r *http.Request) {
 
 	// Pagination parameters
@@ -175,16 +179,17 @@ func ListSortRequestsAPI(w http.ResponseWriter, r *http.Request) {
 }
 
 // UpdateSortRequestAPI godoc
-// @Summary Update a sort request
-// @Description Update an existing sort request based on the provided request data
-// @Tags sortrequests
-// @Accept  json
-// @Produce  json
-// @Param request body models.SortRequest true "Sort Request Data"
-// @Success 200 {object} map[string]string "Sort request updated successfully"
-// @Failure 400 {object} map[string]string "Invalid request data"
-// @Failure 500 {object} map[string]string "Internal Server Error"
-// @Router /api/sorterrorupdate [post]
+//	@Summary		Update a sort request
+//	@Description	Updates an existing sort request with the provided data
+//	@Tags			sortrequests
+//	@Accept			json
+//	@Produce		json
+//	@Param			request	body		models.SortRequest	true	"Sort request data to update"
+//	@Success		200		{object}	map[string]string	"Sort request updated successfully"
+//	@Failure		400		{object}	map[string]string	"Bad Request: Invalid input or missing request ID"
+//	@Failure		500		{object}	map[string]string	"Internal Server Error"
+//	@Router			/api/sorterrorupdate [post]
+
 func UpdateSortRequestAPI(w http.ResponseWriter, r *http.Request) {
 	var sortRequest models.SortRequest
 

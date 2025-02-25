@@ -1,14 +1,14 @@
-// @title Purchasing System API
-// @description Generic Description
-// @version 1.0
-// @host 127.0.0.1:8082
-// @BasePath /api/
-// @schemes http https
+//	@title			Purchasing System API
+//	@version		1.0
+//	@description	API documentation for the Purchasing System
+//	@host			127.0.0.1:8082
+//	@BasePath		/api/
+//	@schemes		http https
 
 // Security Definitions
-// @securityDefinitions.apikey ApiKeyAuth
-// @in header
-// @name X-API-Key
+//	@securityDefinitions.apikey	ApiKeyAuth
+//	@in							header
+//	@name						X-API-Key
 
 package main
 
@@ -20,9 +20,13 @@ import (
 	"os"
 	"purchasing/api"
 	"purchasing/config"
+	_ "purchasing/docs" // Import Swagger documentation
 	"purchasing/models"
 	"purchasing/sql"
 	"strings"
+
+	// Swagger files
+	httpSwagger "github.com/swaggo/http-swagger" // HTTP handler for Swagger UI
 
 	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
@@ -42,6 +46,11 @@ func main() {
 	var message models.Message
 	config.DB, message = config.Opendb()
 	log.Info(message.Body)
+
+	// Serve Swagger UI
+	http.Handle("/swagger/", http.StripPrefix("/swagger/", httpSwagger.Handler(
+		httpSwagger.URL("http://127.0.0.1:8082/docs/swagger.json"), // Swagger endpoint
+	)))
 	fs := http.FileServer(http.Dir("./docs"))
 	http.Handle("/docs/", http.StripPrefix("/docs/", fs))
 	http.HandleFunc("/", PageHandler)

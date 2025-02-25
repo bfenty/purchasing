@@ -10,19 +10,20 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// ExportDataAPI exports data as CSV based on the dataset and filters provided.
-// @Summary Export data to CSV
-// @Description Export data from the database as a CSV file.
-// @Tags export
-// @Accept json
-// @Produce text/csv
-// @Param dataset query string true "Dataset to export (e.g., 'products', 'sort_requests')"
-// @Param filters query string false "Filters for the dataset (e.g., 'sku=ABC123')"
-// @Param columns query string false "Comma-separated list of columns to include"
-// @Success 200 {file} text/csv "CSV file with the exported data"
-// @Failure 400 {object} map[string]string "Invalid request parameters"
-// @Failure 500 {object} map[string]string "Internal server error"
-// @Router /api/export [get]
+// ExportDataAPI godoc
+//	@Summary		Export data to CSV
+//	@Description	Export data from the database as a CSV file with optional filters and column selection.
+//	@Tags			export
+//	@Accept			json
+//	@Produce		text/csv
+//	@Param			dataset	query		string				true	"Dataset to export (e.g., 'products', 'sort_requests')"
+//	@Param			filters	query		string				false	"Filters for the dataset (e.g., 'sku=ABC123&manufacturer_code=XYZ')"
+//	@Param			columns	query		string				false	"Comma-separated list of columns to include in the CSV"
+//	@Success		200		{file}		text/csv			"CSV file containing the exported data"
+//	@Failure		400		{object}	map[string]string	"Invalid request parameters or unsupported dataset"
+//	@Failure		500		{object}	map[string]string	"Internal server error while executing the query"
+//	@Router			/api/export [get]
+
 func ExportDataAPI(w http.ResponseWriter, r *http.Request) {
 	dataset := r.URL.Query().Get("dataset")
 	if dataset == "" {

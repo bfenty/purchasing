@@ -18,18 +18,24 @@ import (
 )
 
 // ListUsersAPI godoc
-// @Summary List users
-// @Description Get a list of users with optional role filtering
-// @Tags users
-// @Accept  json
-// @Produce  json
-// @Param role query string false "Filter users by role (sorting/manager)"
-// @Success 200 {object} map[string][]User "List of users"
-// @Failure 400 {object} map[string]string "Invalid request parameters"
-// @Failure 500 {object} map[string]string "Internal Server Error"
-// @Router /users [get]
-// ListUsersAPI is an HTTP handler function that returns a list of users in JSON format
-// ListUsersAPI with pagination and search
+//	@Summary		List users
+//	@Description	Retrieves a list of users with optional filtering parameters
+//	@Tags			users
+//	@Accept			json
+//	@Produce		json
+//	@Param			username	query		string					false	"Filter users by username"
+//	@Param			usercode	query		string					false	"Filter users by usercode"
+//	@Param			role		query		string					false	"Filter users by role (e.g., 'sorting', 'manager')"
+//	@Param			sorting		query		string					false	"Filter by sorting permissions"
+//	@Param			manager		query		string					false	"Filter by manager permissions"
+//	@Param			management	query		string					false	"Filter by management permissions"
+//	@Param			active		query		string					false	"Filter by active status (1 for active, 0 for inactive)"
+//	@Param			page		query		int						false	"Page number (default: 1)"
+//	@Param			limit		query		int						false	"Number of records per page (default: 100, max: 100)"
+//	@Success		200			{object}	map[string]interface{}	"List of users with pagination"
+//	@Failure		500			{object}	map[string]string		"Internal Server Error"
+//	@Router			/api/users [get]
+
 func ListUsersAPI(w http.ResponseWriter, r *http.Request) {
 	log := logrus.WithFields(logrus.Fields{
 		"api":    "ListUsersAPI",
@@ -117,6 +123,20 @@ func ListUsersAPI(w http.ResponseWriter, r *http.Request) {
 		"totalPages":  (len(users) + limit - 1) / limit,
 	}).Info("Successfully retrieved user list")
 }
+
+// Usercreate godoc
+//	@Summary		Create a new user
+//	@Description	Registers a new user in the system
+//	@Tags			users
+//	@Accept			application/x-www-form-urlencoded
+//	@Produce		text/plain
+//	@Param			username	formData	string				true	"Username of the new user"
+//	@Param			password	formData	string				true	"Password for the new user"
+//	@Param			password2	formData	string				true	"Confirmation of the password"
+//	@Param			secret		formData	string				true	"Secret key for authentication"
+//	@Success		303			{string}	string				"Redirect to /products if successful, otherwise to /signup with an error message"
+//	@Failure		400			{object}	map[string]string	"Bad Request: Invalid input or passwords do not match"
+//	@Router			/api/usercreate [post]
 
 func Usercreate(w http.ResponseWriter, r *http.Request) {
 	var creds models.Credentials
@@ -402,6 +422,18 @@ func Updatepass(user string, pass string, secret string) (message models.Message
 	return message, true
 }
 
+// UserUpdateAPI godoc
+//	@Summary		Update user details
+//	@Description	Updates user information such as role, sorting permissions, and management status
+//	@Tags			users
+//	@Accept			json
+//	@Produce		json
+//	@Param			user	body		models.User			true	"User details to update"
+//	@Success		200		{object}	map[string]string	"User information updated successfully"
+//	@Failure		400		{object}	map[string]string	"Bad Request: Invalid request data"
+//	@Failure		500		{object}	map[string]string	"Internal Server Error"
+//	@Router			/api/userupdate [post]
+
 func UpdateUser(w http.ResponseWriter, r *http.Request) {
 
 	//Test Connection
@@ -468,50 +500,23 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// // Prepare the SQL statement for inserting the data
-	// //Logging
-	// log.Info("Creating Query")
-	// newquery := "REPLACE INTO orders.users (username, usercode, permissions, sorting,manager,management) VALUES (?, ?, ?, ?, ?, ?)"
-
-	// // Execute the SQL statement with the form values
-	// log.Info("Executing Query")
-	// rows, err := config.DB.Query(newquery, username, usercode, role, sorting, manager, management)
-	// defer rows.Close()
-
-	// if err != nil {
-	// 	// Handle error
-	// 	println(err)
-	// 	http.Error(w, "Failed to update user information.", http.StatusInternalServerError)
-	// 	return
-	// }
-
-	// Redirect the user to the users page
-	// http.Redirect(w, r, "/users", http.StatusSeeOther)
-
-	// Update user information in database
-	// _, err = config.DB.Exec("UPDATE orders.users SET username=?, permissions=?, manager=?, sorting=? WHERE usercode=?", username, role, manager, sorting, usercode)
-	// if err != nil {
-	// 	http.Error(w, "Failed to update user information.", http.StatusInternalServerError)
-	// 	return
-	// }
-
 	// Return success message to client
 	w.Write([]byte("User information updated successfully."))
 }
 
 // UserDeleteAPI godoc
-// @Summary Delete a user
-// @Description Deletes a user with the given usercode
-// @Tags users
-// @Accept  json
-// @Produce  json
-// @Param usercode body string true "Usercode of the user to delete"
-// @Success 200 {object} map[string]string{"message": "User successfully deleted"}
-// @Failure 400 {object} map[string]string{"error": "Bad Request: Usercode is required"}
-// @Failure 404 {object} map[string]string{"error": "User not found"}
-// @Failure 500 {object} map[string]string{"error": "Internal Server Error"}
-// @Router /api/userdelete [post]
-// UserDeleteAPI handles the deletion of a user
+//	@Summary		Delete a user
+//	@Description	Deactivates a user by setting their active status to 0
+//	@Tags			users
+//	@Accept			json
+//	@Produce		json
+//	@Param			usercode	body		string				true	"Usercode of the user to deactivate"
+//	@Success		200			{object}	map[string]string	"User successfully deactivated"
+//	@Failure		400			{object}	map[string]string	"Bad Request: Usercode is required"
+//	@Failure		404			{object}	map[string]string	"User not found"
+//	@Failure		500			{object}	map[string]string	"Internal Server Error"
+//	@Router			/api/userdelete [post]
+
 func UserUpdateAPI(w http.ResponseWriter, r *http.Request) {
 	var user models.User
 	err := json.NewDecoder(r.Body).Decode(&user)

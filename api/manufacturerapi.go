@@ -4,23 +4,24 @@ import (
 	"encoding/json"
 	"net/http"
 	"purchasing/config"
+	_ "purchasing/docs"
 	"purchasing/models"
 
 	log "github.com/sirupsen/logrus"
 )
 
 // ListManufacturers godoc
-// @Summary List manufacturers
-// @Description Retrieves a list of manufacturers from the database
-// @Tags manufacturers
-// @Accept  json
-// @Produce  json
-// @Security ApiKeyAuth
-// @param Authorization header string true "Authorization"
-// @Success 200 {array} Manufacturer "List of manufacturers"
-// @Failure 500 {string} string "Internal Server Error"
-// @Router /api/manufacturers [get]
-// Manufacturer List API
+//	@Summary		List manufacturers
+//	@Description	Retrieves a list of manufacturers from the database
+//	@Tags			manufacturers
+//	@Accept			json
+//	@Produce		json
+//	@Security		ApiKeyAuth
+//	@Param			Authorization	header		string				true	"Authorization"
+//	@Success		200				{array}		models.Manufacturer	"List of manufacturers"
+//	@Failure		500				{object}	map[string]string	"Internal Server Error"
+//	@Router			/api/manufacturers [get]
+
 func ListManufacturers(w http.ResponseWriter, r *http.Request) {
 	rows, err := config.DB.Query("SELECT name FROM purchasing.manufacturers WHERE 1")
 	if err != nil {

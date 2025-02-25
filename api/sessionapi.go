@@ -11,6 +11,21 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+// Signin godoc
+//	@Summary		User login
+//	@Description	Authenticates a user and returns a session token as a cookie
+//	@Tags			auth
+//	@Accept			application/x-www-form-urlencoded
+//	@Produce		text/plain
+//	@Param			username	formData	string				true	"Username"
+//	@Param			password	formData	string				true	"Password"
+//	@Success		200			{string}	string				"Redirect URL based on user role"
+//	@Success		201			{string}	string				"Redirect to /signup for new users"
+//	@Failure		400			{object}	map[string]string	"Bad Request: Error parsing form"
+//	@Failure		401			{object}	map[string]string	"Unauthorized: Invalid credentials"
+//	@Failure		500			{object}	map[string]string	"Internal Server Error"
+//	@Router			/api/signin [post]
+
 func Signin(w http.ResponseWriter, r *http.Request) {
 	log.Debug("Entering Signin function")
 
@@ -112,6 +127,16 @@ func Signin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
+
+// Logout godoc
+//	@Summary		User logout
+//	@Description	Logs out the user by deleting the session token
+//	@Tags			auth
+//	@Accept			json
+//	@Produce		text/plain
+//	@Success		303	{string}	string				"Redirect to /login"
+//	@Failure		500	{object}	map[string]string	"Internal Server Error"
+//	@Router			/api/logout [get]
 
 func Logout(w http.ResponseWriter, r *http.Request) {
 	// Get the session token from the user's cookies

@@ -15,28 +15,29 @@ import (
 )
 
 // ProductList godoc
-// @Summary List products
-// @Description Retrieves a list of products, with optional filtering parameters
-// @Tags products
-// @Accept  json
-// @Produce  json
-// @Security X-API-Key
-// @Param sku_internal query string false "Filter by internal SKU"
-// @Param manufacturer_code query string false "Filter by manufacturer code"
-// @Param sku_manufacturer query string false "Filter by manufacturer SKU"
-// @Param processing_request query string false "Filter by processing request"
-// @Param sorting_request query string false "Filter by sorting request"
-// @Param unit query string false "Filter by unit"
-// @Param unit_price query string false "Filter by unit price"
-// @Param Currency query string false "Filter by currency"
-// @Param order_qty query string false "Filter by order quantity"
-// @Param reorder query string false "Filter by reorder status"
-// @Param season query string false "Filter by season"
-// @Param limit query int false "Limit number of results"
-// @Success 200 {array} Product "List of products"
-// @Failure 500 {string} string "Internal Server Error"
-// @Router /api/products [get]
-// ProductListAPI is an HTTP handler function that returns product list in JSON format
+//	@Summary		List products
+//	@Description	Retrieves a list of products, with optional filtering parameters
+//	@Tags			products
+//	@Accept			json
+//	@Produce		json
+//	@Security		X-API-Key
+//	@Param			sku_internal		query		string					false	"Filter by internal SKU"
+//	@Param			manufacturer_code	query		string					false	"Filter by manufacturer code"
+//	@Param			sku_manufacturer	query		string					false	"Filter by manufacturer SKU"
+//	@Param			processing_request	query		string					false	"Filter by processing request"
+//	@Param			sorting_request		query		string					false	"Filter by sorting request"
+//	@Param			unit				query		string					false	"Filter by unit"
+//	@Param			unit_price			query		string					false	"Filter by unit price"
+//	@Param			currency			query		string					false	"Filter by currency"
+//	@Param			order_qty			query		string					false	"Filter by order quantity"
+//	@Param			reorder				query		string					false	"Filter by reorder status"
+//	@Param			season				query		string					false	"Filter by season"
+//	@Param			page				query		int						false	"Page number (default: 1)"
+//	@Param			limit				query		int						false	"Limit number of results (default: 100)"
+//	@Success		200					{object}	map[string]interface{}	"List of products with pagination info"
+//	@Failure		500					{object}	map[string]string		"Internal Server Error"
+//	@Router			/api/products [get]
+
 func ProductList(w http.ResponseWriter, r *http.Request) {
 	log.Debug("Entering ProductListAPI")
 
@@ -150,14 +151,18 @@ func ProductList(w http.ResponseWriter, r *http.Request) {
 }
 
 // InsertProduct godoc
-// @Summary Insert new product
-// @Description Adds a new product to the database
-// @Tags products
-// @Accept  json
-// @Produce  json
-// @Security X-API-Key
-// @Param product body Product true "Product to add"
-// @Router /api/productinsert [post]
+//	@Summary		Insert new product
+//	@Description	Adds a new product to the database
+//	@Tags			products
+//	@Accept			json
+//	@Produce		json
+//	@Security		X-API-Key
+//	@Param			product	body		models.Product		true	"Product details to insert"
+//	@Success		200		{object}	map[string]string	"Product successfully inserted"
+//	@Failure		400		{object}	map[string]string	"Bad Request: Missing required fields"
+//	@Failure		500		{object}	map[string]string	"Internal Server Error"
+//	@Router			/api/productinsert [post]
+
 func InsertProduct(w http.ResponseWriter, r *http.Request) {
 	var p models.Product
 	// Log the start of the function
@@ -210,14 +215,19 @@ func InsertProduct(w http.ResponseWriter, r *http.Request) {
 }
 
 // DeleteProduct godoc
-// @Summary Delete a product
-// @Description Deletes a product from the database based on its SKU
-// @Tags products
-// @Accept  json
-// @Produce  json
-// @Security X-API-Key
-// @Param sku body string true "SKU of the product to delete"
-// @Router /api/productdelete [post]
+//	@Summary		Delete a product
+//	@Description	Deletes a product from the database based on its SKU
+//	@Tags			products
+//	@Accept			json
+//	@Produce		json
+//	@Security		X-API-Key
+//	@Param			sku	body		string				true	"SKU of the product to delete"
+//	@Success		200	{object}	map[string]string	"Product successfully deleted"
+//	@Failure		400	{object}	map[string]string	"Bad Request: SKU is required"
+//	@Failure		404	{object}	map[string]string	"Product not found"
+//	@Failure		500	{object}	map[string]string	"Internal Server Error"
+//	@Router			/api/productdelete [post]
+
 func DeleteProduct(w http.ResponseWriter, r *http.Request) {
 	log.Info("Received request to delete product")
 
@@ -268,28 +278,20 @@ func DeleteProduct(w http.ResponseWriter, r *http.Request) {
 }
 
 // UpdateProduct godoc
-// @Summary Update an existing product
-// @Description Updates fields of a product in the database with the given SKU; only provided fields are updated
-// @Tags products
-// @Accept  json
-// @Produce  json
-// @Security X-API-Key
-// @Param sku path string true "SKU of the product"
-// @Param manufacturer_part body string false "Manufacturer Part of the product"
-// @Param description body string false "Description of the product"
-// @Param manufacturer body string false "Manufacturer of the product"
-// @Param process_request body string false "Processing request of the product"
-// @Param unit body string false "Unit of the product"
-// @Param unit_price body number false "Unit Price of the product"
-// @Param order_qty body integer false "Order Quantity of the product"
-// @Param season body string false "Season of the product"
-// @Param inventory_qty body integer false "Inventory Quantity of the product"
-// @Param currency body string false "Currency of the product"
-// @Success 200 {object} ApiResponse "Product successfully updated"
-// @Failure 400 {object} ApiResponse "Bad Request: SKU is required"
-// @Failure 404 {object} ApiResponse "Product not found"
-// @Failure 500 {object} ApiResponse "Internal Server Error"
-// @Router /api/productupdate [post]
+//	@Summary		Update an existing product
+//	@Description	Updates fields of a product in the database with the given SKU; only provided fields are updated
+//	@Tags			products
+//	@Accept			json
+//	@Produce		json
+//	@Security		X-API-Key
+//	@Param			sku		body		string				true	"SKU of the product"
+//	@Param			product	body		models.Product		true	"Fields to update in the product"
+//	@Success		200		{object}	map[string]string	"Product successfully updated"
+//	@Failure		400		{object}	map[string]string	"Bad Request: SKU is required"
+//	@Failure		404		{object}	map[string]string	"Product not found"
+//	@Failure		500		{object}	map[string]string	"Internal Server Error"
+//	@Router			/api/productupdate [post]
+
 func UpdateProduct(w http.ResponseWriter, r *http.Request) {
 	var p models.Product
 	err := json.NewDecoder(r.Body).Decode(&p)
