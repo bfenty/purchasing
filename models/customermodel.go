@@ -11,7 +11,7 @@ type Customer struct {
 	RebillMonths    sql.NullInt32  `json:"rebill_months"`
 	AutoRenew       bool           `json:"autorenew"`
 	CratejoyStatus  sql.NullString `json:"cratejoy_status"`
-	StartDate       sql.NullString `json:"start_date"` // Assuming dates are in string format, change to time.Time if using date objects
+	StartDate       sql.NullString `json:"start_date"`
 	EndDate         sql.NullString `json:"end_date"`
 	MailchimpStatus sql.NullString `json:"mailchimp_status"`
 }
