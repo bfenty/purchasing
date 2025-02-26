@@ -167,52 +167,70 @@ func fetchProducts(query string, args []interface{}, limit, offset int) ([]model
 
 func InsertProduct(w http.ResponseWriter, r *http.Request) {
 	var p models.Product
-	// Log the start of the function
 	log.Debug("Starting InsertProduct")
 
-	// Attempt to decode the incoming request body into the Product struct
+	// Decode JSON request body
 	err := json.NewDecoder(r.Body).Decode(&p)
 	if err != nil {
-		log.WithFields(log.Fields{"error": err}).Error("Error decoding product data")
-		errMsg := fmt.Sprintf("Internal Server Error: %v", err)
-		handler.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": errMsg})
+		log.WithError(err).Error("Error decoding product data")
+		handler.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Internal Server Error"})
 		return
 	}
 
-	// Log the product being inserted for traceability
-	log.WithFields(log.Fields{
-		"SKU":              p.SKU,
-		"Manufacturer":     p.Manufacturer,
-		"ManufacturerPart": p.ManufacturerPart,
-		"Description":      p.Description,
-		"Currency":         p.Currency,
-	}).Debug("Attempting to insert product")
-
-	// Validate that SKU is provided
+	// Validate SKU
 	if p.SKU == "" {
 		log.Error("SKU is required for product insertion")
 		handler.RespondWithJSON(w, http.StatusBadRequest, map[string]string{"error": "Bad Request: SKU is required"})
 		return
 	}
 
-	// SQL INSERT statement
-	query := `REPLACE INTO purchasing.skus (sku_internal, sku_manufacturer, product_option, manufacturer_code, processing_request, unit, unit_price, order_qty, reorder, season, inventory_qty, Currency) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
-	_, err = config.DB.Exec(query, p.SKU, p.ManufacturerPart, p.Description, p.Manufacturer, p.ProcessRequest, p.Unit, p.UnitPrice, p.OrderQty, p.Reorder, p.Season, p.InventoryQty, p.Currency)
+	// Define table and selected fields
+	table := "purchasing.skus"
+	selectedFields := []Field{
+		{"sku_internal", "SKU"},
+		{"sku_manufacturer", "ManufacturerPart"},
+		{"product_option", "Description"},
+		{"manufacturer_code", "Manufacturer"},
+		{"processing_request", "ProcessRequest"},
+		{"unit", "Unit"},
+		{"unit_price", "UnitPrice"},
+		{"order_qty", "OrderQty"},
+		{"reorder", "Reorder"},
+		{"season", "Season"},
+		{"inventory_qty", "InventoryQty"},
+		{"Currency", "Currency"},
+	}
+
+	// Create filterConditions from product struct
+	filterConditions := map[string]string{
+		"sku_internal":       p.SKU,
+		"sku_manufacturer":   derefString(p.ManufacturerPart),
+		"product_option":     derefString(p.Description),
+		"manufacturer_code":  derefString(p.Manufacturer),
+		"processing_request": derefString(p.ProcessRequest),
+		"unit":               derefString(p.Unit),
+		"unit_price":         strconv.FormatFloat(derefFloat(p.UnitPrice), 'f', 2, 64),
+		"order_qty":          strconv.Itoa(derefInt(p.OrderQty)),
+		"reorder":            strconv.Itoa(boolToInt(derefBool(p.Reorder))),
+		"season":             derefString(p.Season),
+		"inventory_qty":      strconv.Itoa(derefInt(p.InventoryQty)),
+		"Currency":           derefString(p.Currency),
+	}
+
+	// Build query using modified buildQuery function
+	queryArgs, queryBuilder, _ := buildQuery(table, selectedFields, filterConditions, "REPLACE")
+
+	log.Debug("Executing query: ", queryBuilder.String(), " with args: ", queryArgs)
+
+	// Execute query
+	_, err = config.DB.Exec(queryBuilder.String(), queryArgs...)
 	if err != nil {
-		log.WithFields(log.Fields{"error": err, "SKU": p.SKU}).Error("Error executing insert query")
-		errMsg := fmt.Sprintf("Internal Server Error: %v", err)
-		handler.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": errMsg})
+		log.WithError(err).Error("Error executing insert query")
+		handler.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Internal Server Error"})
 		return
 	}
 
-	// Log the successful insertion
 	log.WithFields(log.Fields{"SKU": p.SKU}).Info("Product successfully inserted")
-
-	// Optionally log the call to update quantity and image URLs
-	log.Debug("Updating quantity and image URLs for SKU: ", p.SKU)
-	qty(p.SKU)
-
-	// Respond with success message
 	handler.RespondWithJSON(w, http.StatusOK, map[string]string{"message": "Product successfully inserted"})
 }
 

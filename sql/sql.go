@@ -22,6 +22,11 @@ type ApiResponse struct {
 	Message string `json:"message"`
 }
 
+type Field struct {
+	Column string
+	Alias  string
+}
+
 func ProductExistSQL(sku string) (exists string, message models.Message) {
 	log.Info("SKU: ", sku)
 	//Test Connection

@@ -1,21 +1,14 @@
 package api
 
 import (
-	"fmt"
 	"net/http"
 	"purchasing/config"
 	"purchasing/handler"
 	"purchasing/models"
 	"strconv"
-	"strings"
 
 	"github.com/sirupsen/logrus"
 )
-
-type Field struct {
-	Column string
-	Alias  string
-}
 
 // ListCustomersAPI retrieves a list of customers with optional filters and pagination.
 func ListCustomersAPI(w http.ResponseWriter, r *http.Request) {
@@ -96,39 +89,6 @@ func getPaginationParams(r *http.Request) (int, int) {
 		limit = 10
 	}
 	return page, limit
-}
-
-func buildQuery(table string, selectedFields []Field, filterConditions map[string]string) ([]interface{}, strings.Builder, string) {
-	var queryArgs []interface{}
-	var queryBuilder strings.Builder
-	queryBuilder.WriteString("SELECT ")
-
-	// Build SELECT fields using the structured slice
-	fields := []string{}
-	for _, field := range selectedFields {
-		fields = append(fields, fmt.Sprintf("%s AS %s", field.Column, field.Alias))
-	}
-
-	queryBuilder.WriteString(strings.Join(fields, ", "))
-	queryBuilder.WriteString(" FROM ")
-	queryBuilder.WriteString(table)
-	queryBuilder.WriteString(" WHERE 1")
-
-	// Apply filter conditions correctly
-	for column, value := range filterConditions {
-		if value != "" {
-			queryArgs = append(queryArgs, value)
-			queryBuilder.WriteString(fmt.Sprintf(" AND %s = ?", column))
-		}
-	}
-
-	// Build COUNT query for pagination
-	countQuery := strings.Replace(queryBuilder.String(), "SELECT "+strings.Join(fields, ", "), "SELECT COUNT(*)", 1)
-
-	// Log final query for debugging
-	logrus.WithFields(logrus.Fields{"query": queryBuilder.String(), "args": queryArgs}).Debug("Final built SQL query")
-
-	return queryArgs, queryBuilder, countQuery
 }
 
 func fetchCustomers(query string, args []interface{}, limit, offset int) ([]models.Customer, error) {
