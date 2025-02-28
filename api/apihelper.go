@@ -65,6 +65,42 @@ func buildQuery(table string, selectedFields []Field, filterConditions map[strin
 	}
 
 	switch qType {
+
+	case "DELETE":
+		// DELETE query - assumes filterConditions will contain the WHERE clause conditions
+		queryBuilder.WriteString(fmt.Sprintf("DELETE FROM %s WHERE 1", table))
+		for column, value := range filterConditions {
+			if value != "" {
+				queryArgs = append(queryArgs, value)
+				queryBuilder.WriteString(fmt.Sprintf(" AND %s = ?", column))
+			}
+		}
+		return queryArgs, queryBuilder, ""
+
+	case "UPDATE":
+		// UPDATE query - assumes filterConditions contains both SET values and WHERE conditions
+		queryBuilder.WriteString(fmt.Sprintf("UPDATE %s SET ", table))
+		setClauses := []string{}
+		whereClauses := []string{}
+		for _, field := range selectedFields {
+			if value, exists := filterConditions[field.Column]; exists {
+				setClauses = append(setClauses, fmt.Sprintf("%s = ?", field.Column))
+				queryArgs = append(queryArgs, value)
+			}
+		}
+		queryBuilder.WriteString(strings.Join(setClauses, ", "))
+		queryBuilder.WriteString(" WHERE 1")
+		for column, value := range filterConditions {
+			if value != "" {
+				whereClauses = append(whereClauses, fmt.Sprintf("%s = ?", column))
+				queryArgs = append(queryArgs, value)
+			}
+		}
+		if len(whereClauses) > 0 {
+			queryBuilder.WriteString(" AND ")
+			queryBuilder.WriteString(strings.Join(whereClauses, " AND "))
+		}
+		return queryArgs, queryBuilder, ""
 	case "SELECT":
 		queryBuilder.WriteString("SELECT ")
 		fields := []string{}
