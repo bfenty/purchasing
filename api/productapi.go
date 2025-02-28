@@ -251,15 +251,15 @@ func InsertProduct(w http.ResponseWriter, r *http.Request) {
 func DeleteProduct(w http.ResponseWriter, r *http.Request) {
 	log.Info("Received request to delete product")
 
+	// Parse request body into a simple map
 	var requestBody map[string]string
-	err := json.NewDecoder(r.Body).Decode(&requestBody)
-	if err != nil {
-		log.WithFields(log.Fields{"error": err}).Error("Error decoding request body")
-		errMsg := fmt.Sprintf("Internal Server Error: %v", err)
-		handler.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": errMsg})
+	if err := json.NewDecoder(r.Body).Decode(&requestBody); err != nil {
+		log.WithError(err).Error("Error decoding request body")
+		handler.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Failed to parse request"})
 		return
 	}
 
+	// Extract and validate the SKU, which is required for product deletion
 	sku, ok := requestBody["sku"]
 	if !ok || sku == "" {
 		log.Error("SKU is missing in delete request")
@@ -269,30 +269,43 @@ func DeleteProduct(w http.ResponseWriter, r *http.Request) {
 
 	log.WithFields(log.Fields{"SKU": sku}).Info("Parsed delete request")
 
-	// SQL DELETE statement
-	query := `DELETE FROM purchasing.skus WHERE sku_internal = ?`
-	result, err := config.DB.Exec(query, sku)
+	// Set up filter condition to match the product by SKU
+	filterConditions := map[string]string{
+		"sku_internal": sku,
+	}
+
+	// Use buildQuery to dynamically create the DELETE query
+	queryArgs, queryBuilder, _ := buildQuery("purchasing.skus", nil, filterConditions, "DELETE")
+
+	log.WithFields(log.Fields{
+		"query": queryBuilder.String(),
+		"args":  queryArgs,
+	}).Debug("Executing delete query")
+
+	// Execute the DELETE query
+	result, err := config.DB.Exec(queryBuilder.String(), queryArgs...)
 	if err != nil {
 		log.WithFields(log.Fields{"SKU": sku, "error": err}).Error("Error executing delete query")
-		errMsg := fmt.Sprintf("Internal Server Error: %v", err)
-		handler.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": errMsg})
+		handler.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Failed to delete product"})
 		return
 	}
 
+	// Check how many rows were affected (should be 1 if successful)
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
 		log.WithFields(log.Fields{"SKU": sku, "error": err}).Error("Error getting rows affected")
-		errMsg := fmt.Sprintf("Internal Server Error: %v", err)
-		handler.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": errMsg})
+		handler.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Failed to get deletion result"})
 		return
 	}
 
+	// If no rows were affected, the product did not exist
 	if rowsAffected == 0 {
 		log.WithFields(log.Fields{"SKU": sku}).Warn("Product not found for deletion")
 		handler.RespondWithJSON(w, http.StatusNotFound, map[string]string{"error": "Product not found"})
 		return
 	}
 
+	// Successfully deleted the product
 	log.WithFields(log.Fields{"SKU": sku, "rowsAffected": rowsAffected}).Info("Product deleted successfully")
 	handler.RespondWithJSON(w, http.StatusOK, map[string]string{"message": "Product successfully deleted"})
 }
