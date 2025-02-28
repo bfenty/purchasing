@@ -2,6 +2,7 @@ package api
 
 import (
 	"fmt"
+	"purchasing/config"
 	"strings"
 
 	log "github.com/sirupsen/logrus"
@@ -12,6 +13,49 @@ type Field struct {
 	Alias  string
 }
 
+// boolToInt converts a boolean value to an integer (true -> 1, false -> 0)
+func boolToInt(b bool) int {
+	if b {
+		return 1
+	}
+	return 0
+}
+
+// derefString safely dereferences a string pointer, returning an empty string if nil
+func derefString(s *string) string {
+	if s != nil {
+		return *s
+	}
+	return ""
+}
+
+// derefInt safely dereferences an int pointer, returning 0 if nil
+func derefInt(i *int) int {
+	if i != nil {
+		return *i
+	}
+	return 0
+}
+
+// derefFloat safely dereferences a float64 pointer, returning 0.0 if nil
+func derefFloat(f *float64) float64 {
+	if f != nil {
+		return *f
+	}
+	return 0.0
+}
+
+// derefBool safely dereferences a bool pointer, returning false if nil
+func derefBool(b *bool) bool {
+	if b != nil {
+		return *b
+	}
+	return false
+}
+
+// buildQuery dynamically constructs either a SELECT or REPLACE SQL query based on parameters.
+// If no queryType is provided, it defaults to SELECT.
+// For SELECT queries, it also builds a separate COUNT query for pagination.
 func buildQuery(table string, selectedFields []Field, filterConditions map[string]string, queryType ...string) ([]interface{}, strings.Builder, string) {
 	var queryArgs []interface{}
 	var queryBuilder strings.Builder
@@ -34,10 +78,19 @@ func buildQuery(table string, selectedFields []Field, filterConditions map[strin
 
 		for column, value := range filterConditions {
 			if value != "" {
-				queryArgs = append(queryArgs, value)
-				queryBuilder.WriteString(fmt.Sprintf(" AND %s = ?", column))
+				if isStringColumn(table, column) {
+					// For string columns, use LIKE with wildcards
+					queryArgs = append(queryArgs, "%"+value+"%")
+					queryBuilder.WriteString(fmt.Sprintf(" AND %s LIKE ?", column))
+				} else {
+					// For non-string columns, use exact match
+					queryArgs = append(queryArgs, value)
+					queryBuilder.WriteString(fmt.Sprintf(" AND %s = ?", column))
+				}
 			}
 		}
+
+		queryBuilder.WriteString(" ORDER BY modified DESC")
 
 		countQuery := strings.Replace(queryBuilder.String(), "SELECT "+strings.Join(fields, ", "), "SELECT COUNT(*)", 1)
 		return queryArgs, queryBuilder, countQuery
@@ -65,43 +118,72 @@ func buildQuery(table string, selectedFields []Field, filterConditions map[strin
 		return queryArgs, queryBuilder, ""
 
 	default:
-		log.Error("Unsupported query type: ", qType)
+		log.WithFields(log.Fields{"queryType": qType}).Error("Unsupported query type")
+		return nil, strings.Builder{}, ""
 	}
-
-	return nil, queryBuilder, ""
 }
 
-func boolToInt(b bool) int {
-	if b {
-		return 1
+// columnTypeCache stores table column metadata in memory to avoid repeated schema lookups
+var columnTypeCache = make(map[string]map[string]string)
+
+// getColumnTypes queries INFORMATION_SCHEMA to retrieve the column types for a given table
+// Results are cached to improve performance.
+func getColumnTypes(table string) (map[string]string, error) {
+	// Skip schema lookup if the table string contains a JOIN
+	if strings.Contains(strings.ToUpper(table), "JOIN") {
+		log.WithFields(log.Fields{"table": table}).Warn("Skipping column type lookup for joined tables")
+		return make(map[string]string), nil
 	}
-	return 0
+	if cached, ok := columnTypeCache[table]; ok {
+		log.WithFields(log.Fields{"table": table}).Debug("Using cached column types")
+		return cached, nil
+	}
+
+	log.WithFields(log.Fields{"table": table}).Debug("Fetching column types from database")
+
+	query := `
+		SELECT COLUMN_NAME, DATA_TYPE
+		FROM INFORMATION_SCHEMA.COLUMNS
+		WHERE TABLE_NAME = ? AND TABLE_SCHEMA = DATABASE()
+	`
+
+	rows, err := config.DB.Query(query, table)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	columnTypes := make(map[string]string)
+	for rows.Next() {
+		var column, dataType string
+		if err := rows.Scan(&column, &dataType); err != nil {
+			return nil, err
+		}
+		columnTypes[column] = dataType
+	}
+
+	columnTypeCache[table] = columnTypes
+	return columnTypes, nil
 }
 
-func derefString(s *string) string {
-	if s != nil {
-		return *s
+// isStringColumn determines if a given column in a table is a string type
+// This uses cached column metadata fetched from INFORMATION_SCHEMA
+func isStringColumn(table, column string) bool {
+	columnTypes, err := getColumnTypes(table)
+	if err != nil {
+		log.WithFields(log.Fields{"table": table, "error": err}).Error("Failed to fetch column types")
+		return false
 	}
-	return ""
-}
 
-func derefInt(i *int) int {
-	if i != nil {
-		return *i
+	dataType, exists := columnTypes[column]
+	if !exists {
+		log.WithFields(log.Fields{"table": table, "column": column}).Warn("Column not found in metadata")
+		return false
 	}
-	return 0
-}
 
-func derefFloat(f *float64) float64 {
-	if f != nil {
-		return *f
+	stringTypes := map[string]bool{
+		"char": true, "varchar": true, "text": true, "tinytext": true, "mediumtext": true, "longtext": true,
 	}
-	return 0.0
-}
 
-func derefBool(b *bool) bool {
-	if b != nil {
-		return *b
-	}
-	return false
+	return stringTypes[strings.ToLower(dataType)]
 }
