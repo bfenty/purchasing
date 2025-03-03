@@ -9,7 +9,6 @@ import (
 	"purchasing/handler"
 	"purchasing/models"
 	"strconv"
-	"strings"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -326,87 +325,94 @@ func DeleteProduct(w http.ResponseWriter, r *http.Request) {
 //	@Router			/api/productupdate [post]
 
 func UpdateProduct(w http.ResponseWriter, r *http.Request) {
+	log.Info("Received request to update product")
+
+	// Decode request body into Product struct
 	var p models.Product
-	err := json.NewDecoder(r.Body).Decode(&p)
-	if err != nil {
-		log.WithFields(log.Fields{"error": err}).Error("Error decoding product data")
-		handler.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": fmt.Sprintf("Internal Server Error: %v", err)})
+	if err := json.NewDecoder(r.Body).Decode(&p); err != nil {
+		log.WithError(err).Error("Error decoding product data")
+		handler.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Failed to parse request"})
 		return
 	}
 
+	// Validate that SKU is provided, as it's required for identifying the product
 	if p.SKU == "" {
 		log.Error("SKU is required for product update")
 		handler.RespondWithJSON(w, http.StatusBadRequest, map[string]string{"error": "Bad Request: SKU is required"})
 		return
 	}
 
-	var queryArgs []interface{}
-	var queryBuilder strings.Builder
-	queryBuilder.WriteString("UPDATE purchasing.skus SET ")
-
-	// Dynamically build query based on provided fields
-	if p.ManufacturerPart != nil {
-		queryBuilder.WriteString("sku_manufacturer=?, ")
-		queryArgs = append(queryArgs, *p.ManufacturerPart)
-	}
-	if p.Description != nil {
-		queryBuilder.WriteString("product_option=?, ")
-		queryArgs = append(queryArgs, *p.Description)
-	}
-	if p.Manufacturer != nil {
-		queryBuilder.WriteString("manufacturer_code=?, ")
-		queryArgs = append(queryArgs, *p.Manufacturer)
-	}
-	if p.ProcessRequest != nil {
-		queryBuilder.WriteString("processing_request=?, ")
-		queryArgs = append(queryArgs, *p.ProcessRequest)
-	}
-	if p.SortingRequest != nil {
-		queryBuilder.WriteString("sorting_request=?, ")
-		queryArgs = append(queryArgs, *p.SortingRequest)
-	}
-	if p.Unit != nil {
-		queryBuilder.WriteString("unit=?, ")
-		queryArgs = append(queryArgs, *p.Unit)
-	}
-	if p.UnitPrice != nil {
-		queryBuilder.WriteString("unit_price=?, ")
-		queryArgs = append(queryArgs, *p.UnitPrice)
-	}
-	if p.OrderQty != nil {
-		queryBuilder.WriteString("order_qty=?, ")
-		queryArgs = append(queryArgs, *p.OrderQty)
-	}
-	if p.Reorder != nil {
-		queryBuilder.WriteString("reorder=?, ")
-		queryArgs = append(queryArgs, *p.Reorder)
-	}
-	if p.Season != nil {
-		queryBuilder.WriteString("season=?, ")
-		queryArgs = append(queryArgs, *p.Season)
-	}
-	if p.InventoryQty != nil {
-		queryBuilder.WriteString("inventory_qty=?, ")
-		queryArgs = append(queryArgs, *p.InventoryQty)
-	}
-	if p.Currency != nil {
-		queryBuilder.WriteString("Currency=?, ")
-		queryArgs = append(queryArgs, *p.Currency)
+	// Create a map to hold the provided update values
+	updateValues := map[string]interface{}{
+		"sku_manufacturer":   p.ManufacturerPart,
+		"product_option":     p.Description,
+		"manufacturer_code":  p.Manufacturer,
+		"processing_request": p.ProcessRequest,
+		"sorting_request":    p.SortingRequest,
+		"unit":               p.Unit,
+		"unit_price":         p.UnitPrice,
+		"order_qty":          p.OrderQty,
+		"reorder":            p.Reorder,
+		"season":             p.Season,
+		"inventory_qty":      p.InventoryQty,
+		"Currency":           p.Currency,
 	}
 
-	// Remove trailing comma and space
-	query := strings.TrimSuffix(queryBuilder.String(), ", ")
-	query += " WHERE sku_internal=?"
-	queryArgs = append(queryArgs, p.SKU)
+	// Remove nil values from the updateValues map
+	cleanedValues := make(map[string]string)
+	for key, value := range updateValues {
+		if value == nil {
+			continue
+		}
 
-	_, err = config.DB.Exec(query, queryArgs...)
-	if err != nil {
-		log.WithFields(log.Fields{"SKU": p.SKU, "error": err}).Error("Error executing update query")
-		handler.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": fmt.Sprintf("Internal Server Error: %v", err)})
+		switch v := value.(type) {
+		case *string:
+			if v != nil {
+				cleanedValues[key] = *v
+			}
+		case *float64:
+			if v != nil {
+				cleanedValues[key] = fmt.Sprintf("%f", *v)
+			}
+		case *int:
+			if v != nil {
+				cleanedValues[key] = fmt.Sprintf("%d", *v)
+			}
+		case *bool:
+			if v != nil {
+				cleanedValues[key] = fmt.Sprintf("%t", *v)
+			}
+		default:
+			log.WithFields(log.Fields{"field": key, "value": value}).Warn("Unexpected data type encountered")
+		}
+	}
+
+	// Ensure there is at least one field to update
+	if len(cleanedValues) == 0 {
+		log.Warn("No fields provided for update")
+		handler.RespondWithJSON(w, http.StatusBadRequest, map[string]string{"error": "No fields provided for update"})
 		return
 	}
 
-	//return JSON response
+	// Build the UPDATE query dynamically
+	queryArgs, queryBuilder, _ := buildQuery("purchasing.skus", nil, cleanedValues, "UPDATE")
+	queryArgs = append(queryArgs, p.SKU) // Add SKU as the WHERE clause condition
+
+	log.WithFields(log.Fields{
+		"query": queryBuilder.String(),
+		"args":  queryArgs,
+	}).Debug("Executing update query")
+
+	// Execute the UPDATE query
+	_, err := config.DB.Exec(queryBuilder.String(), queryArgs...)
+	if err != nil {
+		log.WithFields(log.Fields{"SKU": p.SKU, "error": err}).Error("Error executing update query")
+		handler.RespondWithJSON(w, http.StatusInternalServerError, map[string]string{"error": "Failed to update product"})
+		return
+	}
+
+	// Successfully updated the product
+	log.WithFields(log.Fields{"SKU": p.SKU}).Info("Product successfully updated")
 	handler.RespondWithJSON(w, http.StatusOK, map[string]string{"message": "Product successfully updated"})
 }
 

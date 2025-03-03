@@ -101,6 +101,7 @@ func buildQuery(table string, selectedFields []Field, filterConditions map[strin
 			queryBuilder.WriteString(strings.Join(whereClauses, " AND "))
 		}
 		return queryArgs, queryBuilder, ""
+
 	case "SELECT":
 		queryBuilder.WriteString("SELECT ")
 		fields := []string{}
