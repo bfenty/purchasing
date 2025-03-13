@@ -1,0 +1,24 @@
+# Ignore environment variables
+.env
+
+# Ignore system files
+.DS_Store
+Thumbs.db
+
+# Ignore dependency folders
+node_modules/
+vendor/
+
+# Ignore compiled files
+*.pyc
+*.class
+*.o
+*.out
+
+# Ignore log files
+*.log
+
+# Ignore IDE/editor-specific files
+.vscode/
+.idea/
+*.swp
