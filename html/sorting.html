@@ -202,185 +202,166 @@
     }
 
     function GenerateTopRow(users) {
-        console.log("Generating Search Row")
+      console.log("Generating Search Row");
 
-        // Manufacturer dropdown options
-        var userOptions = '<option value="" selected>Select Sorter</option>';
-        users.forEach(function(user) {
-            userOptions += `<option value="${user}">${user}</option>`;
-        });
-        
-        // Generate the Search Row
-        var rowHtml = `
-            <tr>`
-                {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "dataentry") (eq $layout "mgmt")}}rowHtml += `<td><input type="text" class="form-control" name="search-requestid" placeholder="Request ID"></td>`;{{end}}
-                {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "dataentry") (eq $layout "mgmt")}}rowHtml += `<td class="col-sku"><input type="text" class="form-control" name="search-sku" placeholder="SKU"></td>`;{{end}}
-                {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "dataentry")}}rowHtml += `<td><input type="text" class="form-control" name="search-description" placeholder="Description"></td>`;{{end}}
-                {{if or (eq $layout "full") (eq $layout "dataentry")}}rowHtml += `<td><input type="text" class="form-control" name="search-manufacturerpart" placeholder="Manufacturer Part"></td>`;{{end}}
-                {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "dataentry") (eq $layout "mgmt")}}rowHtml += `<td><input type="text" class="form-control" name="search-instructions" pattern="[0-9]+(\.[0-9]+)?" title="Please enter a valid decimal number" placeholder="Pieces"></td>`;{{end}}
-                {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "dataentry")}}rowHtml += `<td><input type="text" class="form-control" name="search-weightout" placeholder="Weight Out"></td>`;{{end}}
-                {{if or (eq $layout "full") (eq $layout "receiving")}}rowHtml += `<td><input type="text" class="form-control" name="search-weightin" placeholder="Weight In"></td>`;{{end}}
-                {{if or (eq $layout "full") (eq $layout "receiving")}}
-                rowHtml += `<td>
-                    <select class="form-select" name="search-difference">
-                        <option value="">Difference</option>
-                        <option value="positive">Positive</option>
-                        <option value="negative">Negative</option>
-                    </select>
-                    </td>`;
-                {{end}}
-                {{if or (eq $layout "full") (eq $layout "receiving")}}rowHtml += `<td></td>`;{{end}}
-                {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "mgmt")}}rowHtml += `<td><input type="text" class="form-control" name="search-pieces" pattern="[0-9]+(\.[0-9]+)?" title="Please enter a valid decimal number" placeholder="Units"></td>`;{{end}}
-                {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "mgmt")}}rowHtml += `<td><input type="text" class="form-control" name="search-hours" placeholder="Hours"></td>`;{{end}}
-                {{if or (eq $layout "full") (eq $layout "mgmt")}}rowHtml += `<td><input type="text" class="form-control" name="search-checkout" placeholder="Check Out"></td>`;{{end}}
-                {{if or (eq $layout "full") (eq $layout "mgmt")}}rowHtml += `<td><input type="text" class="form-control" name="search-checkin" placeholder="Check In"></td>`;{{end}}
-                {{if or (eq $layout "full") (eq $layout "mgmt")}}
-                    rowHtml += `<td>
-                        <select class="form-select" name="search-sorter">
-                            ${userOptions}
-                        </select>
-                    </td>`;
-                {{end}}
-                {{if or (eq $layout "full")}}
-                    rowHtml += `<td>
-                        <select class="form-select" name="search-status">
-                            <option value="">Status</option>
-                            <option value="New">New</option>
-                            <option value="Checkout">Checkout</option>
-                            <option value="Checkin">Checkin</option>
-                        </select>
-                    </td>`;
-                {{end}}
-                {{if or (eq $layout "full") (eq $layout "dataentry")}}
-                rowHtml += `<td>
-                  <select class="form-select" name="search-priority">
-                    <option value="">Priority</option>
-                    <option value="0">Normal</option>
-                    <option value="1">High</option>
-                  </select>
-                </td>`;
-                {{end}}
-                {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "dataentry") (eq $layout "mgmt")}}rowHtml += `<td class="btn-col"><input type=hidden name=layout id=layout><input type='submit' value='Search' class="btn btn-primary"></td>`;{{end}}
-                {{if or (eq $layout "full") ($mgmt)}}rowHtml += `<td class="btn-col"></td>`{{end}}
-                {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "mgmt")}}rowHtml += `<td class="btn-col"></td>`{{end}}
-                rowHtml += `</tr>`;
+      // Load Golang template values into JavaScript variables
+      var layout = "{{.Layout}}"; // Assuming this is how the layout is passed from Go
+      var admin = `{{.Permission.Permissions.Admin}}`;
+      var mgmt = `{{.Permission.Permissions.Mgmt}}`;
+      var userOptions = '<option value="" selected>Select Sorter</option>';
+      
+      users.forEach(function(user) {
+          userOptions += `<option value="${user}">${user}</option>`;
+      });
 
-                // Generate the Insert row
-                rowHtml += `<tr>
-                <td></td>`
-                {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "dataentry") (eq $layout "mgmt")}}rowHtml += `<td class="col-sku"><input type="text" class="form-control sku" id="sku" name="sku" placeholder="SKU"></td>`{{end}}
-                {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "dataentry")}}rowHtml += `<td><input type="text" class="form-control description" id="description" name="description" placeholder="Description"></td>`{{end}}
-                {{if or (eq $layout "full") (eq $layout "dataentry")}}rowHtml += `<td><input type="text" class="form-control manufacturerpart" id="manufacturerpart" name="manufacturerpart" placeholder="Manufacturer Part"></td>`{{end}}
-                {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "dataentry") (eq $layout "mgmt")}}rowHtml += `<td><div class="input-group"><input type="text" class="form-control instructions" id="instructions" name="instructions" pattern="[0-9]+(\.[0-9]+)?" title="Please enter a valid decimal number" placeholder="Pieces"></div></td>`{{end}}
-                {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "dataentry")}}rowHtml += `<td><div class="input-group"><input type="text" class="form-control weightout" id="weightout" name="weightout" placeholder="Weight Out"></div></td>`{{end}}
-                {{if or (eq $layout "full") (eq $layout "receiving")}}rowHtml += `<td><div class="input-group"><input type="text" class="form-control weightin" id="weightin" name="weightin" placeholder="Weight In"></div></td>`{{end}}
-                {{if or (eq $layout "full") (eq $layout "receiving")}}rowHtml += `<td><div class="input-group"><input type="text" class="form-control difference" id="difference" name="difference" readonly placeholder="Difference"></div></td>`{{end}}
-                {{if or (eq $layout "full") (eq $layout "receiving")}}rowHtml += `<td></td>`{{end}}
-                {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "mgmt")}}rowHtml += `<td><div class="input-group"><input type="text" class="form-control pieces" id="pieces" name="pieces" pattern="[0-9]+(\.[0-9]+)?" title="Please enter a valid decimal number" placeholder="Pieces"></div></td>`{{end}}
-                {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "mgmt")}}rowHtml += `<td><input type="text" class="form-control hours" id="hours" name="hours" placeholder="Hours"></td>`{{end}}
-                {{if or (eq $layout "full") (eq $layout "mgmt")}}rowHtml += `<td><input type="date" class="form-control checkout" id="checkout" name="checkout" placeholder="Checkout Date"></td>`{{end}}
-                {{if or (eq $layout "full") (eq $layout "mgmt")}}rowHtml += `<td><input type="date" class="form-control checkin" id="checkin" name="checkin" placeholder="Checkin Date"></td>`{{end}}
-                {{if or (eq $layout "full") (eq $layout "mgmt")}}
-                rowHtml += `<td>
-                  <select class="form-select" id="sorter" name="sorter">
-                            ${userOptions}
-                  </select>
-                </td>`
-                {{end}}
-                {{if or (eq $layout "full")}}
-                rowHtml += `<td>
-                  <select class="form-select" id="status" name="status">
-                    <option selected disabled value="">Status</option>
-                    <option value="New">New</option>
-                    <option value="Checkout">Checkout</option>
-                    <option value="Checkin">Checkin</option>
-                  </select>
-                </td>`
-                {{end}}
-                {{if or (eq $layout "full") (eq $layout "dataentry")}}
-                rowHtml += `<td>
-                  <select class="form-select" id="prty" name="prty">
-                    <option selected disabled value="">Priority</option>
-                    <option value="0">Normal</option>
-                    <option value="1">High</option>
-                  </select>
-                </td>`
-                {{end}}
-                {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "dataentry") (eq $layout "mgmt")}}rowHtml += `<td class="btn-col"><input type='hidden' id='requestid' name='requestid' value=''><input type='hidden' id='active' name='active' value='1'><input type='submit' value='Insert' class="btn btn-primary update-request"></td>`{{end}}
-                {{if or (eq $layout "full") ($mgmt)}}rowHtml += `<td class="btn-col"></td>`{{end}}
-                {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "mgmt")}}rowHtml += `<td class="btn-col"></td>`{{end}}
-                rowHtml += `</tr>`
-        return rowHtml;
+      // Layout conditions based on the Golang template value
+      const showFull = layout === "full";
+      const showReceiving = ["full", "receiving"].includes(layout);
+      const showDataEntry = ["full", "dataentry"].includes(layout);
+      const showMgmt = ["full", "mgmt"].includes(layout);
+
+      // Generate the Search Row
+      var rowHtml = `<tr>`;
+
+      if (showFull || showReceiving || showDataEntry || showMgmt) 
+          rowHtml += `<td><input type="text" class="form-control" name="search-requestid" placeholder="Request ID"></td>`;
+      if (showFull || showReceiving || showDataEntry || showMgmt) 
+          rowHtml += `<td class="col-sku"><input type="text" class="form-control" name="search-sku" placeholder="SKU"></td>`;
+      if (showFull || showReceiving || showDataEntry) 
+          rowHtml += `<td><input type="text" class="form-control" name="search-description" placeholder="Description"></td>`;
+      if (showFull || showDataEntry) 
+          rowHtml += `<td><input type="text" class="form-control" name="search-manufacturerpart" placeholder="Manufacturer Part"></td>`;
+      if (showFull || showReceiving || showDataEntry || showMgmt) 
+          rowHtml += `<td><input type="text" class="form-control" name="search-instructions" pattern="[0-9]+(\\.[0-9]+)?" title="Please enter a valid decimal number" placeholder="Pieces"></td>`;
+      if (showFull || showReceiving || showDataEntry) 
+          rowHtml += `<td><input type="text" class="form-control" name="search-weightout" placeholder="Weight Out"></td>`;
+      if (showFull || showReceiving) 
+          rowHtml += `<td><input type="text" class="form-control" name="search-weightin" placeholder="Weight In"></td>`;
+      if (showFull || showReceiving) {
+          rowHtml += `<td>
+              <select class="form-select" name="search-difference">
+                  <option value="">Difference</option>
+                  <option value="positive">Positive</option>
+                  <option value="negative">Negative</option>
+              </select>
+          </td>`;
+      }
+      if (showFull || showReceiving) rowHtml += `<td></td>`;
+      if (showFull || showReceiving || showMgmt) 
+          rowHtml += `<td><input type="text" class="form-control" name="search-pieces" pattern="[0-9]+(\\.[0-9]+)?" title="Please enter a valid decimal number" placeholder="Units"></td>`;
+      if (showFull || showReceiving || showMgmt) 
+          rowHtml += `<td><input type="text" class="form-control" name="search-hours" placeholder="Hours"></td>`;
+      if (showFull || showMgmt) 
+          rowHtml += `<td><input type="text" class="form-control" name="search-checkout" placeholder="Check Out"></td>`;
+      if (showFull || showMgmt) 
+          rowHtml += `<td><input type="text" class="form-control" name="search-checkin" placeholder="Check In"></td>`;
+      if (showFull || showMgmt) {
+          rowHtml += `<td>
+              <select class="form-select" name="search-sorter">${userOptions}</select>
+          </td>`;
+      }
+      if (showFull) {
+          rowHtml += `<td>
+              <select class="form-select" name="search-status">
+                  <option value="">Status</option>
+                  <option value="New">New</option>
+                  <option value="Checkout">Checkout</option>
+                  <option value="Checkin">Checkin</option>
+              </select>
+          </td>`;
+      }
+      if (showFull || showDataEntry) {
+          rowHtml += `<td>
+              <select class="form-select" name="search-priority">
+                  <option value="">Priority</option>
+                  <option value="0">Normal</option>
+                  <option value="1">High</option>
+              </select>
+          </td>`;
+      }
+      if (showFull || showReceiving || showDataEntry || showMgmt) 
+          rowHtml += `<td class="btn-col"><input type='submit' value='Search' class="btn btn-primary"></td>`;
+
+      // Buttons    
+      if (showFull || mgmt) rowHtml += `<td class="btn-col"></td>`;
+      if (showFull || showReceiving || showMgmt) rowHtml += `<td class="btn-col"></td>`;
+    
+
+      rowHtml += `</tr>`;
+
+      return rowHtml;
+  }
+
+  function generateTableRow(sortRequest, users) {
+    // Load Go template variables
+    var layout = "{{.Layout}}";
+    var admin = `{{.Permission.Permissions.Admin}}`;
+    var mgmt = `{{.Permission.Permissions.Mgmt}}`;
+
+    // Strip percentage from percent
+    let differencePercent = parseFloat(sortRequest.DifferencePercent.replace('%', ''));
+
+    // Check if the absolute value is greater than 10
+    let rowClass = '';
+    if (Math.abs(differencePercent) > 20) {
+        rowClass = 'table-danger';
+    } else if (Math.abs(differencePercent) > 10) {
+        rowClass = 'table-warning';
     }
+    
+    // Manufacturer dropdown options
+    var userOptions = '<option value="" selected>Select Sorter</option>';
+    users.forEach(function(user) {
+        userOptions += `<option value="${user}" ${sortRequest.Sorter === user ? 'selected' : ''}>${user}</option>`;
+    });
 
-    function generateTableRow(sortRequest, users) {
-        //Strip percentage from percent
-        let differencePercent = parseFloat(sortRequest.DifferencePercent.replace('%', ''));
-
-        // Check if the absolute value is greater than 10
-        let rowClass = '';
-        if (Math.abs(differencePercent) > 20) {
-            rowClass = 'table-danger';
-        } else if (Math.abs(differencePercent) > 10) {
-            rowClass = 'table-warning';
+    // Layout conditions
+    const showFull = layout === "full";
+    const showReceiving = ["full", "receiving"].includes(layout);
+    const showDataEntry = ["full", "dataentry"].includes(layout);
+    const showMgmt = ["full", "mgmt"].includes(layout);
+    const showCheckout = ["full", "checkout"].includes(layout);
+    const showCheckin = ["full", "checkin"].includes(layout);
+    
+    // Constructing the row HTML
+    var rowHtml = `<tr class="${rowClass}">`;
+    rowHtml += `<td><input type="text" class="form-control requestid" id="requestid" name="requestid" value="${sortRequest.ID}" readonly></td>`;
+    if (showFull || showReceiving || showDataEntry || showMgmt || showCheckout || showCheckin) rowHtml += `<td class="col-sku"><input type="text" class="form-control sku" id="sku" name="sku" value="${sortRequest.SKU}" ${!mgmt ? 'readonly' : ''}></td>`;
+    if (showFull || showReceiving || showDataEntry || showCheckout || showCheckin) rowHtml += `<td><input type="text" class="form-control description" id="description" name="description" value="${sortRequest.Description}" ${!mgmt ? 'readonly' : ''}></td>`;
+    if (showFull || showDataEntry) rowHtml += `<td><input type="text" class="form-control manufacturerpart" id="manufacturerpart" name="manufacturerpart" value="${sortRequest.ManufacturerPart}"></td>`;
+    if (showFull || showReceiving || showDataEntry || showMgmt || showCheckout || showCheckin) rowHtml += `<td><input type="text" class="form-control instructions" id="instructions" name="instructions" pattern="[0-9]+(\.[0-9]+)?" title="Please enter a valid decimal number" value="${sortRequest.Instructions}" ${!mgmt ? 'readonly' : ''}></td>`;
+    if (showFull || showReceiving || showDataEntry) rowHtml += `<td><input type="text" class="form-control weightout" id="weightout" name="weightout" value="${sortRequest.Weightout}"></td>`;
+    if (showFull || showReceiving) rowHtml += `<td><input type="text" class="form-control weightin" id="weightin" name="weightin" value="${sortRequest.Weightin}"></td>`;
+    if (showFull || showReceiving) rowHtml += `<td><input type="text" class="form-control difference" id="difference" name="difference" value="${sortRequest.Difference}" readonly></td>`;
+    if (showFull || showReceiving) rowHtml += `<td><input type="text" class="form-control differencepercent" id="differencepercent" name="differencepercent" value="${sortRequest.DifferencePercent}" readonly></td>`;
+    if (showFull || showReceiving || showMgmt || showCheckin) rowHtml += `<td><input type="text" class="form-control pieces" id="pieces" name="pieces" value="${sortRequest.Pieces}"></td>`;
+    if (showFull || showReceiving || showMgmt || showCheckin) rowHtml += `<td><input type="text" class="form-control hours" id="hours" name="hours" value="${sortRequest.Hours}"></td>`;
+    if (showFull || showMgmt || showCheckout || showCheckin) rowHtml += `<td><input type="date" class="form-control checkout" id="checkout" name="checkout" value="${sortRequest.Checkout || new Date().toISOString().split('T')[0]}" ${!mgmt ? 'readonly' : ''}></td>`;
+    if (showFull || showMgmt || showCheckin) rowHtml += `<td><input type="date" class="form-control checkin" id="checkin" name="checkin" value="${sortRequest.Checkin || new Date().toISOString().split('T')[0]}" ${!mgmt ? 'readonly' : ''}></td>`;
+    if (showFull || showMgmt || showCheckout || showCheckin) rowHtml += `<td><select class="form-select" id="sorter" name="sorter">${userOptions}</select></td>`;
+    if (showFull) {
+        rowHtml += `<td>`;
+        if (admin) {
+            rowHtml += `<select class="form-select" id="status" name="status">
+                <option value="New" ${sortRequest.Status === "New" ? 'selected' : ''}>New</option>
+                <option value="Checkout" ${sortRequest.Status === "Checkout" ? 'selected' : ''}>Checkout</option>
+                <option value="Checkin" ${sortRequest.Status === "Checkin" ? 'selected' : ''}>Checkin</option>
+            </select>`;
+        } else {
+            rowHtml += `<input class="form-control" type="text" id="status" name="status" value="${sortRequest.Status}" readonly>`;
         }
-        
-        // Manufacturer dropdown options
-        var userOptions = '<option value="" selected>Select Sorter</option>';
-        users.forEach(function(user) {
-            userOptions += `<option value="${user}" ${sortRequest.Sorter === user ? 'selected' : ''}>${user}</option>`;
-        });
-        // Constructing the row HTML
-        var rowHtml = `<tr class="${rowClass}">`
-            rowHtml += `<td><input type="text" class="form-control requestid" id="requestid" name="requestid" value="${sortRequest.ID}" readonly></td>`
-                  {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "dataentry") (eq $layout "mgmt") (eq $layout "checkout") (eq $layout "checkin")}}rowHtml += `<td class="col-sku"><input type="text" class="form-control sku" id="sku" name="sku" value="${sortRequest.SKU}" {{if ne $mgmt true}}readonly{{end}}></td>`{{end}}
-                  {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "dataentry") (eq $layout "checkout") (eq $layout "checkin")}}rowHtml += `<td><input type="text" class="form-control description" id="description" name="description" value="${sortRequest.Description}" {{if ne $mgmt true}}readonly{{end}}></td>`{{end}}
-                  {{if or (eq $layout "full") (eq $layout "dataentry")}}rowHtml += `<td><input type="text" class="form-control manufacturerpart" id="manufacturerpart" name="manufacturerpart" value="${sortRequest.ManufacturerPart}"></td>`{{end}}
-                  {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "dataentry") (eq $layout "mgmt") (eq $layout "checkout") (eq $layout "checkin")}}rowHtml += `<td><div class="input-group"><input type="text" class="form-control instructions" id="instructions" name="instructions" pattern="[0-9]+(\.[0-9]+)?" title="Please enter a valid decimal number" value="${sortRequest.Instructions}" {{if ne $mgmt true}}readonly{{end}}></div></td>`{{end}}
-                  {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "dataentry")}}rowHtml += `<td><div class="input-group"><input type="text" class="form-control weightout" id="weightout" name="weightout" value="${sortRequest.Weightout}"></div></td>`{{end}}
-                  {{if or (eq $layout "full") (eq $layout "receiving")}}rowHtml += `<td><div class="input-group"><input type="text" class="form-control weightin" id="weightin" name="weightin" value="${sortRequest.Weightin}"></div></td>`{{end}}
-                  {{if or (eq $layout "full") (eq $layout "receiving")}}rowHtml += `<td><div class="input-group"><input type="text" class="form-control difference" id="difference" name="difference" value="${sortRequest.Difference}" readonly></div></td>`{{end}}
-                  {{if or (eq $layout "full") (eq $layout "receiving")}}rowHtml += `<td><div class="input-group"><input type="text" class="form-control differencepercent" id="differencepercent" name="differencepercent" value="${sortRequest.DifferencePercent}" readonly percent></div></td>`{{end}}
-                  {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "mgmt") (eq $layout "checkin")}}rowHtml += `<td><div class="input-group"><input type="text" class="form-control pieces" id="pieces" name="pieces" pattern="[0-9]+(\.[0-9]+)?" title="Please enter a valid decimal number" value="${sortRequest.Pieces}"></div></td>`{{end}}
-                  {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "mgmt") (eq $layout "checkin")}}rowHtml += `<td><input type="text" class="form-control hours" id="hours" name="hours" value="${sortRequest.Hours}"></td>`{{end}}
-                  {{if or (eq $layout "full") (eq $layout "mgmt") (eq $layout "checkout") (eq $layout "checkin")}}rowHtml += `<td><input type="date" class="form-control checkout" id="checkout" name="checkout" {{if (eq $layout "checkout")}}value="${sortRequest.Checkout || new Date().toISOString().split('T')[0]}"{{else}}${sortRequest.Checkout}{{end}}{{if ne $mgmt true}}readonly{{end}}></td>`{{end}}
-                  {{if or (eq $layout "full") (eq $layout "mgmt") (eq $layout "checkin")}}rowHtml += `<td><input type="date" class="form-control checkin" id="checkin" name="checkin" {{if (eq $layout "checkin")}}value="${sortRequest.Checkin || new Date().toISOString().split('T')[0]}"{{else}}${sortRequest.Checkin}{{end}}{{if ne $mgmt true}}readonly{{end}}></td>`{{end}}
-                  {{if or (eq $layout "full") (eq $layout "mgmt") (eq $layout "checkout") (eq $layout "checkin")}}
-                  rowHtml += `<td>
-                    <select class="form-select" id="sorter" name="sorter">
-                            ${userOptions}
-                    </select>
-                  </td>`
-                  {{end}}
-                  {{if or (eq $layout "full")}}
-                  rowHtml += `<td>`
-                    {{if $admin}}
-                    rowHtml += `<select class="form-select" id="status" name="status">
-                      <option value="New" ${sortRequest.Status === "New" ? 'selected' : ''}>New</option>
-                      <option value="Checkout" ${sortRequest.Status === "Checkout" ? 'selected' : ''}>Checkout</option>
-                      <option value="Checkin" ${sortRequest.Status === "Checkin" ? 'selected' : ''}>Checkin</option>
-                    </select>`
-                    {{else}}
-                      `<input class="form-control" type="text" id="status" name="status" value="${sortRequest.Status}" readonly>`
-                      {{end}}
-                  rowHtml += `</td>`
-                  {{end}}
-                  {{if or (eq $layout "full") (eq $layout "dataentry") (eq $layout "checkout")}}
-                  rowHtml += `<td>
-                    <select class="form-select" id="prty" name="prty" {{if ne $mgmt true}}disabled{{end}}>
-                      <option value="0">Normal</option>
-                      <option value="1">High</option>
-                    </select>
-                  </td>`
-                  {{end}}
-                  {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "dataentry") (eq $layout "mgmt")}}rowHtml += `<td class="btn-col"><input type='hidden' id='active' name='active' value='1'><input type='submit' value='Update' class="btn btn-primary update-request"></td>`{{end}}
-                  {{if or (eq $layout "checkout")}}rowHtml += `<td class="btn-col"><input type='hidden' id='active' name='active' value='1'><input type='submit' value='Check out' class="btn btn-primary update-request"></td>`{{end}}
-                  {{if or (eq $layout "checkin")}}rowHtml += `<td class="btn-col"><input type='hidden' id='active' name='active' value='1'><input type='submit' value='Check in' class="btn btn-primary update-request"></td>`{{end}}
-                {{if or (eq $layout "full") ($mgmt)}}rowHtml += `<td class="btn-col"><button type="button" class="btn btn-danger archive-request" data-bs-toggle="modal" data-bs-target="#archiveRequestModal" data-requestid="${sortRequest.ID}">Archive</button></td>`{{end}}
-                {{if or (eq $layout "full") (eq $layout "receiving") (eq $layout "mgmt")}}rowHtml += `<td class="btn-col"><a href="/sorterror?requestid=${sortRequest.ID}" class="btn btn-warning error" id="error" name="error" data-requestid="">Error</a></td>`{{end}}
-                rowHtml += `</tr>`;
-        return rowHtml;
+        rowHtml += `</td>`;
     }
+    if (showFull || showDataEntry) rowHtml += `<td><select class="form-select" id="prty" name="prty"><option value="0">Normal</option><option value="1">High</option></select></td>`;
+
+    // Buttons
+    if (showFull || showReceiving || showDataEntry || showMgmt) rowHtml += `<td class="btn-col"><input type='hidden' id='active' name='active' value='1'><input type='submit' value='Update' class="btn btn-primary update-request"></td>`;
+    if (showFull || mgmt) rowHtml += `<td class="btn-col"><button type="button" class="btn btn-danger archive-request" id="archiveRequest" name="archiveRequest" data-requestid="${sortRequest.ID}">Archive</button></td>`;
+    if (showFull || showReceiving || showMgmt) rowHtml += `<td class="btn-col"><a href="/sorterror?requestid=${sortRequest.ID}" class="btn btn-warning error" id="error" name="error" data-requestid="">Error</a></td>`;
+    
+    rowHtml += `</tr>`;
+    return rowHtml;
+}
 </script>
 {{end}}
 

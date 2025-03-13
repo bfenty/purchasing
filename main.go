@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"html/template"
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"purchasing/api"
@@ -13,6 +14,7 @@ import (
 	"purchasing/sql"
 	"strings"
 
+	"github.com/joho/godotenv"
 	"github.com/sirupsen/logrus"
 	httpSwagger "github.com/swaggo/http-swagger"
 )
@@ -23,6 +25,11 @@ var Logger = logrus.New()
 func main() {
 	setupLogging()
 	logrus.Info("Starting Server")
+	// Load .env file
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatalf("Error loading .env file: %v", err)
+	}
 
 	var message models.Message
 	config.DB, message = config.Opendb()
