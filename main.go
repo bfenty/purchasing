@@ -35,7 +35,13 @@ func main() {
 	config.DB, message = config.Opendb()
 	logrus.Info(message.Body)
 
+	// ✅ Create a new ServeMux to register routes
+	mux := http.NewServeMux()
+
 	setupRoutes()
+
+	// ✅ Static file handler (doesn't need userMiddleware)
+	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("./static"))))
 
 	logrus.Fatal(http.ListenAndServe(":8082", nil))
 }

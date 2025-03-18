@@ -206,8 +206,8 @@
 
       // Load Golang template values into JavaScript variables
       var layout = "{{.Layout}}"; // Assuming this is how the layout is passed from Go
-      var admin = `{{.Permission.Permissions.Admin}}`;
-      var mgmt = `{{.Permission.Permissions.Mgmt}}`;
+      var admin = "{{.Permission.Permissions.Admin}}";
+      var mgmt = "{{.Permission.Permissions.Mgmt}}";
       var userOptions = '<option value="" selected>Select Sorter</option>';
       
       users.forEach(function(user) {
@@ -295,8 +295,8 @@
   function generateTableRow(sortRequest, users) {
     // Load Go template variables
     var layout = "{{.Layout}}";
-    var admin = `{{.Permission.Permissions.Admin}}`;
-    var mgmt = `{{.Permission.Permissions.Mgmt}}`;
+    var admin = "{{.Permission.Permissions.Admin}}";
+    var mgmt = "{{.Permission.Permissions.Mgmt}}";
 
     // Strip percentage from percent
     let differencePercent = parseFloat(sortRequest.DifferencePercent.replace('%', ''));
