@@ -60,7 +60,7 @@ func ListSortRequestsAPI(w http.ResponseWriter, r *http.Request) {
 
 	//Gather Search Parameters
 	queryParams := map[string]string{
-		"requestid":        r.URL.Query().Get("requestid"),
+		"requestid":        r.URL.Query().Get("search-requestid"),
 		"sku":              r.URL.Query().Get("search-sku"),
 		"description":      r.URL.Query().Get("search-description"),
 		"sku_manufacturer": r.URL.Query().Get("search-manufacturerpart"),

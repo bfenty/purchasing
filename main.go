@@ -5,8 +5,10 @@ import (
 	"html/template"
 	"io"
 	"log"
+	"mime"
 	"net/http"
 	"os"
+	"path/filepath"
 	"purchasing/api"
 	"purchasing/config"
 	_ "purchasing/docs" // Import Swagger documentation
@@ -35,13 +37,9 @@ func main() {
 	config.DB, message = config.Opendb()
 	logrus.Info(message.Body)
 
-	// ✅ Create a new ServeMux to register routes
-	mux := http.NewServeMux()
-
 	setupRoutes()
 
-	// ✅ Static file handler (doesn't need userMiddleware)
-	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("./static"))))
+	http.HandleFunc("/static/", serveStaticFiles)
 
 	logrus.Fatal(http.ListenAndServe(":8082", nil))
 }
@@ -209,4 +207,40 @@ func copyHeader(src, dest http.Header) {
 			dest.Add(key, value)
 		}
 	}
+}
+
+func serveStaticFiles(w http.ResponseWriter, r *http.Request) {
+	// Extract file path
+	filePath := "." + r.URL.Path
+
+	// Check if file exists
+	if _, err := os.Stat(filePath); os.IsNotExist(err) {
+		logrus.Warnf("File not found: %s", filePath)
+		http.NotFound(w, r)
+		return
+	}
+
+	// Detect MIME type using `mime.TypeByExtension`
+	ext := strings.ToLower(filepath.Ext(filePath))
+	mimeType := mime.TypeByExtension(ext)
+
+	// Fix JavaScript MIME type issue
+	if ext == ".js" {
+		mimeType = "application/javascript"
+		w.Header().Set("X-Content-Type-Options", "nosniff") // Enforce correct MIME type
+	}
+
+	// Ensure a valid MIME type
+	if mimeType == "" {
+		mimeType = "application/octet-stream"
+	}
+
+	// Log MIME type being set
+	logrus.Infof("Serving %s with MIME type: %s", filePath, mimeType)
+
+	// Set correct Content-Type
+	w.Header().Set("Content-Type", mimeType)
+
+	// Serve the file
+	http.ServeFile(w, r, filePath)
 }
